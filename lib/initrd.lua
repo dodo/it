@@ -1,7 +1,7 @@
 process = require('events'):new()
 
 -- call c to pump moar values into lua state
-__it_boots(process)
+_it.boots(process)
 process.stdout = require('io').stdout
 process.stderr = require('io').stderr
 process.stdin = require('io').stdin

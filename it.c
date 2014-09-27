@@ -5,8 +5,25 @@
 
 #include <uv.h>
 
-#include <lua.h>
+#include <luajit.h>
 #include <lauxlib.h>
+
+
+#ifndef luaL_newlib
+    // these are missing in luajit but defined in lua > 5.2
+    #define luaL_setfuncs(L,l,n) \
+        luaL_register(L,NULL,l)
+
+    #define luaL_newlibtable(L,l) \
+        lua_createtable(L, 0, sizeof(l)/sizeof((l)[0]) - 1)
+
+    #define luaL_newlib(L,l) \
+        (luaL_newlibtable(L,l), luaL_setfuncs(L,l,0))
+#endif
+
+#define luaI_newlib(L,name,l) \
+    (luaL_newlib(L,l), lua_setglobal(L,name))
+
 
 
 typedef struct {
@@ -50,6 +67,30 @@ it_states* luaI_getstate(lua_State* L) {
     return state;
 }
 
+lua_State* luaI_newstate(void* state, uv_loop_t *loop) {
+    // create lua state
+    lua_State* L = luaL_newstate();
+    if (!L) {
+        fprintf(stderr, "failed to allocate lua state!\n");
+        return NULL;
+    }
+    // load lua libs
+    luaL_openlibs(L);
+    if (luaI_setstate(L, state, loop)) {
+        fprintf(stderr, "failed to initialize lua state!\n");
+        return NULL;
+    }
+    return L;
+}
+
+int luaI_loadfile(lua_State* L, const char *filename) {
+    if (luaL_loadfile(L, filename)) {
+        fprintf(stderr, "failed to load boot script: %s\n", lua_tostring(L, -1));
+        return 1;
+    }
+    return 0;
+}
+
 int it_gets_cwd_lua(lua_State* L) {
     lua_pushstring(L, getcwd(NULL, 0)); // thanks to gnu c
     return 1;
@@ -86,6 +127,11 @@ int it_boots_lua(lua_State* L) {
     return 0;
 }
 
+static const luaL_Reg luaI_reg_it[] = {
+    {"boots", it_boots_lua},
+    {NULL, NULL}
+};
+
 int main(int argc, char *argv[]) {
     it_states state;
     // default state values
@@ -101,24 +147,10 @@ int main(int argc, char *argv[]) {
     uv_signal_start(state.sigint, sigint_cb, SIGINT);
 
     // create lua state
-    state.lua = luaL_newstate();
-    if (!state.lua) {
-        fprintf(stderr, "failed to allocate lua state!\n");
-        exit(1);
-    }
-    // load lua libs
-    luaL_openlibs(state.lua);
-    luaI_setstate(state.lua, &state, state.loop);
-    // c entry point after first lua call
-    lua_pushcfunction(state.lua, &it_boots_lua);
-    lua_setglobal(state.lua, "__it_boots");
-
-    // load lua kernel
-    if (luaL_loadfile(state.lua, "lib/initrd.lua")) {
-        fprintf(stderr, "failed to load lua kernel: %s\n", lua_tostring(state.lua, -1));
-        exit(1);
-    }
+    state.lua = luaI_newstate(&state, state.loop);
+    luaI_newlib(state.lua, "_it", luaI_reg_it);
     // boot lua
+    luaI_loadfile(state.lua, "lib/initrd.lua");
     lua_call(state.lua, 0, 0);
     // run forest run!
     if (state.exit_code == -1)
