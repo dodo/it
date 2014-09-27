@@ -29,6 +29,11 @@ it_states* luaI_getstate(lua_State* L) {
     return state;
 }
 
+int it_gets_cwd_lua(lua_State* L) {
+    lua_pushstring(L, getcwd(NULL, 0)); // thanks to gnu c
+    return 1;
+}
+
 int it_exits_lua(lua_State* L) {
     it_states* state = luaI_getstate(L);
     int code = 0;
@@ -51,6 +56,9 @@ int it_boots_lua(lua_State* L) {
     // process.exit
     lua_pushcfunction(L, it_exits_lua);
     lua_setfield(L, -2, "exit");
+    // process.cwd
+    lua_pushcfunction(L, it_gets_cwd_lua);
+    lua_setfield(L, -2, "cwd");
     // process.pid
     lua_pushinteger(L, getpid());
     lua_setfield(L, -2, "pid");
