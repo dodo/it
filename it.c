@@ -23,8 +23,28 @@ static void sigint_cb(uv_signal_t* handle, int signum) {
     uv_signal_stop(handle);
 }
 
+int luaI_setstate(lua_State* L, void* state, uv_loop_t *loop) {
+    size_t size = 2*PATH_MAX;
+    char exec_path[2*PATH_MAX];
+    if (uv_exepath(exec_path, &size)) {
+        uv_err_t err = uv_last_error(loop);
+        return luaL_error(L, "uv_exepath: %s", uv_strerror(err));
+    }
+    lua_pushlightuserdata(L, state);
+    lua_setglobal(L, "__it_states__");
+    luaL_loadstring(L,
+        "package.path = ("
+            "table.concat({...}, ';')" // concat arguments
+            ":match('^(.*)/[^/]+$')"   // remove executable name
+            " .. '/lib/core/?.lua'"    // append core lib path
+        ") .. ';' .. package.path");   // prepend to lua search paths
+    lua_pushlstring(L, exec_path, size);
+    lua_call(L, 1, 0);
+    return 0;
+}
+
 it_states* luaI_getstate(lua_State* L) {
-    lua_getglobal(L, "__it_states");
+    lua_getglobal(L, "__it_states__");
     it_states* state = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return state;
@@ -88,12 +108,11 @@ int main(int argc, char *argv[]) {
     }
     // load lua libs
     luaL_openlibs(state.lua);
-    // remember global state
-    lua_pushlightuserdata(state.lua, &state);
-    lua_setglobal(state.lua, "__it_states");
+    luaI_setstate(state.lua, &state, state.loop);
     // c entry point after first lua call
     lua_pushcfunction(state.lua, &it_boots_lua);
     lua_setglobal(state.lua, "__it_boots");
+
     // load lua kernel
     if (luaL_loadfile(state.lua, "lib/initrd.lua")) {
         fprintf(stderr, "failed to load lua kernel: %s\n", lua_tostring(state.lua, -1));

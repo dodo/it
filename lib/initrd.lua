@@ -1,6 +1,3 @@
--- link core lib
-package.path = './lib/?.lua;' .. package.path
-
 process = require('events'):new()
 
 -- call c to pump moar values into lua state
