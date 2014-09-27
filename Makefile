@@ -1,3 +1,5 @@
 
-it:
-	gcc -o $@ it.c -lev -I/usr/include
+it: it.c
+	gcc -o $@ $^ \
+		-I/usr/include -lev \
+		$(shell pkg-config --cflags --libs luajit)
