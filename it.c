@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
     // default state values
     state.argc = argc;
     state.argv = argv;
-    state.exit_code = 0;
+    state.exit_code = -1;
     state.loop = EV_DEFAULT;
     ev_set_userdata(state.loop, &state);
     // init signals
@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
     // create lua state
     state.lua = luaL_newstate();
     if (!state.lua) {
-        fprintf(stderr, "failed to allow lua state!\n");
+        fprintf(stderr, "failed to allocate lua state!\n");
         exit(1);
     }
     // load lua libs
@@ -88,7 +88,7 @@ int main(int argc, char *argv[]) {
     // boot lua
     lua_call(state.lua, 0, 0);
     // run forest run!
-    if (state.exit_code == 0)
+    if (state.exit_code == -1)
         ev_run(state.loop, 0);
     // shutdown
     lua_close(state.lua);

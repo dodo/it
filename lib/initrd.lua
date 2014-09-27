@@ -13,6 +13,7 @@ if #process.argv == 0 then
     print "no repl, no script file."
     process.exit(1)
 else
-    print(process.argv[1])
---     dofile(process.argv[2])
+    dofile(process.argv[1])
+    -- TODO test if something happened
+    process.exit() -- normally
 end
