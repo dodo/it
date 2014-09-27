@@ -3,23 +3,24 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include <ev.h>
+#include <uv.h>
 
 #include <lua.h>
 #include <lauxlib.h>
 
 
 typedef struct {
-    struct ev_loop *loop;
-    ev_signal *sigint;
+    uv_loop_t *loop;
+    uv_signal_t *sigint;
     lua_State *lua;
     int argc; char **argv;
     int exit_code;
 } it_states;
 
 
-static void sigint_cb(struct ev_loop *loop, ev_signal *w, int revents) {
-    ev_break(loop, EVBREAK_ALL);
+static void sigint_cb(uv_signal_t* handle, int signum) {
+    uv_stop(handle->loop);
+    uv_signal_stop(handle);
 }
 
 it_states* luaI_getstate(lua_State* L) {
@@ -40,7 +41,7 @@ int it_exits_lua(lua_State* L) {
     if (lua_gettop(L))
         code = luaL_checkint(L, 1);
     state->exit_code = code;
-    ev_break(state->loop, EVBREAK_ALL);
+    uv_stop(state->loop);
     return 0;
 }
 
@@ -71,14 +72,13 @@ int main(int argc, char *argv[]) {
     state.argc = argc;
     state.argv = argv;
     state.exit_code = -1;
-    state.loop = EV_DEFAULT;
-    ev_set_userdata(state.loop, &state);
+    state.loop = uv_default_loop();
     // init signals
-    ev_signal sigint_signal;
+    uv_signal_t sigint_signal;
     state.sigint = &sigint_signal;
     // start signal watchers
-    ev_signal_init(state.sigint, sigint_cb, SIGINT);
-    ev_signal_start(state.loop, state.sigint);
+    uv_signal_init(state.loop, state.sigint);
+    uv_signal_start(state.sigint, sigint_cb, SIGINT);
 
     // create lua state
     state.lua = luaL_newstate();
@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
     lua_call(state.lua, 0, 0);
     // run forest run!
     if (state.exit_code == -1)
-        ev_run(state.loop, 0);
+        uv_run(state.loop, UV_RUN_DEFAULT);
     // shutdown
     lua_close(state.lua);
     return state.exit_code;
