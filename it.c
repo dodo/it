@@ -1,5 +1,8 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include <ev.h>
 
 #include <lua.h>
@@ -48,6 +51,9 @@ int it_boots_lua(lua_State* L) {
     // process.exit
     lua_pushcfunction(L, it_exits_lua);
     lua_setfield(L, -2, "exit");
+    // process.pid
+    lua_pushinteger(L, getpid());
+    lua_setfield(L, -2, "pid");
     return 0;
 }
 
