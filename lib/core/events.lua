@@ -1,6 +1,6 @@
 local Prototype = require 'prototype'
 
-EventEmitter = Prototype:fork()
+local EventEmitter = Prototype:fork()
 
 function EventEmitter:init()
     self._events = {}

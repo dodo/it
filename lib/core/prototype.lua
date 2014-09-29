@@ -1,6 +1,6 @@
 local bind = require('util').bind
 
-Prototype = {}
+local Prototype = {}
 Prototype.prototype = Prototype
 Prototype.metatable = { __index = Prototype }
 

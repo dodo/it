@@ -34,7 +34,7 @@ local function merge(o, i) -- inplace
     return o
 end
 
-Features = Prototype:fork()
+local Features = Prototype:fork()
 
 function Features:compose(protos)
     return Prototype:fork(merge({super={}}, protos))
