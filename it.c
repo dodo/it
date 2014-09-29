@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "it.h"
+#include "it-types.h"
 #include "luaI.h"
 
 

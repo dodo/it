@@ -1,13 +1,16 @@
 #include "luaI.h"
+
 #include "it.h"
 
 
+#include "lua/it.h"
 static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
     {"forks", it_forks_lua},
     {NULL, NULL}
 };
 
+#include "lua/ctx.h"
 static const luaL_Reg luaI_reg_ctx[] = {
     {"import", it_imports_ctx_lua},
     {"call", it_calls_ctx_lua},
