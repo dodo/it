@@ -20,8 +20,8 @@ function Prototype:new(...)
     return instance
 end
 
-function Prototype:bind(name)
-    local fn = self[name .. "*"] or bind(self, self[name])
+function Prototype:bind(name, ...)
+    local fn = self[name .. "*"] or bind(self, self[name], ...)
     self[name .. "*"] = fn
     return fn
 end

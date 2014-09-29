@@ -1,8 +1,9 @@
 local exports = {}
 
 
-function exports.bind(this, handler)
-    return function (...) return handler(this, ...) end
+function exports.bind(this, handler, ...)
+    args = {...}
+    return function (...) return handler(this, unpack(args), ...) end
 end
 
 function exports.ininterval(v, min, max)
