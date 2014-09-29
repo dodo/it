@@ -25,6 +25,10 @@ int it_boots_lua(lua_State* L) {
     return 0;
 }
 
+int it_loads_lua(lua_State* L) {
+    return luaI_loadmetatable(L, 1);
+}
+
 int it_forks_lua(lua_State* L) {
     it_states* ctx;
     it_states* state = luaI_getstate(L);
@@ -35,10 +39,6 @@ int it_forks_lua(lua_State* L) {
         return 1;
     }
     luaI_setmetatable(L, "Context");
-    lua_createtable(ctx->lua, 0, 1);
-    lua_pushcfunction(ctx->lua, it_forks_lua);
-    lua_setfield(ctx->lua, -2, "forks");
-    lua_setglobal(ctx->lua, "_it");
     luaI_dofile(ctx->lua, "lib/context.lua");
     return 1;
 }

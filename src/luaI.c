@@ -6,6 +6,7 @@
 #include "lua/it.h"
 static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
+    {"loads", it_loads_lua},
     {"forks", it_forks_lua},
     {NULL, NULL}
 };
@@ -17,6 +18,17 @@ static const luaL_Reg luaI_reg_ctx[] = {
     {"__gc", it_kills_ctx_lua},
     {NULL, NULL}
 };
+
+int luaI_loadmetatable(lua_State* L, int i) {
+    const char *name = lua_tostring(L, i);
+    switch (name[0]) {
+        case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it); break;
+        case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
+        default: return 0; break;
+    }
+    lua_pop(L, 1); // dont need metatable right now
+    return 0;
+}
 
 
 static int buf_writer(lua_State* L, const void* b, size_t n, void* B) {
@@ -94,8 +106,7 @@ int luaI_newstate(it_states* ctx) {
     ctx->lua = L;
     // load lua libs
     luaL_openlibs(L);
-    luaI_newmetatable(L, "Context", luaI_reg_ctx);
-    lua_pop(L,1); // dont need metatable right now
+    luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     if (luaI_setstate(L, ctx)) {
         fprintf(stderr, "failed to initialize lua state!\n");
         return 1;
@@ -108,7 +119,6 @@ int luaI_createstate(it_processes* process) {
     if (luaI_newstate(ctx)) {
         return 1;
     }
-    luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setglobalfield(ctx->lua, "_it", "process");
     luaI_dofile(ctx->lua, "lib/initrd.lua");

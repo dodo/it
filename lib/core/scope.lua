@@ -2,6 +2,7 @@ local Prototype = require 'prototype'
 
 local Scope = Prototype:fork()
 
+_it.loads('Context')
 function Scope:init()
     self.state = _it.forks()
 end

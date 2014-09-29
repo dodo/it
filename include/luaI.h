@@ -44,6 +44,7 @@
     (lua_getglobal(L,gn), lua_pushvalue(L,-2), lua_setfield(L,-2,fn), lua_pop(L,2))
 
 
+int luaI_loadmetatable(lua_State* L, int i);
 
 int luaI_copyfunction(lua_State* L, lua_State* src);
 int luaI_dofile(lua_State* L, const char *filename);
