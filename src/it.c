@@ -40,7 +40,10 @@ int it_forks_lua(lua_State* L) {
     it_states* state = luaI_getstate(L);
     ctx = lua_newuserdata(L, sizeof(it_states));
     ctx->loop = state->loop;
-    ctx->lua = luaI_newstate(ctx);
+    if (luaI_newstate(ctx)) {
+        lua_pushnil(L);
+        return 1;
+    }
     luaI_setmetatable(L, "Context");
     lua_createtable(ctx->lua, 0, 1);
     lua_pushcfunction(ctx->lua, it_forks_lua);

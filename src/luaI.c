@@ -81,27 +81,30 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     return 0;
 }
 
-lua_State* luaI_newstate(it_states* ctx) {
+int luaI_newstate(it_states* ctx) {
     // create lua state
     lua_State* L = luaL_newstate();
     if (!L) {
         fprintf(stderr, "failed to allocate lua state!\n");
-        return NULL;
+        return 1;
     }
+    ctx->lua = L;
     // load lua libs
     luaL_openlibs(L);
     luaI_newmetatable(L, "Context", luaI_reg_ctx);
     lua_pop(L,1); // dont need metatable right now
     if (luaI_setstate(L, ctx)) {
         fprintf(stderr, "failed to initialize lua state!\n");
-        return NULL;
+        return 1;
     }
-    return L;
+    return 0;
 }
 
 int luaI_createstate(it_processes* process) {
     it_states* ctx = process->ctx;
-    ctx->lua = luaI_newstate(ctx);
+    if (luaI_newstate(ctx)) {
+        return 1;
+    }
     luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setglobalfield(ctx->lua, "_it", "process");

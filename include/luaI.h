@@ -52,7 +52,7 @@ it_processes* luaI_getprocess(lua_State* L);
 it_states* luaI_getstate(lua_State* L);
 int luaI_setstate(lua_State* L, it_states* ctx);
 
-lua_State* luaI_newstate(it_states* ctx);
+int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);
 
 #endif /* LUAI_H */

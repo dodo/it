@@ -28,7 +28,9 @@ int main(int argc, char *argv[]) {
     uv_signal_init(ctx.loop, process.sigint);
     uv_signal_start(process.sigint, sigint_cb, SIGINT);
     // create lua state
-    luaI_createstate(&process);
+    if (luaI_createstate(&process)) {
+        return 1;
+    }
     // run forest run!
     if (process.exit_code == -1)
         uv_run(ctx.loop, UV_RUN_DEFAULT);
