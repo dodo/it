@@ -1,5 +1,5 @@
 
 it: it.c
-	gcc -o $@ $^ \
+	gcc -Wall -o $@ $^ \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit)

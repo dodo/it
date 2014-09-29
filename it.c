@@ -6,6 +6,7 @@
 #include <uv.h>
 
 #include <luajit.h>
+#include <lualib.h>
 #include <lauxlib.h>
 
 
