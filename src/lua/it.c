@@ -39,9 +39,8 @@ int it_loads_lua(lua_State* L) {
 }
 
 int it_forks_lua(lua_State* L) {
-    it_states* ctx;
     it_states* state = luaI_getstate(L);
-    ctx = lua_newuserdata(L, sizeof(it_states));
+    it_states* ctx = lua_newuserdata(L, sizeof(it_states));
     ctx->loop = state->loop;
     if (luaI_newstate(ctx)) {
         lua_pushnil(L);
