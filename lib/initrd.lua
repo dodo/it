@@ -10,7 +10,6 @@ function Process:init()
     -- convenience
     self.exit = self:bind('exit')
     self.cwd  = self._handle.cwd
-    print(self.on)
 end
 
 function Process:exit(...)
