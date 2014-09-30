@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <signal.h>
 #include <unistd.h>
 
 #include "it-types.h"
@@ -13,6 +14,8 @@ static void sigint_cb(uv_signal_t* handle, int signum) {
 }
 
 int main(int argc, char *argv[]) {
+    signal(SIGPIPE, SIG_IGN);
+
     it_states ctx;
     it_processes process;
     // default state values
