@@ -19,4 +19,15 @@ function Buffer:setEncoding(encoding)
     self.encoding = encoding
 end
 
+function Buffer:copy(buf)
+    if not buf or not buf.size then return end
+    if not self.size then
+        self.size = buf.size
+        self._buffer:malloc(buf.size)
+    end
+    self.encoding = buf.encoding
+    -- dest:memcpy(src, dest.size)
+    self._buffer:memcpy(buf._buffer, self.size)
+end
+
 return Buffer

@@ -23,6 +23,7 @@ static const luaL_Reg luaI_reg_process[] = {
 #include "lua/buffer.h"
 static const luaL_Reg luaI_reg_buffer[] = {
     {"malloc", it_mallocs_buffer_lua},
+    {"memcpy", it_memcpies_buffer_lua},
     {"__gc", it_kills_buffer_lua},
     {NULL, NULL}
 };
