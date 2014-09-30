@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "lua/it.h"
 
 #include "it.h"
@@ -22,6 +24,13 @@ int it_boots_lua(lua_State* L) {
     // process.pid
     lua_pushinteger(L, getpid());
     lua_setfield(L, -2, "pid");
+    // stdio
+    lua_pushlightuserdata(L, stdout);
+    lua_setfield(L, -2, "stdout");
+    lua_pushlightuserdata(L, stderr);
+    lua_setfield(L, -2, "stderr");
+    lua_pushlightuserdata(L, stdin);
+    lua_setfield(L, -2, "stdin");
     return 0;
 }
 
