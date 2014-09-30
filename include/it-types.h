@@ -24,6 +24,7 @@ typedef struct {
     uv_thread_t *thread;
     uv_loop_t *loop;
     uv_idle_t *idle;
+    it_states *ctx;
     int frames;
     int size;
     int width;

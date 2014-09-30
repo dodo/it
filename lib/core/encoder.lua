@@ -1,6 +1,7 @@
 local io = require 'io'
 local fs = require 'fs'
 local ffi = require 'ffi'
+local Scope = require 'scope'
 local EventEmitter = require 'events'
 
 ffi.cdef(fs.read(_it.libdir .. "schrovideoformat.h"))
@@ -10,8 +11,9 @@ local Encoder = EventEmitter:fork()
 _it.loads('Encoder')
 function Encoder:init()
     self.prototype.init(self)
+    self.scope = Scope:new()
     self._handle = _it.encodes()
-    self._handle:create() -- FIXME maybe doing this lazy?
+    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
     self.format = {
         width = 320,
         height = 240,

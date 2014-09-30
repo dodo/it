@@ -40,6 +40,7 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
         case SCHRO_STATE_HAVE_BUFFER:
             buffer = schro_encoder_pull(enc->encoder, &x);
             //printf("%d\n", x);
+            it_runs_ctx(enc->ctx); // FIXME not here plz
             schro_buffer_unref(buffer);
             break;
         case SCHRO_STATE_AGAIN:
@@ -67,7 +68,9 @@ static void thread_encode(void* priv) {
 
 int it_creates_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+    it_states*  ctx = luaL_checkudata(L, 2, "Context");
     schro_init();
+    enc->ctx = ctx;
     enc->frames = 0;
     enc->thread = NULL;
     enc->buffer = NULL;
