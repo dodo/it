@@ -3,6 +3,7 @@
 
 #include <uv.h>
 #include <lua.h>
+#include <schroedinger/schro.h>
 
 
 typedef struct {
@@ -17,5 +18,12 @@ typedef struct {
     int argc; char **argv;
     int exit_code;
 } it_processes;
+
+typedef struct {
+  SchroEncoder *encoder;
+  int frames;
+  int size;
+  uint8_t *buffer;
+} it_encodes;
 
 #endif /* IT_TYPES_H */

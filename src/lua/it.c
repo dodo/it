@@ -50,3 +50,9 @@ int it_forks_lua(lua_State* L) {
     luaI_dofile(ctx->lua, "lib/context.lua");
     return 1;
 }
+
+int it_encodes_lua(lua_State* L) {
+    lua_newuserdata(L, sizeof(it_encodes));
+    luaI_setmetatable(L, "Encoder");
+    return 1;
+}

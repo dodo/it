@@ -8,6 +8,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
     {"loads", it_loads_lua},
     {"forks", it_forks_lua},
+    {"encodes", it_encodes_lua},
     {NULL, NULL}
 };
 
@@ -19,11 +20,23 @@ static const luaL_Reg luaI_reg_ctx[] = {
     {NULL, NULL}
 };
 
+#include "lua/enc.h"
+static const luaL_Reg luaI_reg_enc[] = {
+    {"create", it_creates_enc_lua},
+    {"start", it_starts_enc_lua},
+    {"getformat", it_gets_format_enc_lua},
+    {"setformat", it_sets_format_enc_lua},
+    {"__gc", it_kills_enc_lua},
+    {NULL, NULL}
+};
+
+
 int luaI_loadmetatable(lua_State* L, int i) {
     const char *name = lua_tostring(L, i);
     switch (name[0]) {
         case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it); break;
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
+        case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
         default: return 0; break;
     }
     lua_pop(L, 1); // dont need metatable right now
