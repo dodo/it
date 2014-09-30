@@ -33,4 +33,10 @@ typedef struct {
     schro_bool closed;
 } it_encodes;
 
+typedef struct {
+    schro_bool free;
+    void *buffer;
+} it_buffers;
+
+
 #endif /* IT_TYPES_H */

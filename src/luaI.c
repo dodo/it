@@ -9,6 +9,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"loads", it_loads_lua},
     {"forks", it_forks_lua},
     {"encodes", it_encodes_lua},
+    {"buffers", it_buffers_lua},
     {NULL, NULL}
 };
 
@@ -18,6 +19,14 @@ static const luaL_Reg luaI_reg_process[] = {
     {"cwd",  it_gets_cwd_process_lua},
     {NULL, NULL}
 };
+
+#include "lua/buffer.h"
+static const luaL_Reg luaI_reg_buffer[] = {
+    {"malloc", it_mallocs_buffer_lua},
+    {"__gc", it_kills_buffer_lua},
+    {NULL, NULL}
+};
+
 
 #include "lua/ctx.h"
 static const luaL_Reg luaI_reg_ctx[] = {
@@ -42,6 +51,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
     const char *name = lua_tostring(L, i);
     switch (name[0]) {
         case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it); break;
+        case 'B'/*uffer*/:  luaI_newmetatable(L, name, luaI_reg_buffer); break;
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;

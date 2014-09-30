@@ -53,3 +53,12 @@ int it_encodes_lua(lua_State* L) {
     luaI_setmetatable(L, "Encoder");
     return 1;
 }
+
+int it_buffers_lua(lua_State* L) {
+    it_buffers* buf = lua_newuserdata(L, sizeof(it_buffers));
+    buf->free = FALSE;
+    buf->buffer = NULL;
+    luaI_setmetatable(L, "Buffer");
+    return 1;
+}
+
