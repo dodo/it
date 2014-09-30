@@ -30,6 +30,7 @@ local ENUMS = {
   transfer_function = {typ="SchroTransferFunction",prefix="SCHRO_TRANSFER_CHAR_"},
 }
 function Encoder:start()
+    process.shutdown = false -- prevent process from shutting down
     local schroformat = self._handle:getformat()
     local ffiformat = ffi.new("SchroVideoFormat*", schroformat)
     for key,value in pairs(self.format) do
