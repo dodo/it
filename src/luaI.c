@@ -86,11 +86,12 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     lua_pushlightuserdata(L, ctx);
     lua_setglobal(L, "__it_states__");
     luaL_loadstring(L,
-        "package.path = ("
-            "table.concat({...}, ';')" // concat arguments
-            ":match('^(.*)/[^/]+$')"   // remove executable name
-            " .. '/lib/core/?.lua'"    // append core lib path
-        ") .. ';' .. package.path");   // prepend to lua search paths
+        // concat arguments to get one string
+        "_it.execpath = table.concat({...}, '') "
+        // remove executable name and append libdir
+        "_it.libdir = _it.execpath:match('^(.*)/[^/]+$') .. '/lib/' "
+        // prepend to lua search paths
+        "package.path = _it.libdir .. 'core/?.lua;' .. package.path");
     lua_pushlstring(L, exec_path, size);
     lua_call(L, 1, 0);
     return 0;
