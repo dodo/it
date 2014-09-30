@@ -15,12 +15,6 @@ int it_boots_lua(lua_State* L) {
         lua_rawseti(L, -2, i);
     }
     lua_setfield(L, -2, "argv");
-    // process.exit
-    lua_pushcfunction(L, it_exits_lua);
-    lua_setfield(L, -2, "exit");
-    // process.cwd
-    lua_pushcfunction(L, it_gets_cwd_lua);
-    lua_setfield(L, -2, "cwd");
     // process.pid
     lua_pushinteger(L, getpid());
     lua_setfield(L, -2, "pid");
@@ -31,7 +25,10 @@ int it_boots_lua(lua_State* L) {
     lua_setfield(L, -2, "stderr");
     lua_pushlightuserdata(L, stdin);
     lua_setfield(L, -2, "stdin");
-    return 0;
+    // cfunction metatable
+    lua_newtable(L);
+    luaI_setmetatable(L, "Process");
+    return 1;
 }
 
 int it_loads_lua(lua_State* L) {

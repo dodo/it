@@ -12,6 +12,13 @@ static const luaL_Reg luaI_reg_it[] = {
     {NULL, NULL}
 };
 
+#include "lua/process.h"
+static const luaL_Reg luaI_reg_process[] = {
+    {"exit", it_exits_process_lua},
+    {"cwd",  it_gets_cwd_process_lua},
+    {NULL, NULL}
+};
+
 #include "lua/ctx.h"
 static const luaL_Reg luaI_reg_ctx[] = {
     {"import", it_imports_ctx_lua},
@@ -37,6 +44,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
         case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it); break;
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
+        case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
         default: return 0; break;
     }
     lua_pop(L, 1); // dont need metatable right now

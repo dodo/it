@@ -1,5 +1,5 @@
 
-it: it.c src/it.c src/luaI.c src/lua/it.c src/lua/ctx.c src/lua/enc.c
+it: it.c src/luaI.c src/lua/it.c src/lua/ctx.c src/lua/enc.c src/lua/process.c
 	gcc -Wall -o $@ $^ -I./include \
 		-lpthread \
 		$(shell pkg-config --cflags --libs libuv) \

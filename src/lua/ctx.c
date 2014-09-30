@@ -3,6 +3,13 @@
 #include "it.h"
 #include "luaI.h"
 
+int it_runs_ctx(it_states* ctx) {
+    luaI_getglobalfield(ctx->lua, "context", "run");
+    if (lua_pcall(ctx->lua, 0, 0, 0)) {
+        return lua_error(ctx->lua);
+    }
+    return 0;
+}
 
 int it_imports_ctx_lua(lua_State* L) {
     it_states* ctx = luaL_checkudata(L, 1, "Context");
