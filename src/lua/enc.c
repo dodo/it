@@ -1,4 +1,10 @@
+#include <stdio.h>
+#include <string.h>
+
+#define SCHRO_ENABLE_UNSTABLE_API
+
 #include <schroedinger/schro.h>
+#include <schroedinger/schroutils.h>
 
 #include "lua/enc.h"
 
@@ -6,26 +12,82 @@
 #include "luaI.h"
 
 
-static void frame_free(SchroFrame *frame, void *priv) {
+static void it_frees_frame(SchroFrame* frame, void* priv) {
   free(priv);
+}
+
+static void it_waits_on_encoder(uv_idle_t* handle, int status) {
+    it_encodes* enc = (it_encodes*) handle->data;
+    int x;
+    SchroFrame *frame;
+    SchroBuffer *buffer;
+    switch (schro_encoder_wait(enc->encoder)) {
+        case SCHRO_STATE_NEED_FRAME:
+            if (enc->closed) {
+                schro_encoder_end_of_stream(enc->encoder);
+            } else {
+                //SCHRO_ERROR("frame %d", n_frames);
+
+                enc->buffer = malloc(enc->size);
+                memset(enc->buffer, 128, enc->size);
+
+                frame = schro_frame_new_from_data_I420(enc->buffer, enc->width, enc->height);
+                schro_frame_set_free_callback(frame, it_frees_frame, enc->buffer);
+                schro_encoder_push_frame(enc->encoder, frame);
+                (enc->frames)++;
+            }
+            break;
+        case SCHRO_STATE_HAVE_BUFFER:
+            buffer = schro_encoder_pull(enc->encoder, &x);
+            //printf("%d\n", x);
+            schro_buffer_unref(buffer);
+            break;
+        case SCHRO_STATE_AGAIN:
+            break;
+        case SCHRO_STATE_END_OF_STREAM:
+            uv_close((uv_handle_t*) enc->idle, NULL);
+            uv_stop(enc->loop);
+            break;
+        default:
+            break;
+    }
+}
+
+static void thread_encode(void* priv) {
+    it_encodes* enc = (it_encodes*) priv;
+    schro_encoder_start(enc->encoder);
+    enc->loop = uv_loop_new();
+    uv_idle_t idle;
+    enc->idle = &idle;
+    uv_idle_init(enc->loop, enc->idle);
+    enc->idle->data = enc;
+    uv_idle_start(enc->idle, it_waits_on_encoder);
+    uv_run(enc->loop, UV_RUN_DEFAULT);
 }
 
 int it_creates_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     schro_init();
     enc->frames = 0;
+    enc->thread = NULL;
     enc->buffer = NULL;
+    enc->closed = FALSE;
     enc->encoder = schro_encoder_new();
     return 1;
 }
 
 int it_starts_enc_lua(lua_State* L) {
-    // TODO
+    it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+    if (enc->thread) return 0;
+    uv_thread_t thread;
+    enc->thread = &thread;
+    uv_thread_create(enc->thread, thread_encode, enc);
     return 0;
 }
 
 int it_gets_format_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+    if (!enc->encoder) return 0;
     SchroVideoFormat *format = schro_encoder_get_video_format(enc->encoder);
     lua_pushlightuserdata(L, format);
     return 1;
@@ -33,7 +95,16 @@ int it_gets_format_enc_lua(lua_State* L) {
 
 int it_sets_format_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+    if (!enc->encoder) return 0;
     SchroVideoFormat *format = lua_touserdata(L, 2);
+
+    int w = format->width; int h = format->height;
+    int size = ROUND_UP_4(w) * ROUND_UP_2(h);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    enc->height = h;
+    enc->width = w;
+    enc->size = size;
     schro_encoder_set_video_format(enc->encoder, format);
     free(format);
     return 0;
@@ -41,7 +112,10 @@ int it_sets_format_enc_lua(lua_State* L) {
 
 int it_kills_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
-    if (enc->encoder) schro_encoder_free(enc->encoder);
+    if (!enc->encoder) return 0;
+    enc->closed = TRUE;
+    uv_thread_join(enc->thread);
+    schro_encoder_free(enc->encoder);
     enc->encoder = NULL;
     return 0;
 }
