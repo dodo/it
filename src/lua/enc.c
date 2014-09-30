@@ -65,6 +65,7 @@ static void thread_encode(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     schro_encoder_start(enc->encoder);
     enc->loop = uv_loop_new();
+    enc->ctx->loop = enc->loop; // switch context loop to thread loop
     uv_idle_t idle;
     enc->idle = &idle;
     uv_idle_init(enc->loop, enc->idle);
