@@ -55,7 +55,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
-        default: return 0; break;
+        default: return luaL_error(L, "unknown metatable %s!", name); break;
     }
     lua_pop(L, 1); // dont need metatable right now
     return 0;
