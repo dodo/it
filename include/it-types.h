@@ -5,6 +5,8 @@
 #include <lua.h>
 #include <schroedinger/schro.h>
 
+#define stdnon  (FILE*) -1
+
 
 typedef struct {
     lua_State *lua;
