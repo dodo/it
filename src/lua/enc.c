@@ -39,8 +39,15 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             break;
         case SCHRO_STATE_HAVE_BUFFER:
             buffer = schro_encoder_pull(enc->encoder, &x);
-            //printf("%d\n", x);
-            it_runs_ctx(enc->ctx); // FIXME not here plz
+//             printf("%d\n", x);
+            // one time change to do something with this buffer …
+            luaI_getglobalfield(enc->ctx->lua, "context", "emit");
+            lua_getglobal(enc->ctx->lua, "context"); // self
+            lua_pushstring(enc->ctx->lua, "userdata");
+            lua_pushlightuserdata(enc->ctx->lua, buffer->data);
+            lua_pushinteger(enc->ctx->lua, x);
+            lua_call(enc->ctx->lua, 4, 0);
+            // … and it's gone.
             schro_buffer_unref(buffer);
             break;
         case SCHRO_STATE_AGAIN:
@@ -63,6 +70,10 @@ static void thread_encode(void* priv) {
     uv_idle_init(enc->loop, enc->idle);
     enc->idle->data = enc;
     uv_idle_start(enc->idle, it_waits_on_encoder);
+    // call into lua state first …
+    luaI_getglobalfield(enc->ctx->lua, "context", "run");
+    lua_call(enc->ctx->lua, 0, 0);
+    // … and now run!
     uv_run(enc->loop, UV_RUN_DEFAULT);
 }
 

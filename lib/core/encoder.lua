@@ -13,7 +13,6 @@ function Encoder:init()
     self.prototype.init(self)
     self.scope = Scope:new()
     self._handle = _it.encodes()
-    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
     self.format = {
         width = 320,
         height = 240,
@@ -22,6 +21,14 @@ function Encoder:init()
         left_offset = 0,
         top_offset = 0,
     }
+    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
+    -- process 'userdata' events to 'data' events
+    self.scope:import(function ()
+        local Buffer = require 'buffer'
+        context:on('userdata', function (raw, len)
+            context:emit('data', Buffer:new(raw, len))
+        end)
+    end)
 end
 
 local ENUMS = {
