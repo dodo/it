@@ -4,7 +4,7 @@ typedef unsigned int schro_bool;
 
 // from schroedinger/schrobitstream.h
 
-typedef enum {
+typedef enum _SchroVideoFormatEnum {
   SCHRO_VIDEO_FORMAT_CUSTOM = 0,
   SCHRO_VIDEO_FORMAT_QSIF,
   SCHRO_VIDEO_FORMAT_QCIF,
@@ -28,26 +28,26 @@ typedef enum {
   SCHRO_VIDEO_FORMAT_UHDTV_8K_50
 } SchroVideoFormatEnum;
 
-typedef enum {
+typedef enum _SchroChromaFormat {
   SCHRO_CHROMA_444 = 0,
   SCHRO_CHROMA_422,
   SCHRO_CHROMA_420
 } SchroChromaFormat;
 
-typedef enum {
+typedef enum _SchroColourPrimaries {
   SCHRO_COLOUR_PRIMARY_HDTV = 0,
   SCHRO_COLOUR_PRIMARY_SDTV_525 = 1,
   SCHRO_COLOUR_PRIMARY_SDTV_625 = 2,
   SCHRO_COLOUR_PRIMARY_CINEMA = 3
 } SchroColourPrimaries;
 
-typedef enum {
+typedef enum _SchroColourMatrix {
   SCHRO_COLOUR_MATRIX_HDTV = 0,
   SCHRO_COLOUR_MATRIX_SDTV = 1,
   SCHRO_COLOUR_MATRIX_REVERSIBLE = 2
 }SchroColourMatrix;
 
-typedef enum {
+typedef enum _SchroTransferFunction {
   SCHRO_TRANSFER_CHAR_TV_GAMMA = 0,
   SCHRO_TRANSFER_CHAR_EXTENDED_GAMUT = 1,
   SCHRO_TRANSFER_CHAR_LINEAR = 2,
@@ -56,7 +56,7 @@ typedef enum {
 
 // from schroedinger/schrovideoformat.h
 
-typedef struct {
+typedef struct _SchroVideoFormat {
   SchroVideoFormatEnum index;
   int width;
   int height;
