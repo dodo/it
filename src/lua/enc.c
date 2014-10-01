@@ -1,10 +1,14 @@
 #include <stdio.h>
+#include <stdint.h>
 #include <string.h>
+
+#include <uv.h>
 
 #define SCHRO_ENABLE_UNSTABLE_API
 
 #include <schroedinger/schro.h>
 #include <schroedinger/schroutils.h>
+#include <schroedinger/schrobuffer.h>
 
 #include "lua/enc.h"
 
@@ -18,9 +22,6 @@ static void it_frees_frame(SchroFrame* frame, void* priv) {
 
 static void it_waits_on_encoder(uv_idle_t* handle, int status) {
     it_encodes* enc = (it_encodes*) handle->data;
-    int x;
-    SchroFrame *frame;
-    SchroBuffer *buffer;
     switch (schro_encoder_wait(enc->encoder)) {
         case SCHRO_STATE_NEED_FRAME:
             if (enc->closed) {
@@ -31,7 +32,7 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
                 enc->buffer = malloc(enc->size);
                 memset(enc->buffer, 128, enc->size);
 
-                frame = schro_frame_new_from_data_I420(enc->buffer, enc->width, enc->height);
+                SchroFrame* frame = schro_frame_new_from_data_I420(enc->buffer, enc->width, enc->height);
                 schro_frame_set_free_callback(frame, it_frees_frame, enc->buffer);
                 // chance to change frame …
                 luaI_getglobalfield(enc->ctx->lua, "context", "emit");
@@ -44,8 +45,9 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
                 (enc->frames)++;
             }
             break;
-        case SCHRO_STATE_HAVE_BUFFER:
-            buffer = schro_encoder_pull(enc->encoder, &x);
+        case SCHRO_STATE_HAVE_BUFFER: {
+            int x;
+            SchroBuffer* buffer = schro_encoder_pull(enc->encoder, &x);
 //             printf("%d\n", x);
             // one time change to do something with this buffer …
             luaI_getglobalfield(enc->ctx->lua, "context", "emit");
@@ -56,7 +58,7 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             lua_call(enc->ctx->lua, 4, 0);
             // … and it's gone.
             schro_buffer_unref(buffer);
-            break;
+          };break;
         case SCHRO_STATE_AGAIN:
             break;
         case SCHRO_STATE_END_OF_STREAM:
