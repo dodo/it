@@ -28,6 +28,10 @@ function Encoder:init()
         context:on('userdata', function (raw, len)
             context:emit('data', Buffer:new(raw, len))
         end)
+        local frame = require 'frame'
+        context:on('rawframe', function (raw)
+            context:emit('frame', frame(raw))
+        end)
     end)
 end
 

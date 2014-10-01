@@ -33,6 +33,13 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
 
                 frame = schro_frame_new_from_data_I420(enc->buffer, enc->width, enc->height);
                 schro_frame_set_free_callback(frame, it_frees_frame, enc->buffer);
+                // chance to change frame …
+                luaI_getglobalfield(enc->ctx->lua, "context", "emit");
+                lua_getglobal(enc->ctx->lua, "context"); // self
+                lua_pushstring(enc->ctx->lua, "rawframe");
+                lua_pushlightuserdata(enc->ctx->lua, frame);
+                lua_call(enc->ctx->lua, 3, 0);
+                // … and right into encoder. hopefully everything is right!
                 schro_encoder_push_frame(enc->encoder, frame);
                 (enc->frames)++;
             }
