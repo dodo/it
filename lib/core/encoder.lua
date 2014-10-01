@@ -1,10 +1,8 @@
-local io = require 'io'
-local fs = require 'fs'
 local ffi = require 'ffi'
 local Scope = require 'scope'
 local EventEmitter = require 'events'
 
-ffi.cdef(fs.read(_it.libdir .. "schrovideoformat.h"))
+require('cface')(_it.libdir .. "schrovideoformat.h")
 
 local Encoder = EventEmitter:fork()
 

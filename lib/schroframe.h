@@ -4,7 +4,7 @@ typedef struct _SchroMutex SchroMutex;
 
 // from schroedinger/schrodomain.h
 
-// #define SCHRO_MEMORY_DOMAIN_SLOTS 1000
+#define SCHRO_MEMORY_DOMAIN_SLOTS 1000
 
 typedef struct _SchroMemoryDomain {
   SchroMutex * mutex;
@@ -20,12 +20,12 @@ typedef struct _SchroMemoryDomain {
     void *ptr;
     int size;
     void *priv;
-  } slots[1000/*SCHRO_MEMORY_DOMAIN_SLOTS*/];
+  } slots[SCHRO_MEMORY_DOMAIN_SLOTS];
 } SchroMemoryDomain;
 
 // from schroedinger/schroframe.h
 
-// #define SCHRO_FRAME_CACHE_SIZE 32
+#define SCHRO_FRAME_CACHE_SIZE 32
 
 typedef struct _SchroFrame SchroFrame;
 typedef struct _SchroFrameData SchroFrameData;
@@ -88,7 +88,7 @@ struct _SchroFrame {
   SchroFrameData components[3];
 
   int is_virtual;
-  int cached_lines[3][32/*SCHRO_FRAME_CACHE_SIZE*/];
+  int cached_lines[3][SCHRO_FRAME_CACHE_SIZE];
   SchroFrame *virt_frame1;
   SchroFrame *virt_frame2;
   void (*render_line) (SchroFrame *frame, void *dest, int component, int i);
