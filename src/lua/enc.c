@@ -47,15 +47,14 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             }
             break;
         case SCHRO_STATE_HAVE_BUFFER: {
-            int x;
-            SchroBuffer* buffer = schro_encoder_pull(enc->encoder, &x);
-//             printf("%d\n", x);
+            int nr;
+            SchroBuffer* buffer = schro_encoder_pull(enc->encoder, &nr);
             // one time change to do something with this buffer …
             luaI_getglobalfield(enc->ctx->lua, "context", "emit");
             lua_getglobal(enc->ctx->lua, "context"); // self
             lua_pushstring(enc->ctx->lua, "userdata");
             lua_pushlightuserdata(enc->ctx->lua, buffer->data);
-            lua_pushinteger(enc->ctx->lua, x);
+            lua_pushinteger(enc->ctx->lua, buffer->length);
             lua_call(enc->ctx->lua, 4, 0);
             // … and it's gone.
             schro_buffer_unref(buffer);
