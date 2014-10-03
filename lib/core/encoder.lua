@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local Scope = require 'scope'
 local EventEmitter = require 'events'
+local table_index = require('util').table_index
 
 require('cface')(_it.libdir .. "schrovideoformat.h")
 
@@ -53,6 +54,16 @@ function Encoder:start()
     end
     self._handle:setformat(schroformat)
     self._handle:start()
+end
+
+
+function Encoder:debug(level)
+    self._handle.setdebug(
+        table_index(
+            {"ERROR","WARNING","INFO","DEBUG","LOG"},
+            string.upper(level)
+        )
+    )
 end
 
 return Encoder

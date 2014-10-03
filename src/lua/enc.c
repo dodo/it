@@ -7,6 +7,7 @@
 #define SCHRO_ENABLE_UNSTABLE_API
 
 #include <schroedinger/schro.h>
+#include <schroedinger/schrodebug.h>
 #include <schroedinger/schroutils.h>
 #include <schroedinger/schrobuffer.h>
 
@@ -131,6 +132,11 @@ int it_sets_format_enc_lua(lua_State* L) {
     enc->size = size;
     schro_encoder_set_video_format(enc->encoder, format);
     free(format);
+    return 0;
+}
+
+int it_sets_debug_enc_lua(lua_State* L) {
+    schro_debug_set_level(luaL_checkint(L, 1));
     return 0;
 }
 

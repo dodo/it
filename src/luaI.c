@@ -44,6 +44,7 @@ static const luaL_Reg luaI_reg_enc[] = {
     {"start", it_starts_enc_lua},
     {"getformat", it_gets_format_enc_lua},
     {"setformat", it_sets_format_enc_lua},
+    {"setdebug", it_sets_debug_enc_lua},
     {"__gc", it_kills_enc_lua},
     {NULL, NULL}
 };
