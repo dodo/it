@@ -4,6 +4,8 @@
 
 #include <uv.h>
 
+#include <oggz/oggz.h>
+
 #define SCHRO_ENABLE_UNSTABLE_API
 
 #include <schroedinger/schro.h>
@@ -76,7 +78,26 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             lua_pushlightuserdata(enc->ctx->lua, enc->buffer);
             lua_pushinteger(enc->ctx->lua, enc->length);
             lua_call(enc->ctx->lua, 4, 0);
-            // … and it's gone.
+            { // … now pump it out …
+                ogg_packet op = {
+                    .packet = enc->buffer,
+                    .bytes = enc->length,
+                    .b_o_s = -1, // auto bos
+                    .e_o_s = (enc->eos_pulled) ? 1 : 0,
+                    .granulepos = enc->granulepos,
+                    .packetno = enc->packetno,
+                };
+                // add to write queue
+                // this function has to be the first oggz_* that uses
+                //   enc->serialno for the first time
+                //   to get propper ogg stream content type detected
+                oggz_write_feed(enc->container, &op, enc->serialno,
+                                OGGZ_FLUSH_AFTER, NULL/*guard*/);
+                // increase state
+//                 enc->granulepos += 100; // FIXME use either fake or real time here
+                enc->granulepos += 22; /* not a typo */ // same as in liboggz/oggz_auto.c#auto_dirac
+                enc->packetno++;
+            } // … and it's gone.
             enc->buffer = NULL;
             enc->length = 0;
             schro_buffer_unref(buffer);
@@ -87,6 +108,8 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             it_errors("unknown encoder state");
             break;
     }
+    /* Write bytes from packetized bitstream to the output file */
+    oggz_run(enc->container); // flush ogg pages to ogg output // FIXME thread?
 }
 
 static void thread_encode(void* priv) {
@@ -114,6 +137,9 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, setting
     enc->size = 0;
     enc->length = 0;
     enc->frames = 0;
+    enc->serialno = 0;
+    enc->packetno = 0;
+    enc->granulepos = 0;
     enc->thread = NULL;
     enc->buffer = NULL;
     enc->closed = FALSE;
@@ -154,6 +180,23 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
         schro_encoder_setting_set_double(enc->encoder, info->name, lua_tonumber(L, -1));
         lua_pop(L, 2);
     }
+    // now open ogg container
+    const char* name;
+    int flags = OGGZ_WRITE;
+    if (lua_isnil(L, 2)) {
+        name = "oggz_new";
+        enc->container = oggz_new(flags);
+    } else if (lua_isstring(L, 2)) {
+        name = "oggz_open";
+        enc->container = oggz_open(lua_tostring(L, 2), flags);
+    } else { // probably userdata
+        name = "oggz_open_stdio";
+        FILE *fd = lua_touserdata(L, 2);
+        enc->container = oggz_open_stdio(fd, flags);
+    }
+    if (!enc->container)
+        luaI_error(L, "%s: failed to create oggz container", name);
+    enc->serialno = oggz_serialno_new(enc->container);
     // now start the thread to run the encoder
     enc->thread = malloc(sizeof(uv_thread_t));
     uv_thread_create(enc->thread, thread_encode, enc);
@@ -198,6 +241,8 @@ int it_kills_enc_lua(lua_State* L) { // (enc_userdata)
     enc->thread = NULL;
     schro_encoder_free(enc->encoder);
     enc->encoder = NULL;
+    oggz_close(enc->container);
+    enc->container = NULL;
     if (enc->length) {
         free(enc->buffer);
         enc->buffer = NULL;

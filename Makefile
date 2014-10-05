@@ -10,4 +10,5 @@ it: it.c \
 		-lpthread \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit) \
-		$(shell pkg-config --cflags --libs schroedinger-1.0)
+		$(shell pkg-config --cflags --libs schroedinger-1.0) \
+		$(shell pkg-config --cflags --libs oggz)

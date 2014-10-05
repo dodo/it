@@ -4,6 +4,7 @@
 #include <uv.h>
 #include <lua.h>
 #include <schroedinger/schro.h>
+#include <oggz/oggz.h>
 
 #define stdnon  (FILE*) -1
 
@@ -27,6 +28,10 @@ typedef struct {
     it_states *ctx;
     uv_thread_t *thread;
     SchroEncoder *encoder;
+    OGGZ *container;
+    ogg_int64_t granulepos;
+    ogg_int64_t packetno;
+    long serialno;
     int frames;
     int size;
     int width;
