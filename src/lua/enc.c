@@ -23,18 +23,19 @@ static void it_frees_frame(SchroFrame* frame, void* priv) {
 
 static void it_waits_on_encoder(uv_idle_t* handle, int status) {
     it_encodes* enc = (it_encodes*) handle->data;
-    switch (schro_encoder_wait(enc->encoder)) {
+    if (enc->eos_pulled) return;
+    SchroStateEnum state = schro_encoder_wait(enc->encoder);
+    switch (state) {
         case SCHRO_STATE_NEED_FRAME:
             if (enc->closed) {
                 schro_encoder_end_of_stream(enc->encoder);
             } else {
                 //SCHRO_ERROR("frame %d", n_frames);
+                uint8_t* buffer = malloc(enc->size);
+                memset(buffer, 128, enc->size);
 
-                enc->buffer = malloc(enc->size);
-                memset(enc->buffer, 128, enc->size);
-
-                SchroFrame* frame = schro_frame_new_from_data_I420(enc->buffer, enc->width, enc->height);
-                schro_frame_set_free_callback(frame, it_frees_frame, enc->buffer);
+                SchroFrame* frame = schro_frame_new_from_data_I420(buffer, enc->width, enc->height);
+                schro_frame_set_free_callback(frame, it_frees_frame, buffer);
                 // chance to change frame …
                 luaI_getglobalfield(enc->ctx->lua, "context", "emit");
                 lua_getglobal(enc->ctx->lua, "context"); // self
@@ -46,26 +47,44 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
                 (enc->frames)++;
             }
             break;
+        case SCHRO_STATE_END_OF_STREAM:
         case SCHRO_STATE_HAVE_BUFFER: {
             int nr;
             SchroBuffer* buffer = schro_encoder_pull(enc->encoder, &nr);
+            if (buffer->length <= 0)
+                it_errors("schro_encoder_pull: buffer[%d]", buffer->length);
+            int parse_code = buffer->data[4];
+            // accumulate buffers to one packet
+            enc->buffer = realloc(enc->buffer, enc->length + buffer->length);
+            memcpy(enc->buffer + enc->length, buffer->data, buffer->length);
+            enc->length += buffer->length;
+            // close in cose of eos
+            if (state == SCHRO_STATE_END_OF_STREAM) {
+                enc->eos_pulled = TRUE;
+                uv_close((uv_handle_t*) enc->idle, NULL);
+                uv_stop(enc->loop);
+            }
+            // skip lua and ogg in case buffer is not a full picture yet
+            if (!SCHRO_PARSE_CODE_IS_PICTURE(parse_code)) {
+                schro_buffer_unref(buffer);
+                break;
+            }
             // one time change to do something with this buffer …
             luaI_getglobalfield(enc->ctx->lua, "context", "emit");
             lua_getglobal(enc->ctx->lua, "context"); // self
             lua_pushstring(enc->ctx->lua, "userdata");
-            lua_pushlightuserdata(enc->ctx->lua, buffer->data);
-            lua_pushinteger(enc->ctx->lua, buffer->length);
+            lua_pushlightuserdata(enc->ctx->lua, enc->buffer);
+            lua_pushinteger(enc->ctx->lua, enc->length);
             lua_call(enc->ctx->lua, 4, 0);
             // … and it's gone.
+            enc->buffer = NULL;
+            enc->length = 0;
             schro_buffer_unref(buffer);
           };break;
         case SCHRO_STATE_AGAIN:
             break;
-        case SCHRO_STATE_END_OF_STREAM:
-            uv_close((uv_handle_t*) enc->idle, NULL);
-            uv_stop(enc->loop);
-            break;
-        default:
+        default: // should never happen
+            it_errors("unknown encoder state");
             break;
     }
 }
@@ -92,10 +111,13 @@ int it_creates_enc_lua(lua_State* L) {
     it_states*  ctx = luaL_checkudata(L, 2, "Context");
     schro_init();
     enc->ctx = ctx;
+    enc->size = 0;
+    enc->length = 0;
     enc->frames = 0;
     enc->thread = NULL;
     enc->buffer = NULL;
     enc->closed = FALSE;
+    enc->eos_pulled = FALSE;
     enc->encoder = schro_encoder_new();
     return 1;
 }
@@ -147,5 +169,10 @@ int it_kills_enc_lua(lua_State* L) {
     enc->thread = NULL;
     schro_encoder_free(enc->encoder);
     enc->encoder = NULL;
+    if (enc->length) {
+        free(enc->buffer);
+        enc->buffer = NULL;
+        enc->length = 0;
+    }
     return 0;
 }

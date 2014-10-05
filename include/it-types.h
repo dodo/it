@@ -31,7 +31,9 @@ typedef struct {
     int size;
     int width;
     int height;
-    uint8_t *buffer;
+    int length;
+    unsigned char *buffer;
+    schro_bool eos_pulled;
     schro_bool closed;
 } it_encodes;
 
