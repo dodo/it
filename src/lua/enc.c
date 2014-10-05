@@ -119,6 +119,10 @@ int it_creates_enc_lua(lua_State* L) {
     enc->closed = FALSE;
     enc->eos_pulled = FALSE;
     enc->encoder = schro_encoder_new();
+    if (!enc->encoder)
+        luaI_error(L, "schro_encoder_new: failed to create encoder");
+    schro_video_format_set_std_video_format(&enc->encoder->video_format,
+        SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
     // fill settings table from args
     int i; int n = schro_encoder_get_n_settings();
     for (i = 0; i < n; i++) {
