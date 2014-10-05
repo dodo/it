@@ -1,7 +1,7 @@
 local ffi = require 'ffi'
+local util = require 'util'
 local Scope = require 'scope'
 local EventEmitter = require 'events'
-local table_index = require('util').table_index
 
 require('cface')(_it.libdir .. "schrovideoformat.h")
 
@@ -55,12 +55,18 @@ function Encoder:start()
     end
     self._handle:setformat(schroformat)
     self._handle:start(self.output, self.settings)
+    -- make format and settings readonly
+    for key, value in pairs(self.settings) do
+        self.settings[key] = util.readonlytable(value)
+    end
+    self.settings = util.readonlytable(self.settings)
+    self.format = util.readonlytable(self.format)
 end
 
 
 function Encoder:debug(level)
     self._handle.setdebug(
-        table_index(
+        util.table_index(
             {"ERROR","WARNING","INFO","DEBUG","LOG"},
             string.upper(level)
         )

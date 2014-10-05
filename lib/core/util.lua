@@ -23,6 +23,16 @@ function exports.lerp(p, a, b)
     return (b - a) * p + a
 end
 
+function exports.readonlytable(table)
+    return setmetatable({}, {
+        __index = table,
+        __newindex = function(table, key, value)
+            error("attempt to modify read-only table")
+        end,
+        __metatable = false
+    })
+end
+
 function exports.table_index(t, val)
     for i, v in ipairs(t) do
         if v == val then
