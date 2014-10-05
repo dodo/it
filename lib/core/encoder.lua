@@ -20,7 +20,8 @@ function Encoder:init()
         left_offset = 0,
         top_offset = 0,
     }
-    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
+    self.settings = {}
+    self._handle:create(self.scope.state, self.settings) -- FIXME maybe doing this lazy?
     -- process 'userdata' events to 'data' events
     self.scope:import(function ()
         local Buffer = require 'buffer'
@@ -53,7 +54,7 @@ function Encoder:start()
         ffiformat[key] = value
     end
     self._handle:setformat(schroformat)
-    self._handle:start()
+    self._handle:start(self.output, self.settings)
 end
 
 

@@ -119,12 +119,38 @@ int it_creates_enc_lua(lua_State* L) {
     enc->closed = FALSE;
     enc->eos_pulled = FALSE;
     enc->encoder = schro_encoder_new();
+    // fill settings table from args
+    int i; int n = schro_encoder_get_n_settings();
+    for (i = 0; i < n; i++) {
+        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
+        lua_createtable(L, 0, 4);
+        lua_pushnumber(L, info->min);
+        lua_setfield(L, -2, "min");
+        lua_pushnumber(L, info->max);
+        lua_setfield(L, -2, "max");
+        lua_pushnumber(L, info->default_value);
+        lua_setfield(L, -2, "value");
+        lua_pushnumber(L, info->default_value);
+        lua_setfield(L, -2, "default");
+        // now store table in settings
+        lua_setfield(L, 3, info->name);
+    }
     return 1;
 }
 
 int it_starts_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (enc->thread) return 0;
+    // fill encoder settings with state from lua
+    int i; int n = schro_encoder_get_n_settings();
+    for (i = 0; i < n; i++) {
+        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
+        lua_getfield(L, 3, info->name);
+        lua_getfield(L, -1, "value");
+        schro_encoder_setting_set_double(enc->encoder, info->name, lua_tonumber(L, -1));
+        lua_pop(L, 2);
+    }
+    // now start the thread to run the encoder
     enc->thread = malloc(sizeof(uv_thread_t));
     uv_thread_create(enc->thread, thread_encode, enc);
     return 0;
