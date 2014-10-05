@@ -4,7 +4,7 @@
 #include "luaI.h"
 
 
-int it_imports_ctx_lua(lua_State* L) {
+int it_imports_ctx_lua(lua_State* L) { // (state_userdata, function)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
@@ -15,7 +15,7 @@ int it_imports_ctx_lua(lua_State* L) {
     return 0;
 }
 
-int it_calls_ctx_lua(lua_State* L) {
+int it_calls_ctx_lua(lua_State* L) { // (state_userdata)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     printf("it_calls_ctx_lua\n");
     luaI_getglobalfield(ctx->lua, "context", "run");
@@ -23,7 +23,7 @@ int it_calls_ctx_lua(lua_State* L) {
     return 0;
 }
 
-int it_kills_ctx_lua(lua_State* L) {
+int it_kills_ctx_lua(lua_State* L) { // (state_userdata)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     lua_close(ctx->lua);
     ctx->loop = NULL;

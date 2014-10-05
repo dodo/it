@@ -106,7 +106,7 @@ static void thread_encode(void* priv) {
     uv_run(enc->loop, UV_RUN_DEFAULT);
 }
 
-int it_creates_enc_lua(lua_State* L) {
+int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, settings)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     it_states*  ctx = luaL_checkudata(L, 2, "Context");
     schro_init();
@@ -142,7 +142,7 @@ int it_creates_enc_lua(lua_State* L) {
     return 1;
 }
 
-int it_starts_enc_lua(lua_State* L) {
+int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (enc->thread) return 0;
     // fill encoder settings with state from lua
@@ -160,7 +160,7 @@ int it_starts_enc_lua(lua_State* L) {
     return 0;
 }
 
-int it_gets_format_enc_lua(lua_State* L) {
+int it_gets_format_enc_lua(lua_State* L) { // (enc_userdata)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = schro_encoder_get_video_format(enc->encoder);
@@ -168,11 +168,10 @@ int it_gets_format_enc_lua(lua_State* L) {
     return 1;
 }
 
-int it_sets_format_enc_lua(lua_State* L) {
+int it_sets_format_enc_lua(lua_State* L) { // (enc_userdata, videoformat_userdata)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = lua_touserdata(L, 2);
-
     int w = format->width; int h = format->height;
     int size = ROUND_UP_4(w) * ROUND_UP_2(h);
     size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
@@ -185,12 +184,12 @@ int it_sets_format_enc_lua(lua_State* L) {
     return 0;
 }
 
-int it_sets_debug_enc_lua(lua_State* L) {
+int it_sets_debug_enc_lua(lua_State* L) { // (level)
     schro_debug_set_level(luaL_checkint(L, 1));
     return 0;
 }
 
-int it_kills_enc_lua(lua_State* L) {
+int it_kills_enc_lua(lua_State* L) { // (enc_userdata)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
     enc->closed = TRUE;

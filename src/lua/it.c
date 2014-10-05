@@ -1,12 +1,14 @@
 #include <stdio.h>
 
+#include <uv.h>
+
 #include "lua/it.h"
 
 #include "it.h"
 #include "luaI.h"
 
 
-int it_boots_lua(lua_State* L) {
+int it_boots_lua(lua_State* L) { // ()
     it_processes* process = luaI_getprocess(L);
     // process.argv
     lua_createtable(L, process->argc, 0);
@@ -33,11 +35,11 @@ int it_boots_lua(lua_State* L) {
     return 1;
 }
 
-int it_loads_lua(lua_State* L) {
+int it_loads_lua(lua_State* L) { // (metatable_name)
     return luaI_loadmetatable(L, 1);
 }
 
-int it_forks_lua(lua_State* L) {
+int it_forks_lua(lua_State* L) { // ()
     it_states* state = luaI_getstate(L);
     it_states* ctx = lua_newuserdata(L, sizeof(it_states));
     ctx->loop = state->loop;
@@ -50,13 +52,13 @@ int it_forks_lua(lua_State* L) {
     return 1;
 }
 
-int it_encodes_lua(lua_State* L) {
+int it_encodes_lua(lua_State* L) { // ()
     lua_newuserdata(L, sizeof(it_encodes));
     luaI_setmetatable(L, "Encoder");
     return 1;
 }
 
-int it_buffers_lua(lua_State* L) {
+int it_buffers_lua(lua_State* L) { // ()
     it_buffers* buf = lua_newuserdata(L, sizeof(it_buffers));
     buf->free = FALSE;
     buf->buffer = NULL;
