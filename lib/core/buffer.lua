@@ -3,12 +3,12 @@ local Prototype = require 'prototype'
 local Buffer = Prototype:fork()
 
 _it.loads('Buffer')
-function Buffer:init(data, size, encoding)
+function Buffer:init(data, length, encoding)
     if type(data) == 'number' then
-        data, size, encoding = nil, data, size
+        data, length, encoding = nil, data, length
     end
-    if type(size) == 'string' then
-        size, encoding = nil, size
+    if type(length) == 'string' then
+        length, encoding = nil, length
     end
     if type(data) == 'userdata' then
          encoding = encoding or 'userdata'
@@ -16,11 +16,11 @@ function Buffer:init(data, size, encoding)
     self.encoding = encoding
     self._buffer = _it.buffers()
     if data then
-        if size then self.size = size end
-        self._buffer:user(data, size)
-    elseif size then
-        self.size = size
-        self._buffer:malloc(size)
+        if length then self.length = length end
+        self._buffer:user(data, length)
+    elseif length then
+        self.length = length
+        self._buffer:malloc(length)
     end
 end
 
@@ -29,14 +29,14 @@ function Buffer:setEncoding(encoding)
 end
 
 function Buffer:copy(buf)
-    if not buf or not buf.size then return end
-    if not self.size then
-        self.size = buf.size
-        self._buffer:malloc(buf.size)
+    if not buf or not buf.length then return end
+    if not self.length then
+        self.length = buf.length
+        self._buffer:malloc(buf.length)
     end
     self.encoding = buf.encoding
-    -- dest:memcpy(src, dest.size)
-    self._buffer:memcpy(buf._buffer, self.size)
+    -- dest:memcpy(src, dest.length)
+    self._buffer:memcpy(buf._buffer, self.length)
 end
 
 return Buffer
