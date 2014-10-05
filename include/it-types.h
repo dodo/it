@@ -22,11 +22,11 @@ typedef struct {
 } it_processes;
 
 typedef struct {
-    SchroEncoder *encoder;
-    uv_thread_t *thread;
     uv_loop_t *loop;
     uv_idle_t *idle;
     it_states *ctx;
+    uv_thread_t *thread;
+    SchroEncoder *encoder;
     int frames;
     int size;
     int width;

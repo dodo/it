@@ -103,8 +103,7 @@ int it_creates_enc_lua(lua_State* L) {
 int it_starts_enc_lua(lua_State* L) {
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (enc->thread) return 0;
-    uv_thread_t thread;
-    enc->thread = &thread;
+    enc->thread = malloc(sizeof(uv_thread_t));
     uv_thread_create(enc->thread, thread_encode, enc);
     return 0;
 }
@@ -144,6 +143,8 @@ int it_kills_enc_lua(lua_State* L) {
     if (!enc->encoder) return 0;
     enc->closed = TRUE;
     uv_thread_join(enc->thread);
+    free(enc->thread);
+    enc->thread = NULL;
     schro_encoder_free(enc->encoder);
     enc->encoder = NULL;
     return 0;
