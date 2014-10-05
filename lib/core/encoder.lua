@@ -8,10 +8,11 @@ require('cface')(_it.libdir .. "schrovideoformat.h")
 local Encoder = EventEmitter:fork()
 
 _it.loads('Encoder')
-function Encoder:init()
+function Encoder:init(filename)
     self.prototype.init(self)
     self.scope = Scope:new()
     self._handle = _it.encodes()
+    self.output = filename or process.stdnon
     self.format = { -- defaults
         width = 352,
         height = 240,
