@@ -12,10 +12,10 @@ function Encoder:init()
     self.prototype.init(self)
     self.scope = Scope:new()
     self._handle = _it.encodes()
-    self.format = {
-        width = 320,
+    self.format = { -- defaults
+        width = 352,
         height = 240,
-        clean_width = 320,
+        clean_width = 352,
         clean_height = 240,
         left_offset = 0,
         top_offset = 0,
