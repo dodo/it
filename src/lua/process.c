@@ -7,7 +7,7 @@
 int it_exits_process_lua(lua_State* L) { // (exit_code)
     it_processes* process = luaI_getprocess(L);
     int code = 0;
-    if (lua_gettop(L) && !lua_isnil(L, 1))
+    if (lua_gettop(L) == 1 && !lua_isnil(L, 1))
         code = luaL_checkint(L, 1);
     process->exit_code = code;
     uv_stop(process->ctx->loop);

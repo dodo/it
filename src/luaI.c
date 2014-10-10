@@ -170,3 +170,14 @@ int luaI_createstate(it_processes* process) {
     luaI_dofile(ctx->lua, "lib/initrd.lua");
     return 0;
 }
+
+void luaI_close(lua_State* L, const char *global, int code) {
+    lua_getglobal(L, global);
+    lua_getfield(L, -1, "emit");
+    lua_pushvalue(L, -2);
+    lua_pushstring(L, "exit");
+    if (code > -1) lua_pushinteger(L, code);
+    luaI_pcall(L, (code == -1) ? 2 : 3, 0);
+    // we are done now:
+    lua_close(L);
+}

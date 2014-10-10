@@ -55,5 +55,6 @@ int luaI_setstate(lua_State* L, it_states* ctx);
 
 int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);
+void luaI_close(lua_State* L, const char *global, int code);
 
 #endif /* LUAI_H */

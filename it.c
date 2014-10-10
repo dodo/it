@@ -35,9 +35,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     // run forest run!
-    if (process.exit_code == -1)
+    if (process.exit_code == -1) {
+        process.exit_code = 0;
         uv_run(ctx.loop, UV_RUN_DEFAULT);
+    }
     // shutdown
-    lua_close(ctx.lua);
+    luaI_close(ctx.lua, "process", process.exit_code);
     return process.exit_code;
 }
