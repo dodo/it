@@ -14,6 +14,7 @@
 #include <schroedinger/schrobuffer.h>
 
 #include "lua/enc.h"
+#include "lua/ctx.h"
 
 #include "it.h"
 #include "luaI.h"
@@ -132,6 +133,8 @@ static void thread_encode(void* priv) {
 int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, settings)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     it_states*  ctx = luaL_checkudata(L, 2, "Context");
+    if (enc->encoder) return 0;
+    ctx->free = FALSE; // take over ctx
     schro_init();
     enc->ctx = ctx;
     enc->size = 0;
@@ -242,6 +245,9 @@ int it_kills_enc_lua(lua_State* L) { // (enc_userdata)
     uv_thread_join(enc->thread);
     free(enc->thread);
     enc->thread = NULL;
+    enc->ctx->free = TRUE; //now we can
+    it_frees_ctx(enc->ctx);
+    enc->ctx = NULL;
     schro_encoder_free(enc->encoder);
     enc->encoder = NULL;
     oggz_close(enc->container);

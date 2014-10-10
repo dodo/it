@@ -4,6 +4,17 @@
 #include "luaI.h"
 
 
+void it_frees_ctx(it_states* ctx) {
+    if (ctx->free && ctx->lua) {
+        luaI_close(ctx->lua, "context", -1);
+        ctx->lua = NULL;
+    }
+    if (ctx->free && ctx->loop) {
+        ctx->loop = NULL;
+    }
+    ctx->free = FALSE;
+}
+
 int it_imports_ctx_lua(lua_State* L) { // (state_userdata, function)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     luaL_checktype(L, 2, LUA_TFUNCTION);
@@ -25,7 +36,6 @@ int it_calls_ctx_lua(lua_State* L) { // (state_userdata)
 
 int it_kills_ctx_lua(lua_State* L) { // (state_userdata)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
-    lua_close(ctx->lua);
-    ctx->loop = NULL;
+    it_frees_ctx(ctx);
     return 0;
 }

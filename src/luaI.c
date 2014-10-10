@@ -149,6 +149,7 @@ int luaI_newstate(it_states* ctx) {
         it_prints_error("failed to allocate lua state!");
         return 1;
     }
+    ctx->free = TRUE;
     ctx->lua = L;
     // load lua libs
     luaL_openlibs(L);

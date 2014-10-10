@@ -12,6 +12,7 @@
 typedef struct {
     lua_State *lua;
     uv_loop_t *loop;
+    schro_bool free;
 } it_states;
 
 
