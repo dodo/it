@@ -45,16 +45,15 @@ local ENUMS = {
 }
 function Encoder:start()
     process.shutdown = false -- prevent process from shutting down
-    local schroformat = self._handle:getformat()
-    local ffiformat = ffi.new("SchroVideoFormat*", schroformat)
+    local format = self:getformat()
     for key,value in pairs(self.format) do
         if ENUMS[key] then
             value = string.upper(tostring(value):gsub("%s", "_"))
             value = ffi.new(ENUMS[key].typ, ENUMS[key].prefix .. value)
         end
-        ffiformat[key] = value
+        format.raw[key] = value
     end
-    self._handle:setformat(schroformat)
+    self._handle:setformat(format.pointer)
     self._handle:start(self.output, self.settings)
     -- make format and settings readonly
     for key, value in pairs(self.settings) do
@@ -62,6 +61,14 @@ function Encoder:start()
     end
     self.settings = util.readonlytable(self.settings)
     self.format = util.readonlytable(self.format)
+end
+
+function Encoder:getformat()
+    local pointer = self._handle.getformat(self._pointer or self._handle)
+    return {
+        raw = ffi.new("SchroVideoFormat*", pointer),
+        pointer = pointer,
+    }
 end
 
 
