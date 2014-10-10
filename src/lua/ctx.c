@@ -11,7 +11,7 @@ int it_imports_ctx_lua(lua_State* L) { // (state_userdata, function)
     // copy function and import into context
     luaI_getglobalfield(ctx->lua, "context", "import");
     luaI_copyfunction(ctx->lua, L);
-    lua_call(ctx->lua, 1, 0);
+    luaI_pcall(ctx->lua, 1, 0);
     return 0;
 }
 
@@ -19,7 +19,7 @@ int it_calls_ctx_lua(lua_State* L) { // (state_userdata)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     printf("it_calls_ctx_lua\n");
     luaI_getglobalfield(ctx->lua, "context", "run");
-    lua_call(ctx->lua, 0, 0);
+    luaI_pcall(ctx->lua, 0, 0);
     return 0;
 }
 

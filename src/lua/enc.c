@@ -43,7 +43,7 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
                 lua_getglobal(enc->ctx->lua, "context"); // self
                 lua_pushstring(enc->ctx->lua, "rawframe");
                 lua_pushlightuserdata(enc->ctx->lua, frame);
-                lua_call(enc->ctx->lua, 3, 0);
+                luaI_pcall(enc->ctx->lua, 3, 0);
                 // … and right into encoder. hopefully everything is right!
                 schro_encoder_push_frame(enc->encoder, frame);
                 (enc->frames)++;
@@ -77,7 +77,7 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             lua_pushstring(enc->ctx->lua, "userdata");
             lua_pushlightuserdata(enc->ctx->lua, enc->buffer);
             lua_pushinteger(enc->ctx->lua, enc->length);
-            lua_call(enc->ctx->lua, 4, 0);
+            luaI_pcall(enc->ctx->lua, 4, 0);
             { // … now pump it out …
                 ogg_packet op = {
                     .packet = enc->buffer,
@@ -124,7 +124,7 @@ static void thread_encode(void* priv) {
     uv_idle_start(enc->idle, it_waits_on_encoder);
     // call into lua state first …
     luaI_getglobalfield(enc->ctx->lua, "context", "run");
-    lua_call(enc->ctx->lua, 0, 0);
+    luaI_pcall(enc->ctx->lua, 0, 0);
     // … and now run!
     uv_run(enc->loop, UV_RUN_DEFAULT);
 }

@@ -43,6 +43,11 @@
 #define luaI_setglobalfield(L,gn,fn) \
     (lua_getglobal(L,gn), lua_pushvalue(L,-2), lua_setfield(L,-2,fn), lua_pop(L,2))
 
+#define luaI_pcall(L,nargs,nresults) \
+    do{if (lua_pcall(L,nargs,nresults,0)) { \
+        lua_error(L); \
+    }} while (0)
+
 
 int luaI_loadmetatable(lua_State* L, int i);
 
