@@ -1,9 +1,8 @@
 local exports = {}
 
-
-function exports.bind(this, handler, ...)
-    args = {...}
-    return function (...) return handler(this, unpack(args), ...) end
+function exports.ignore_self(this, self, ...)
+    -- if function is called with : on the same object
+    return self == this and {...} or {self, ...}
 end
 
 function exports.ininterval(v, min, max)
@@ -31,6 +30,21 @@ function exports.readonlytable(table)
         end,
         __metatable = false
     })
+end
+
+function exports.table_sum(t1, t2)
+    return exports.table_append(exports.table_copy(t1), t2)
+end
+
+function exports.table_copy(t)
+    return {unpack(t)}
+end
+
+function exports.table_append(t1, t2)
+    for i=1,#t2 do
+        t1[#t1+1] = t2[i]
+    end
+    return t1
 end
 
 function exports.table_index(t, val)
@@ -81,6 +95,28 @@ function exports.dump(t)
         s = s .. tostring(k) .. " = " .. tostring(v) .. "\n"
     end
     return s
+end
+
+
+local table_sum, ignore_self = exports.table_sum, exports.ignore_self
+function exports.bind(this, handler, ...)
+    local args = this and {this, ...} or {...}
+    if not this and #args == 0 then
+        return handle
+    elseif this and #args == 1 then
+        return function (...)
+            return handler(this, unpack(ignore_self(this, ...)))
+        end
+    elseif not this then
+        return  function (...)
+            return handler(unpack(table_sum(args, {...})))
+        end
+    else
+        return  function (...)
+            -- append copies of the arguments
+            return handler(unpack(table_sum(args, ignore_self(this, ...))))
+        end
+    end
 end
 
 return exports
