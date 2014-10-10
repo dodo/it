@@ -11,9 +11,10 @@ function EventEmitter:on(event, listener)
     if not self._events[event] then
         self._events[event] = listener
     elseif type(self._events[event]) == 'function' then
-        self._events[event] = { self._events[event], listener }
+        self._events[event] = { self._events[event], listener, length = 2 }
     else
         table.insert(self._events[event], listener)
+        self._events[event].length = self._events[event].length + 1
     end
     return self
 end
