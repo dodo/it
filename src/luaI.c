@@ -64,6 +64,20 @@ int luaI_loadmetatable(lua_State* L, int i) {
     return 0;
 }
 
+void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l) {
+    if (luaL_newmetatable(L, name)) {
+        luaL_newlib(L, l);
+        lua_setfield(L, -2, "__index");
+        for (; l->name; l++) {
+            // __* method are metatable specific
+            if (l->name[0] == '_' && l->name[1] == '_') {
+                lua_pushcfunction(L, l->func);
+                lua_setfield(L, -2, l->name);
+            }
+        }
+    }
+}
+
 
 static int buf_writer(lua_State* L, const void* b, size_t n, void* B) {
   (void)L;

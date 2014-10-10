@@ -28,12 +28,6 @@
 #define luaI_newlib(L,name,l) \
     (luaL_newlib(L,l), lua_setglobal(L,name))
 
-#define luaI_newmetatable(L,name,l) \
-    do {if (luaL_newmetatable(L,name)) { \
-        luaL_newlib(L,l); \
-        lua_setfield(L, -2, "__index"); \
-    }} while (0)
-
 #define luaI_setmetatable(L,name) \
     (luaL_getmetatable(L,name), lua_setmetatable(L,-2))
 
@@ -50,6 +44,7 @@
 
 
 int luaI_loadmetatable(lua_State* L, int i);
+void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
 int luaI_copyfunction(lua_State* L, lua_State* src);
 int luaI_dofile(lua_State* L, const char *filename);
