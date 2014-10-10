@@ -105,7 +105,6 @@ int luaI_copyfunction(lua_State* L, lua_State* src) {
     luaL_pushresult(&b);
     char const* s = lua_tolstring(src, -1, &sz);
     if (luaL_loadbuffer(L, s, sz, name)) {
-        puts("fail loadbuffer");
         return lua_error(L);
     }
     lua_pop(src, 2); // dumped string + function
