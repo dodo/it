@@ -2,6 +2,9 @@
 
 #include <uv.h>
 
+#define SCHRO_ENABLE_UNSTABLE_API
+
+#include <schroedinger/schro.h>
 
 #include "it.h"
 #include "luaI.h"
@@ -53,8 +56,14 @@ int it_forks_lua(lua_State* L) { // ()
     return 1;
 }
 
-int it_encodes_lua(lua_State* L) { // ()
-    lua_newuserdata(L, sizeof(it_encodes));
+int it_encodes_lua(lua_State* L) { // ((optional) enc_pointer)
+    if (lua_gettop(L) == 1 && lua_islightuserdata(L, 1)) {
+        lua_newtable(L);
+    } else {
+        it_encodes* enc = lua_newuserdata(L, sizeof(it_encodes));
+        enc->encoder = NULL;
+        enc->thread = NULL;
+    }
     luaI_setmetatable(L, "Encoder");
     return 1;
 }

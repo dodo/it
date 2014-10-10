@@ -5,13 +5,20 @@ local EventEmitter = require 'events'
 
 require('cface')(_it.libdir .. "schrovideoformat.h")
 
+
 local Encoder = EventEmitter:fork()
 
 _it.loads('Encoder')
-function Encoder:init(filename)
+function Encoder:init(filename, pointer)
     self.prototype.init(self)
+    self._pointer = pointer
+    self._handle = _it.encodes(pointer)
+    if pointer then -- other stuff not needed in scope context
+        self.start = nil
+        self.format = util.readonlytable(self:getformat().raw)
+        return
+    end
     self.scope = Scope:new()
-    self._handle = _it.encodes()
     self.output = filename or process.stdnon
     self.format = { -- defaults
         width = 352,
@@ -25,6 +32,9 @@ function Encoder:init(filename)
     self._handle:create(self.scope.state, self.settings) -- FIXME maybe doing this lazy?
     -- process 'userdata' events to 'data' events
     self.scope:import(function ()
+        -- encoder handle gets injected right before
+        encoder = require('encoder'):new(nil, encoder)
+        -- expose userdata as buffers
         local Buffer = require 'buffer'
         context:on('userdata', function (raw, len)
             context:emit('data', Buffer:new(raw, len))

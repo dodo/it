@@ -114,7 +114,6 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
 
 static void thread_encode(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
-    schro_encoder_start(enc->encoder);
     enc->loop = uv_loop_new();
     enc->ctx->loop = enc->loop; // switch context loop to thread loop
     uv_idle_t idle;
@@ -122,7 +121,11 @@ static void thread_encode(void* priv) {
     uv_idle_init(enc->loop, enc->idle);
     enc->idle->data = enc;
     uv_idle_start(enc->idle, it_waits_on_encoder);
-    // call into lua state first …
+    schro_encoder_start(enc->encoder);
+    // inject encoder handle into lua context …
+    lua_pushlightuserdata(enc->ctx->lua, enc);
+    lua_setglobal(enc->ctx->lua, "encoder");
+    // … then call into lua state first …
     luaI_getglobalfield(enc->ctx->lua, "context", "run");
     luaI_pcall(enc->ctx->lua, 0, 0);
     // … and now run!
@@ -167,7 +170,7 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, setting
         // now store table in settings
         lua_setfield(L, 3, info->name);
     }
-    return 1;
+    return 0;
 }
 
 int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
@@ -209,7 +212,7 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
 }
 
 int it_gets_format_enc_lua(lua_State* L) { // (enc_userdata)
-    it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+    it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = schro_encoder_get_video_format(enc->encoder);
     lua_pushlightuserdata(L, format);

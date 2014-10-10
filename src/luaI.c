@@ -109,6 +109,12 @@ int luaI_dofile(lua_State* L, const char *filename) {
     return 0;
 }
 
+void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable) {
+    return (lua_islightuserdata(L, i)) ?
+         lua_touserdata(L, i) :
+        luaL_checkudata(L, i, metatable);
+}
+
 it_processes* luaI_getprocess(lua_State* L) {
     luaI_getglobalfield(L, "_it", "process");
     it_processes* process = lua_touserdata(L, -1);
