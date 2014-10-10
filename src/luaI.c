@@ -151,6 +151,8 @@ int luaI_newstate(it_states* ctx) {
     }
     ctx->free = TRUE;
     ctx->lua = L;
+    // enable JIT
+    luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs
     luaL_openlibs(L);
     luaI_newlib(ctx->lua, "_it", luaI_reg_it);
