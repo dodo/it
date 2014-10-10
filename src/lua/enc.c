@@ -19,9 +19,6 @@
 #include "lua/enc.h"
 #include "lua/ctx.h"
 
-static void it_frees_frame(SchroFrame* frame, void* priv) {
-  free(priv);
-}
 
 static void it_waits_on_encoder(uv_idle_t* handle, int status) {
     it_encodes* enc = (it_encodes*) handle->data;
@@ -32,21 +29,18 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
             if (enc->closed) {
                 schro_encoder_end_of_stream(enc->encoder);
             } else {
-                //SCHRO_ERROR("frame %d", n_frames);
-                uint8_t* buffer = malloc(enc->size);
-                memset(buffer, 128, enc->size);
-
-                SchroFrame* frame = schro_frame_new_from_data_I420(buffer, enc->width, enc->height);
-                schro_frame_set_free_callback(frame, it_frees_frame, buffer);
-                // chance to change frame …
+                int frames = enc->frames;
+                // chance to create frame …
                 luaI_getglobalfield(enc->ctx->lua, "context", "emit");
                 lua_getglobal(enc->ctx->lua, "context"); // self
-                lua_pushstring(enc->ctx->lua, "rawframe");
-                lua_pushlightuserdata(enc->ctx->lua, frame);
-                luaI_pcall(enc->ctx->lua, 3, 0);
-                // … and right into encoder. hopefully everything is right!
-                schro_encoder_push_frame(enc->encoder, frame);
-                (enc->frames)++;
+                lua_pushstring(enc->ctx->lua, "need frame");
+                // hopefully calls schro_encoder_push_frame
+                luaI_pcall(enc->ctx->lua, 2, 0);
+                if (enc->frames == frames)
+                    it_prints_error("no schro_encoder_push_frame happened!");
+                // free all unused frames and other stuff
+                if (lua_gc(enc->ctx->lua, LUA_GCCOLLECT, 0))
+                    luaL_error(enc->ctx->lua, "internal error: lua_gc failed");
             }
             break;
         case SCHRO_STATE_END_OF_STREAM:
@@ -139,7 +133,6 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, setting
     ctx->free = FALSE; // take over ctx
     schro_init();
     enc->ctx = ctx;
-    enc->size = 0;
     enc->length = 0;
     enc->frames = 0;
     enc->serialno = 0;
@@ -211,6 +204,21 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
     return 0;
 }
 
+int it_pushes_frame_enc_lua(lua_State* L) { // (enc_userdata, frame_userdata)
+    it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
+    it_frames* fr = luaL_checkudata(L, 2, "Frame");
+    if (enc->encoder && fr->frame) {
+        // … and right into encoder. hopefully everything is right!
+        schro_encoder_push_frame(enc->encoder, fr->frame);
+        fr->frame = NULL; // prevent schro_frame_unref
+        (enc->frames)++;
+        lua_pushboolean(L, TRUE);
+    } else {
+        lua_pushboolean(L, FALSE);
+    }
+    return 1;
+}
+
 int it_gets_format_enc_lua(lua_State* L) { // (enc_userdata)
     it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
@@ -223,13 +231,6 @@ int it_sets_format_enc_lua(lua_State* L) { // (enc_userdata, videoformat_userdat
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = lua_touserdata(L, 2);
-    int w = format->width; int h = format->height;
-    int size = ROUND_UP_4(w) * ROUND_UP_2(h);
-    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
-    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
-    enc->height = h;
-    enc->width = w;
-    enc->size = size;
     schro_encoder_set_video_format(enc->encoder, format);
     free(format);
     return 0;

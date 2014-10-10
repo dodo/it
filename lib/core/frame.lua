@@ -1,11 +1,22 @@
 local ffi = require 'ffi'
+local Prototype = require 'prototype'
 
 require('cface')(_it.libdir .. "schroframe.h")
 
 
-local function frame(ref)
-    return ffi.new("SchroFrame*", ref)
+local Frame = Prototype:fork()
+
+_it.loads('Frame')
+function Frame:init(width, height, pointer)
+    self.width, self.height = width, height
+    self._handle = _it.frames(width, height)
+    self:create(pointer)
 end
 
+function Frame:create(pointer)
+    self._pointer = self._handle:create(pointer)
+    self.raw = ffi.new("SchroFrame*", self._pointer)
+    return self.raw
+end
 
-return frame
+return Frame

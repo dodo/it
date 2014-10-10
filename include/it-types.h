@@ -32,21 +32,26 @@ typedef struct {
     OGGZ *container;
     ogg_int64_t granulepos;
     ogg_int64_t packetno;
-    long serialno;
-    int frames;
-    int size;
-    int width;
-    int height;
-    int length;
-    unsigned char *buffer;
     schro_bool eos_pulled;
     schro_bool closed;
+    long serialno;
+    int frames;
+    int length;
+    unsigned char *buffer;
 } it_encodes;
 
 typedef struct {
     schro_bool free;
     void *buffer;
 } it_buffers;
+
+typedef struct {
+    it_states *ctx;
+    SchroFrame *frame;
+    int size;
+    int width;
+    int height;
+} it_frames;
 
 
 #endif /* IT_TYPES_H */

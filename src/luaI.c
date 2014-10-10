@@ -10,6 +10,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"forks", it_forks_lua},
     {"encodes", it_encodes_lua},
     {"buffers", it_buffers_lua},
+    {"frames", it_frames_lua},
     {NULL, NULL}
 };
 
@@ -42,10 +43,18 @@ static const luaL_Reg luaI_reg_ctx[] = {
 static const luaL_Reg luaI_reg_enc[] = {
     {"create", it_creates_enc_lua},
     {"start", it_starts_enc_lua},
+    {"push", it_pushes_frame_enc_lua},
     {"getformat", it_gets_format_enc_lua},
     {"setformat", it_sets_format_enc_lua},
     {"setdebug", it_sets_debug_enc_lua},
     {"__gc", it_kills_enc_lua},
+    {NULL, NULL}
+};
+
+#include "lua/frame.h"
+static const luaL_Reg luaI_reg_frame[] = {
+    {"create", it_creates_frame_lua},
+    {"__gc", it_kills_frame_lua},
     {NULL, NULL}
 };
 
@@ -57,6 +66,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
         case 'B'/*uffer*/:  luaI_newmetatable(L, name, luaI_reg_buffer); break;
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
+        case 'F'/*rame*/:   luaI_newmetatable(L, name, luaI_reg_frame); break;
         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
         default: luaI_error(L, "unknown metatable %s!", name); break;
     }

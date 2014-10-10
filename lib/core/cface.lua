@@ -21,6 +21,7 @@ local function cface(filename)
     end
     -- no use that …
     ffi.cdef(header)
+    return true
 end
 
 

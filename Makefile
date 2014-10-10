@@ -5,7 +5,8 @@ it: it.c \
 	src/lua/ctx.c \
 	src/lua/enc.c \
 	src/lua/process.c \
-	src/lua/buffer.c
+	src/lua/buffer.c \
+	src/lua/frame.c
 	gcc -Wall -o $@ $^ -I./include \
 		-lpthread \
 		$(shell pkg-config --cflags --libs libuv) \

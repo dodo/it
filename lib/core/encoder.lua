@@ -12,6 +12,7 @@ _it.loads('Encoder')
 function Encoder:init(filename, pointer)
     self.prototype.init(self)
     self._pointer = pointer
+    self.push = self:bind('push')
     self._handle = _it.encodes(pointer)
     if pointer then -- other stuff not needed in scope context
         self.start = nil
@@ -39,9 +40,14 @@ function Encoder:init(filename, pointer)
         context:on('userdata', function (raw, len)
             context:emit('data', Buffer:new(raw, len))
         end)
-        local frame = require 'frame'
-        context:on('rawframe', function (raw)
-            context:emit('frame', frame(raw))
+        -- expose SchroFrames as objects
+        local Frame = require 'frame'
+        context:on('need frame', function ()
+            local frame = Frame:new(
+                encoder.format.width,
+                encoder.format.height
+            )
+            _ = context:emit('frame', frame) or encoder:push(frame)
         end)
     end)
 end
@@ -71,6 +77,16 @@ function Encoder:start()
     end
     self.settings = util.readonlytable(self.settings)
     self.format = util.readonlytable(self.format)
+end
+
+function Encoder:push(frame)
+    if self._handle and frame and frame._handle then
+        return self._handle.push(
+            self._pointer or self._handle,
+            frame._handle
+        )
+    end
+    return false
 end
 
 function Encoder:getformat()

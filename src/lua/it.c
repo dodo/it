@@ -76,3 +76,19 @@ int it_buffers_lua(lua_State* L) { // ()
     return 1;
 }
 
+int it_frames_lua(lua_State* L)  {// (width, height)
+    int w = luaL_checkint(L, 1);
+    int h = luaL_checkint(L, 2);
+    int size = ROUND_UP_4(w) * ROUND_UP_2(h);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    it_frames* fr = lua_newuserdata(L, sizeof(it_frames));
+    fr->ctx = luaI_getstate(L);
+    fr->frame = NULL;
+    fr->size = size;
+    fr->width = w;
+    fr->height = h;
+    luaI_setmetatable(L, "Frame");
+    return 1;
+}
+
