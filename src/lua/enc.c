@@ -199,7 +199,10 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
     enc->serialno = oggz_serialno_new(enc->container);
     // now start the thread to run the encoder
     enc->thread = malloc(sizeof(uv_thread_t));
-    uv_thread_create(enc->thread, thread_encode, enc);
+    if (!enc->thread)
+        luaI_error(L, "failed to initialize thread!");
+    if (uv_thread_create(enc->thread, thread_encode, enc))
+        luaI_error(L, "uv_thread_create: failed to create thread!");
     return 0;
 }
 

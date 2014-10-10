@@ -58,7 +58,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
         case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
-        default: return luaL_error(L, "unknown metatable %s!", name); break;
+        default: luaI_error(L, "unknown metatable %s!", name); break;
     }
     lua_pop(L, 1); // dont need metatable right now
     return 0;
@@ -76,9 +76,8 @@ int luaI_copyfunction(lua_State* L, lua_State* src) {
     size_t sz;
     luaL_Buffer b;
     luaL_buffinit(src, &b);
-    if (lua_dump(src, buf_writer, &b)) {
-        return luaL_error(src, "internal error: function dump failed.");
-    }
+    if (lua_dump(src, buf_writer, &b))
+        luaI_error(src, "function dump failed");
     luaL_pushresult(&b);
     char const* s = lua_tolstring(src, -1, &sz);
     if (luaL_loadbuffer(L, s, sz, name)) {
@@ -113,10 +112,8 @@ it_states* luaI_getstate(lua_State* L) {
 int luaI_setstate(lua_State* L, it_states* ctx) {
     size_t size = 2*PATH_MAX;
     char exec_path[2*PATH_MAX];
-    if (uv_exepath(exec_path, &size)) {
-        uv_err_t err = uv_last_error(ctx->loop);
-        return luaL_error(L, "uv_exepath: %s", uv_strerror(err));
-    }
+    if (uv_exepath(exec_path, &size))
+        uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
     lua_setglobal(L, "__it_states__");
     luaL_loadstring(L,
@@ -135,7 +132,7 @@ int luaI_newstate(it_states* ctx) {
     // create lua state
     lua_State* L = luaL_newstate();
     if (!L) {
-        fprintf(stderr, "failed to allocate lua state!\n");
+        it_prints_error("failed to allocate lua state!");
         return 1;
     }
     ctx->lua = L;
@@ -143,7 +140,7 @@ int luaI_newstate(it_states* ctx) {
     luaL_openlibs(L);
     luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     if (luaI_setstate(L, ctx)) {
-        fprintf(stderr, "failed to initialize lua state!\n");
+        it_prints_error("failed to initialize lua state!");
         return 1;
     }
     return 0;

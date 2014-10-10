@@ -9,8 +9,11 @@
 #include "it-types.h"
 
 
+#define it_prints_error(msg, ...) \
+        fprintf(stderr, "internal error: "msg"\n", ##__VA_ARGS__)
+
 #define it_errors(msg, ...) { \
-        fprintf(stderr, "internal error: "msg"\n", ##__VA_ARGS__); \
+        it_prints_error(msg, ##__VA_ARGS__); \
         assert(0); \
     }
 
