@@ -37,6 +37,15 @@ function EventEmitter:emit(event, ...)
     return true
 end
 
+function EventEmitter:listeners(event)
+    local handler = self._events[event]
+    if type(handler) == 'function' then
+        return { handler, length = 1 }
+    else
+        return handler -- already a list
+    end
+end
+
 function EventEmitter:removeAllListeners(event)
     if event then
         self._events[event] = nil
