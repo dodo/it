@@ -2,10 +2,11 @@
 
 #include <uv.h>
 
-#include "lua/it.h"
 
 #include "it.h"
 #include "luaI.h"
+
+#include "lua/it.h"
 
 
 int it_boots_lua(lua_State* L) { // ()

@@ -1,7 +1,7 @@
-#include "lua/process.h"
-
 #include "it.h"
 #include "luaI.h"
+
+#include "lua/process.h"
 
 
 int it_exits_process_lua(lua_State* L) { // (exit_code)

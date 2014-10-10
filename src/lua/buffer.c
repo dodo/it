@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "lua/buffer.h"
-
 #include "it.h"
 #include "luaI.h"
+
+#include "lua/buffer.h"
 
 
 static void it_frees_buffer(it_buffers* buf) {

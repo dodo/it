@@ -13,12 +13,11 @@
 #include <schroedinger/schroutils.h>
 #include <schroedinger/schrobuffer.h>
 
-#include "lua/enc.h"
-#include "lua/ctx.h"
-
 #include "it.h"
 #include "luaI.h"
 
+#include "lua/enc.h"
+#include "lua/ctx.h"
 
 static void it_frees_frame(SchroFrame* frame, void* priv) {
   free(priv);

@@ -1,7 +1,7 @@
-#include "lua/ctx.h"
-
 #include "it.h"
 #include "luaI.h"
+
+#include "lua/ctx.h"
 
 
 void it_frees_ctx(it_states* ctx) {
