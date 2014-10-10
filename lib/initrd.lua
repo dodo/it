@@ -5,6 +5,7 @@ local Process = EventEmitter:fork()
 
 _it.loads('Process')
 function Process:init()
+    self.prototype.init(self)
     self.shutdown = true
     self._handle = _it.boots(self)
     -- convenience
