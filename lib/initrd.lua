@@ -29,4 +29,5 @@ else
     if process.shutdown then
         process.exit() -- normally
     end
+    process.shutdown = false
 end
