@@ -85,7 +85,7 @@ end
 
 function exports.table_format(s, t)
     for m in s:gmatch('{([%w_%.]+)}') do
-        s, _ = s:gsub("{" .. m .. "}", exports.table_deep_get(t, m) or "")
+        s, _ = s:gsub("{" .. m .. "}", util.table_deep_get(t, m) or "")
     end
     return s
 end
