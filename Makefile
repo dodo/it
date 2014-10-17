@@ -6,9 +6,9 @@ it: it.c \
 	src/lua/enc.c \
 	src/lua/process.c \
 	src/lua/buffer.c \
-	src/lua/frame.c
+	src/lua/frame.c \
+	vendor/schroedinger/schroedinger/.libs/libschroedinger-1.0.a
 	gcc -Wall -o $@ $^ -I./include \
-		-lpthread \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit) \
 		$(shell pkg-config --cflags --libs schroedinger-1.0) \
