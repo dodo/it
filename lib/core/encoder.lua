@@ -19,6 +19,9 @@ function Encoder:init(filename, pointer)
         self.format = util.readonlytable(self:getformat().raw)
         return
     end
+    if filename == false then
+        return
+    end
     self.scope = Scope:new()
     self.output = filename or process.stdnon
     self.format = { -- defaults
