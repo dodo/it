@@ -46,7 +46,6 @@ typedef struct {
 } it_buffers;
 
 typedef struct {
-    it_states *ctx;
     SchroFrame *frame;
     int size;
     int width;

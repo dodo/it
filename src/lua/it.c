@@ -83,7 +83,6 @@ int it_frames_lua(lua_State* L)  {// (width, height)
     size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
     size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
     it_frames* fr = lua_newuserdata(L, sizeof(it_frames));
-    fr->ctx = luaI_getstate(L);
     fr->frame = NULL;
     fr->size = size;
     fr->width = w;

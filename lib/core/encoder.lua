@@ -12,6 +12,7 @@ _it.loads('Encoder')
 function Encoder:init(filename, pointer)
     self.prototype.init(self)
     self._pointer = pointer
+    self.frame_format = 'ARGB'
     self.push = self:bind('push')
     self._handle = _it.encodes(pointer)
     if pointer then -- other stuff not needed in scope context
@@ -48,7 +49,8 @@ function Encoder:init(filename, pointer)
         context:on('need frame', function ()
             local frame = Frame:new(
                 encoder.format.width,
-                encoder.format.height
+                encoder.format.height,
+                encoder.frame_format
             )
             _ = context:emit('frame', frame) or encoder:push(frame)
         end)
