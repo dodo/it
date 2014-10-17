@@ -79,10 +79,10 @@ function Encoder:start()
 end
 
 function Encoder:push(frame)
-    if self._handle and frame and frame._handle then
+    if self._handle and frame and frame.render then
         return self._handle.push(
             self._pointer or self._handle,
-            frame._handle
+            frame:render() -- userdata or lightuserdata of it_frames* exptected
         )
     end
     return false

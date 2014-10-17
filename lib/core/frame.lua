@@ -1,5 +1,7 @@
 local ffi = require 'ffi'
+local util = require 'util'
 local Prototype = require 'prototype'
+-- local lgi = require 'lgi' -- lazy ↓
 
 require('cface')(_it.libdir .. "schroframe.h")
 
@@ -39,5 +41,45 @@ function Frame:convert(format) -- format or frame
     end
 end
 
+function Frame:surface()
+    if self._surface then return self._surface end
+    local cairo = require('lgi').cairo -- lazy load lgi
+    local f = 'ARGB'--self.format
+--     self:validate()
+    local surface = cairo.ImageSurface.create_for_data(
+        self._handle:getdata(), f,
+        self.width, self.height,
+        cairo.Format.stride_for_width(f, self.width)
+    )
+    self._surface = {
+        object = surface,
+        context = cairo.Context.create(surface),
+    }
+    return self._surface
+end
+
+function Frame:render()
+    if self._surface then
+        -- do any pending drawing for the surface
+        self._surface.object:flush()
+        self._surface.object:mark_dirty()
+    end
+    return self._handle
+end
+
+function Frame:validate()
+    local cairo = require('lgi').cairo -- lazy load lgi
+    local surface_stride = cairo.Format.stride_for_width(self.format, self.width)
+    local frame_stride = self.raw.components[0].stride +
+                         self.raw.components[1].stride +
+                         self.raw.components[2].stride
+    if surface_stride > frame_stride then
+        return error(string.format(
+            "prevented segfault: strides mismatch (surface wants %d but frame has %d)",
+            surface_stride, frame_stride
+        ))
+    end
+    return true
+end
 
 return Frame

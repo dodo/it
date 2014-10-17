@@ -55,6 +55,7 @@ static const luaL_Reg luaI_reg_enc[] = {
 static const luaL_Reg luaI_reg_frame[] = {
     {"create", it_creates_frame_lua},
     {"convert", it_converts_frame_lua},
+    {"getdata", it_gets_data_frame_lua},
     {"__gc", it_kills_frame_lua},
     {NULL, NULL}
 };

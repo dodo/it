@@ -44,6 +44,16 @@ int it_converts_frame_lua(lua_State* L) {
     return 1;
 }
 
+int it_gets_data_frame_lua(lua_State* L) { // (frame_userdata) //, cairo_surface_userdata)
+    it_frames* fr = luaL_checkudata(L, 1, "Frame");
+    if (!fr->frame) return 0;
+    lua_pushlightuserdata(L, fr->frame->components[0].data);
+    if (SCHRO_FRAME_IS_PACKED(fr->frame->format)) return 1;
+    lua_pushlightuserdata(L, fr->frame->components[1].data);
+    lua_pushlightuserdata(L, fr->frame->components[2].data);
+    return 3;
+}
+
 int it_kills_frame_lua(lua_State* L) { // (frame_userdata)
     it_frames* fr = luaL_checkudata(L, 1, "Frame");
     if (!fr->frame) return 0;
