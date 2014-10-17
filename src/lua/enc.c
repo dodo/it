@@ -206,7 +206,7 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
 
 int it_pushes_frame_enc_lua(lua_State* L) { // (enc_userdata, frame_userdata)
     it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
-    it_frames* fr = luaL_checkudata(L, 2, "Frame");
+    it_frames* fr = luaI_checklightuserdata(L, 2, "Frame");
     if (enc->encoder && fr->frame) {
         // … and right into encoder. hopefully everything is right!
         schro_encoder_push_frame(enc->encoder, fr->frame);
