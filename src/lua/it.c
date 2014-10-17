@@ -12,7 +12,7 @@
 #include "lua/it.h"
 
 
-int it_boots_lua(lua_State* L) { // ()
+int it_boots_lua(lua_State* L) { // (process)
     it_processes* process = luaI_getprocess(L);
     // process.argv
     lua_createtable(L, process->argc, 0);
