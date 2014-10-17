@@ -26,4 +26,9 @@ function Prototype:bind(name, ...)
     return fn
 end
 
+function Prototype:isinstance(instance)
+    -- FIXME make it recursive (check parent prototypes too)
+    return instance and instance.prototype == self -- prototype
+end
+
 return Prototype
