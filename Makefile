@@ -11,5 +11,5 @@ it: it.c \
 	gcc -Wall -o $@ $^ -I./include \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit) \
-		$(shell pkg-config --cflags --libs schroedinger-1.0) \
+		$(shell PKG_CONFIG_PATH="`pwd`/vendor/schroedinger" pkg-config --cflags --libs --static schroedinger) \
 		$(shell pkg-config --cflags --libs oggz)
