@@ -54,6 +54,7 @@ static const luaL_Reg luaI_reg_enc[] = {
 #include "lua/frame.h"
 static const luaL_Reg luaI_reg_frame[] = {
     {"create", it_creates_frame_lua},
+    {"convert", it_converts_frame_lua},
     {"__gc", it_kills_frame_lua},
     {NULL, NULL}
 };

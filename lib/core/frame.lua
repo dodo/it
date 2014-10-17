@@ -22,4 +22,22 @@ function Frame:create(pointer)
     return self.raw
 end
 
+function Frame:convert(format) -- format or frame
+    if format and Frame:isinstance(format) then
+        local frame = format
+        frame:create(self._handle:convert(frame._pointer))
+        return frame
+    elseif format then
+        local pointer = self._handle:convert(
+            util.convert_enum('format', format,
+                "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"
+            )
+        )
+        return Frame:new(self.width, self.height, format, pointer)
+    else
+        return self
+    end
+end
+
+
 return Frame
