@@ -14,6 +14,14 @@ static void it_frees_buffer(it_buffers* buf) {
     }
 }
 
+int it_new_buffer_lua(lua_State* L) { // ()
+    it_buffers* buf = lua_newuserdata(L, sizeof(it_buffers));
+    buf->free = FALSE;
+    buf->buffer = NULL;
+    luaI_setmetatable(L, "Buffer");
+    return 1;
+}
+
 int it_uses_userdata_buffer_lua(lua_State* L) { // (buf_userdata, void*_userdata)
     it_buffers* buf = luaL_checkudata(L, 1, "Buffer");
     void* userdata = lua_touserdata(L, 2);

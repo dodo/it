@@ -3,6 +3,7 @@
 
 #include <lua.h>
 
+int it_new_frame_lua(lua_State* L);
 int it_creates_frame_lua(lua_State* L);
 int it_converts_frame_lua(lua_State* L);
 int it_gets_data_frame_lua(lua_State* L);

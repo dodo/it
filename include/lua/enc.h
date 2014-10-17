@@ -3,6 +3,7 @@
 
 #include <lua.h>
 
+int it_new_enc_lua(lua_State* L);
 int it_creates_enc_lua(lua_State* L);
 int it_starts_enc_lua(lua_State* L);
 int it_pushes_frame_enc_lua(lua_State* L);

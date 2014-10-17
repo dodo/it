@@ -2,6 +2,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#define SCHRO_ENABLE_UNSTABLE_API
+
+#include <schroedinger/schro.h>
 #include <schroedinger/schroframe.h>
 
 #include "it.h"
@@ -10,9 +13,20 @@
 #include "lua/frame.h"
 
 
-// static void it_frees_frame(SchroFrame* frame, void* priv) {
-//   free(priv);
-// }
+int it_new_frame_lua(lua_State* L)  { // (width, height)
+    int w = luaL_checkint(L, 1);
+    int h = luaL_checkint(L, 2);
+    int size = ROUND_UP_4(w) * ROUND_UP_2(h);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
+    it_frames* fr = lua_newuserdata(L, sizeof(it_frames));
+    fr->frame = NULL;
+    fr->size = size;
+    fr->width = w;
+    fr->height = h;
+    luaI_setmetatable(L, "Frame");
+    return 1;
+}
 
 int it_creates_frame_lua(lua_State* L) { // (frame_userdata, frame_data)
     it_frames* fr = luaL_checkudata(L, 1, "Frame");

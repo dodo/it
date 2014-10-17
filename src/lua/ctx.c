@@ -15,6 +15,20 @@ void it_frees_ctx(it_states* ctx) {
     ctx->free = FALSE;
 }
 
+
+int it_new_ctx_lua(lua_State* L) { // ()
+    it_states* state = luaI_getstate(L);
+    it_states* ctx = lua_newuserdata(L, sizeof(it_states));
+    ctx->loop = state->loop;
+    if (luaI_newstate(ctx)) {
+        lua_pushnil(L);
+        return 1;
+    }
+    luaI_setmetatable(L, "Context");
+    luaI_dofile(ctx->lua, "lib/context.lua");
+    return 1;
+}
+
 int it_imports_ctx_lua(lua_State* L) { // (state_userdata, function)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     luaL_checktype(L, 2, LUA_TFUNCTION);

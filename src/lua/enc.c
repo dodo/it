@@ -127,6 +127,18 @@ static void thread_encode(void* priv) {
     uv_run(enc->loop, UV_RUN_DEFAULT);
 }
 
+int it_new_enc_lua(lua_State* L) { // ((optional) enc_pointer)
+    if (lua_gettop(L) == 1 && lua_islightuserdata(L, 1)) {
+        lua_newtable(L);
+    } else {
+        it_encodes* enc = lua_newuserdata(L, sizeof(it_encodes));
+        enc->encoder = NULL;
+        enc->thread = NULL;
+    }
+    luaI_setmetatable(L, "Encoder");
+    return 1;
+}
+
 int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, settings)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     it_states*  ctx = luaL_checkudata(L, 2, "Context");
