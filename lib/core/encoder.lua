@@ -56,22 +56,16 @@ function Encoder:init(filename, pointer)
 end
 
 local ENUMS = {
-  index             = {typ="SchroVideoFormatEnum", prefix="SCHRO_VIDEO_FORMAT_"},
-  chroma_format     = {typ="SchroChromaFormat",    prefix="SCHRO_CHROMA_"},
-  colour_primaries  = {typ="SchroColourPrimaries", prefix="SCHRO_COLOUR_PRIMARY_"},
-  colour_matrix     = {typ="SchroColourMatrix",    prefix="SCHRO_COLOUR_MATRIX_"},
-  transfer_function = {typ="SchroTransferFunction",prefix="SCHRO_TRANSFER_CHAR_"},
+  index             = {typ="SchroVideoFormatEnum", prefix="VIDEO_FORMAT_"},
+  chroma_format     = {typ="SchroChromaFormat",    prefix="CHROMA_"},
+  colour_primaries  = {typ="SchroColourPrimaries", prefix="COLOUR_PRIMARY_"},
+  colour_matrix     = {typ="SchroColourMatrix",    prefix="COLOUR_MATRIX_"},
+  transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
 }
 function Encoder:start()
     process.shutdown = false -- prevent process from shutting down
     local format = self:getformat()
-    for key,value in pairs(self.format) do
-        if ENUMS[key] then
-            value = string.upper(tostring(value):gsub("%s", "_"))
-            value = ffi.new(ENUMS[key].typ, ENUMS[key].prefix .. value)
-        end
-        format.raw[key] = value
-    end
+    util.update_ffi(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
     self._handle:setformat(format.pointer)
     self._handle:start(self.output, self.settings)
     -- make format and settings readonly

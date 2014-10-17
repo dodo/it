@@ -90,6 +90,29 @@ function exports.table_format(s, t)
     return s
 end
 
+function exports.update_ffi(interface, values, opts)
+    local ffi = require 'ffi'
+    for key,value in pairs(values) do
+        if type(value) == 'string' then
+            value = string.upper(value):gsub("%s", "_")
+            if opts.enums and opts.enums[key] then
+                value = (opts.prefix            or "") ..
+                        (opts.enums[key].prefix or "") ..
+                        value
+                value = ffi.new(opts.enums[key].typ, value)
+            end
+        end
+        interface[key] = value
+    end
+    return interface
+end
+
+function exports.convert_enum(key, value, typ, prefix)
+    return tonumber(util.update_ffi({}, {[key]=value}, {
+        enums={[key]={typ=typ, prefix=prefix}}
+    })[key])
+end
+
 function exports.dump(t)
     local s = " -- \n"
     for k,v in pairs(t) do
