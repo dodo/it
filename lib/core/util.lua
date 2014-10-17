@@ -1,4 +1,5 @@
 local exports = {}
+local util = exports
 
 function exports.ignore_self(this, self, ...)
     -- if function is called with : on the same object
@@ -33,7 +34,7 @@ function exports.readonlytable(table)
 end
 
 function exports.table_sum(t1, t2)
-    return exports.table_append(exports.table_copy(t1), t2)
+    return util.table_append(util.table_copy(t1), t2)
 end
 
 function exports.table_copy(t)
@@ -98,7 +99,7 @@ function exports.dump(t)
 end
 
 
-local table_sum, ignore_self = exports.table_sum, exports.ignore_self
+local table_sum, ignore_self = util.table_sum, util.ignore_self
 function exports.bind(this, handler, ...)
     local args = this and {this, ...} or {...}
     if not this and #args == 0 then
