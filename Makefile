@@ -4,6 +4,7 @@ it: it.c \
 	src/lua/it.c \
 	src/lua/ctx.c \
 	src/lua/enc.c \
+	src/lua/enc_settings.c \
 	src/lua/process.c \
 	src/lua/buffer.c \
 	src/lua/frame.c \

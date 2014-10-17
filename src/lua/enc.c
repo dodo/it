@@ -17,6 +17,7 @@
 #include "luaI.h"
 
 #include "lua/enc.h"
+#include "lua/enc_settings.h"
 #include "lua/ctx.h"
 
 
@@ -148,21 +149,7 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, setting
     schro_video_format_set_std_video_format(&enc->encoder->video_format,
         SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
     // fill settings table from args
-    int i; int n = schro_encoder_get_n_settings();
-    for (i = 0; i < n; i++) {
-        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
-        lua_createtable(L, 0, 4);
-        lua_pushnumber(L, info->min);
-        lua_setfield(L, -2, "min");
-        lua_pushnumber(L, info->max);
-        lua_setfield(L, -2, "max");
-        lua_pushnumber(L, info->default_value);
-        lua_setfield(L, -2, "value");
-        lua_pushnumber(L, info->default_value);
-        lua_setfield(L, -2, "default");
-        // now store table in settings
-        lua_setfield(L, 3, info->name);
-    }
+    luaI_setencodersettings(L, 3);
     return 0;
 }
 
@@ -170,14 +157,7 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     if (enc->thread) return 0;
     // fill encoder settings with state from lua
-    int i; int n = schro_encoder_get_n_settings();
-    for (i = 0; i < n; i++) {
-        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
-        lua_getfield(L, 3, info->name);
-        lua_getfield(L, -1, "value");
-        schro_encoder_setting_set_double(enc->encoder, info->name, lua_tonumber(L, -1));
-        lua_pop(L, 2);
-    }
+    luaI_getencodersettings(L, 3, enc->encoder);
     // now open ogg container
     const char* name;
     int flags = OGGZ_WRITE;
