@@ -12,6 +12,19 @@
 #include "lua/frame.h"
 
 
+int it_stdios_lua(lua_State* L) { // ()
+    // stdio
+    lua_pushnil(L);
+    lua_setfield(L, -2, "stdnon");
+    lua_pushlightuserdata(L, stdout);
+    lua_setfield(L, -2, "stdout");
+    lua_pushlightuserdata(L, stderr);
+    lua_setfield(L, -2, "stderr");
+    lua_pushlightuserdata(L, stdin);
+    lua_setfield(L, -2, "stdin");
+    return 0;
+}
+
 int it_boots_lua(lua_State* L) { // (process)
     it_processes* process = luaI_getprocess(L);
     // process.argv
@@ -24,15 +37,6 @@ int it_boots_lua(lua_State* L) { // (process)
     // process.pid
     lua_pushinteger(L, getpid());
     lua_setfield(L, -2, "pid");
-    // stdio
-    lua_pushnil(L);
-    lua_setfield(L, -2, "stdnon");
-    lua_pushlightuserdata(L, stdout);
-    lua_setfield(L, -2, "stdout");
-    lua_pushlightuserdata(L, stderr);
-    lua_setfield(L, -2, "stderr");
-    lua_pushlightuserdata(L, stdin);
-    lua_setfield(L, -2, "stdin");
     // cfunction metatable
     lua_newtable(L);
     luaI_setmetatable(L, "Process");

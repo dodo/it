@@ -6,6 +6,7 @@
 #include "lua/it.h"
 static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
+    {"stdios", it_stdios_lua},
     {"loads", it_loads_lua},
     {"forks", it_forks_lua},
     {"encodes", it_encodes_lua},
