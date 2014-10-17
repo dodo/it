@@ -172,12 +172,15 @@ int luaI_newstate(it_states* ctx) {
     // enable JIT
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs
+    lua_gc(L, LUA_GCSTOP, 0);  // stop collector during initialization
     luaL_openlibs(L);
     luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     if (luaI_setstate(L, ctx)) {
+        lua_gc(L, LUA_GCRESTART, -1);
         it_prints_error("failed to initialize lua state!");
         return 1;
     }
+    lua_gc(L, LUA_GCRESTART, -1);
     return 0;
 }
 
