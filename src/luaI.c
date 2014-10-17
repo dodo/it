@@ -132,7 +132,7 @@ it_processes* luaI_getprocess(lua_State* L) {
 }
 
 it_states* luaI_getstate(lua_State* L) {
-    lua_getglobal(L, "__it_states__");
+    luaI_getglobalfield(L, "_it", "state");
     it_states* state = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return state;
@@ -144,7 +144,7 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     if (uv_exepath(exec_path, &size))
         uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
-    lua_setglobal(L, "__it_states__");
+    luaI_setglobalfield(L, "_it", "state");
     luaL_loadstring(L,
         // concat arguments to get one string
         "_it.execpath = table.concat({...}, '') "
