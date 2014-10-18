@@ -88,6 +88,9 @@ static void it_waits_on_encoder(uv_idle_t* handle, int status) {
                 //   to get propper ogg stream content type detected
                 oggz_write_feed(enc->container, &op, enc->serialno,
                                 OGGZ_FLUSH_AFTER, NULL/*guard*/);
+                if (enc->packetno == 0) {
+                    oggz_comment_set_vendor(enc->container, enc->serialno, IT_NAMES" "IT_VERSIONS);
+                }
                 // increase state
 //                 enc->granulepos += 100; // FIXME use either fake or real time here
                 enc->granulepos += 22; /* not a typo */ // same as in liboggz/oggz_auto.c#auto_dirac
