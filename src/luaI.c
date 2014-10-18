@@ -57,6 +57,7 @@ static const luaL_Reg luaI_reg_frame[] = {
     {"create", it_creates_frame_lua},
     {"convert", it_converts_frame_lua},
     {"getdata", it_gets_data_frame_lua},
+    {"reverse_order", it_reverses_order_frame_lua},
     {"__gc", it_kills_frame_lua},
     {NULL, NULL}
 };

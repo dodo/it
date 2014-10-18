@@ -1,6 +1,16 @@
 
+all: 'include/orc0.h' 'src/orc0.c' it
+
+'include/orc0.h': src/it.orc
+	orcc -o $@ $^ --inline --header
+
+'src/orc0.c': src/it.orc
+	orcc -o $@ $^ --inline --implementation
+
 it: it.c \
 	src/luaI.c \
+	src/orc0.c \
+	src/orcI.c \
 	src/lua/it.c \
 	src/lua/ctx.c \
 	src/lua/enc.c \
@@ -12,5 +22,10 @@ it: it.c \
 	gcc -Wall -o $@ $^ -I./include \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit) \
+		$(shell pkg-config --cflags --libs orc-0.4) \
 		$(shell PKG_CONFIG_PATH="`pwd`/vendor/schroedinger" pkg-config --cflags --libs --static schroedinger) \
 		$(shell pkg-config --cflags --libs oggz)
+
+
+
+.PHONY: all

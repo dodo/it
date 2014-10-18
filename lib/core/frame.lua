@@ -63,6 +63,8 @@ function Frame:render()
         -- do any pending drawing for the surface
         self._surface.object:flush()
         self._surface.object:mark_dirty()
+        -- revert cairo mess
+        self._handle:reverse_order()
     end
     return self._handle
 end
