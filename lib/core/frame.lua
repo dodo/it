@@ -69,6 +69,15 @@ function Frame:render()
     return self._handle
 end
 
+function Frame:write_to_png(filename)
+    -- init cairo
+    self:surface()
+    -- convert frame data into cairo mess
+    self._handle:reverse_order()
+    -- io
+    return self._surface.object:write_to_png(filename)
+end
+
 function Frame:validate()
     local cairo = require('lgi').cairo -- lazy load lgi
     local surface_stride = cairo.Format.stride_for_width(self.format, self.width)
