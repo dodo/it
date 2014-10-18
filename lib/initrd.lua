@@ -1,3 +1,4 @@
+local fs = require 'fs'
 local EventEmitter = require 'events'
 local haz = require('util').table_index
 
@@ -55,6 +56,10 @@ if #process.argv == 0 then
     print "no repl, no script file."
     process.exit(1)
 else
+    if not fs.exists(process.argv[1]) then
+        print "script file does not exist."
+        return process.exit(1)
+    end
     dofile(process.argv[1])
     -- TODO test if something happened
     if process.shutdown then
