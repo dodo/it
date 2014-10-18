@@ -8,6 +8,8 @@
 
 #include "it-types.h"
 
+#define IT_NAMES "muSchro0m it"
+#define IT_VERSIONS "0.0.1"
 
 #define it_prints_error(msg, ...) \
         fprintf(stderr, "internal error: "msg"\n", ##__VA_ARGS__)

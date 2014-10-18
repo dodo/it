@@ -1,5 +1,5 @@
 local EventEmitter = require 'events'
-local bind = require('util').bind
+local util = require 'util'
 
 local Process = EventEmitter:fork()
 
@@ -21,6 +21,19 @@ end
 -- -- -- -- -- -- -- --
 
 process = Process:new()
+
+if util.table_index(process.argv, "--version") > 0 then
+    local versions = _it.versions()
+    print(versions.it)
+    versions.it = nil
+    for lib,version in pairs(versions) do
+        if lib == 'lua' then
+            version = version .. " (running with " .. _VERSION .. ")"
+        end
+        print(" • " .. version)
+    end
+    return process.exit()
+end
 
 if #process.argv == 0 then
     print "no repl, no script file."

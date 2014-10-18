@@ -10,5 +10,6 @@ int it_stdios_lua(lua_State* L);
 int it_encodes_lua(lua_State* L);
 int it_buffers_lua(lua_State* L);
 int it_frames_lua(lua_State* L);
+int it_versions_lua(lua_State* L);
 
 #endif /* LUA_IT_H */

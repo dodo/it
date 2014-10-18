@@ -12,6 +12,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"encodes", it_encodes_lua},
     {"buffers", it_buffers_lua},
     {"frames", it_frames_lua},
+    {"versions", it_versions_lua},
     {NULL, NULL}
 };
 
