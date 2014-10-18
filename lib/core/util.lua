@@ -54,7 +54,7 @@ function exports.table_index(t, val)
             return i
         end
     end
-    return 0
+    return
 end
 
 function exports.table_deep_set(t, key, val)

@@ -102,7 +102,7 @@ function Encoder:debug(level)
         util.table_index(
             {"ERROR","WARNING","INFO","DEBUG","LOG"},
             string.upper(level)
-        )
+        ) or 0
     )
 end
 

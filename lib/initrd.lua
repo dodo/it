@@ -1,5 +1,5 @@
 local EventEmitter = require 'events'
-local util = require 'util'
+local haz = require('util').table_index
 
 local Process = EventEmitter:fork()
 
@@ -22,7 +22,7 @@ end
 
 process = Process:new()
 
-if util.table_index(process.argv, "--version") > 0 then
+if haz(process.argv, "-v") or haz(process.argv, "--version") then
     local versions = _it.versions()
     print(versions.it)
     versions.it = nil
