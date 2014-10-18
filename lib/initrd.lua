@@ -18,9 +18,25 @@ function Process:exit(...)
     self._handle.exit(...)
 end
 
+function Process:usage()
+    return [[
+Usage: it [options] script.lua [arguments]
+
+Options:
+  -v --version      print versions
+  -h --help         magic flag
+    ]]
+end
+
 -- -- -- -- -- -- -- --
 
 process = Process:new()
+
+if haz(process.argv, "-h") or haz(process.argv, "--help") then
+    print(process.usage())
+    return process.exit()
+end
+
 
 if haz(process.argv, "-v") or haz(process.argv, "--version") then
     local versions = _it.versions()
