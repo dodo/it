@@ -39,9 +39,13 @@
     (lua_getglobal(L,gn), lua_pushvalue(L,-2), lua_setfield(L,-2,fn), lua_pop(L,2))
 
 #define luaI_pcall(L,nargs,nresults) \
-    do{if (lua_pcall(L,nargs,nresults,0)) { \
+    do{lua_getglobal(L, "_TRACEBACK"); \
+      lua_insert(L,0 - nargs - 2); \
+      if (lua_pcall(L,nargs,nresults,0 - nargs - 2)) { \
         lua_error(L); \
-    }} while (0)
+      } \
+      lua_remove(L, 0 - nresults - 1);\
+    } while (0)
 
 
 int luaI_loadmetatable(lua_State* L, int i);
@@ -57,6 +61,8 @@ int luaI_setstate(lua_State* L, it_states* ctx);
 
 int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);
+
+int luaI_stacktrace(lua_State* L);
 void luaI_close(lua_State* L, const char *global, int code);
 
 #endif /* LUAI_H */
