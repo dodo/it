@@ -24,7 +24,7 @@ end
 
 function Process:usage()
     return [[
-Usage: it [options] script.lua [arguments]
+Usage: it [options] scripts.lua [arguments]
 
 Options:
   -v --version      print versions
