@@ -2,6 +2,9 @@ local fs = require 'fs'
 local EventEmitter = require 'events'
 local haz = require('util').table_index
 
+--  needed to build stacktrace
+_it.getlines = fs.line
+
 local Process = EventEmitter:fork()
 
 _it.loads('Process')
@@ -26,8 +29,7 @@ Usage: it [options] script.lua [arguments]
 Options:
   -v --version      print versions
   -h --help         magic flag
-    ]]
-end
+]] end
 
 -- -- -- -- -- -- -- --
 

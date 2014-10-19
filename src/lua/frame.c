@@ -84,7 +84,6 @@ int it_reverses_order_frame_lua(lua_State* L) { // (frame_userdata)
         orcI_reverse_order(comp->data, comp->width * comp->height, depth);
     }
     return 0;
-
 }
 
 int it_kills_frame_lua(lua_State* L) { // (frame_userdata)

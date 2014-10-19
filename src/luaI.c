@@ -213,19 +213,33 @@ int luaI_createstate(it_processes* process) {
 int luaI_stacktrace(lua_State* L) {
     lua_Debug info;
     int level = 0;
+    int strings = 1; // starts with error message on top of stack
     while (lua_getstack(L, level, &info)) {
         lua_getinfo(L, "nSl", &info);
-        lua_pushfstring(L, "  %d  in %s  (at %s:%d)\n",
+        lua_pushfstring(L, "  %d  in %s  (%s at %s:%d)\n",
             level, (info.name ? info.name : "<unknown>"),
-            info.short_src, info.currentline);
+             info.namewhat, info.short_src, info.currentline);
+        ++strings;
+        // get source code
+        lua_pushstring(L, "        ");
+        luaI_getglobalfield(L, "_it", "getlines");
+        lua_pushstring(L, info.short_src);
+        lua_pushinteger(L, info.currentline);
+        lua_call(L, 2, 1);
+        if (lua_isnil(L, -1)) {
+            lua_pop(L, 2);
+        } else {
+            lua_pushstring(L, "\n");
+            strings += 3;
+        }
         ++level;
     }
     if (level) {
         lua_pushstring(L, "\n");
         lua_insert(L, 2);
-        ++level;
+        strings++;
     }
-    lua_concat(L, level + 1);
+    lua_concat(L, strings);
     return 1;
 }
 
