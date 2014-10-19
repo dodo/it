@@ -9,7 +9,7 @@
 .temp   1 _rb
 
 splitwb   _lb _rb s
-mergebw d _lb _rb
+mergebw d _lb _rb   # reversed order
 
 
 .function orc0_reverse_order_u32
@@ -23,10 +23,10 @@ mergebw d _lb _rb
 splitlw   _lw _rw s
 
 splitwb     _lb _rb _lw
-mergebw _lw _lb _rb
+mergebw _lw _lb _rb     # reversed order
 
 splitwb     _lb _rb _rw
-mergebw _rw _lb _rb
+mergebw _rw _lb _rb     # reversed order
 
 mergewl d _lw _rw
 

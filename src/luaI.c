@@ -150,6 +150,8 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
         uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
     luaI_setglobalfield(L, "_it", "state");
+    lua_pushboolean(L, (*(uint16_t *)"\0\xff" < 0x100));
+    luaI_setglobalfield(L, "_it", "is_big_endian");
     luaL_loadstring(L,
         // concat arguments to get one string
         "_it.execpath = table.concat({...}, '') "

@@ -58,13 +58,21 @@ function Frame:surface()
     return self._surface
 end
 
+function Frame:fix_endian()
+    --- from cairo docs:
+    -- CAIRO_FORMAT_ARGB32 […] The 32-bit quantities are stored native-endian […]
+    if not _it.is_big_endian then
+        self._handle:reverse_order()
+    end
+end
+
 function Frame:render()
     if self._surface then
         -- do any pending drawing for the surface
         self._surface.object:flush()
         self._surface.object:mark_dirty()
         -- revert cairo mess
-        self._handle:reverse_order()
+        self:fix_endian()
     end
     return self._handle
 end
@@ -73,7 +81,7 @@ function Frame:write_to_png(filename)
     -- init cairo
     self:surface()
     -- convert frame data into cairo mess
-    self._handle:reverse_order()
+    self:fix_endian()
     -- io
     return self._surface.object:write_to_png(filename)
 end
