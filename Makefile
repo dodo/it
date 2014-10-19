@@ -1,10 +1,11 @@
 
-all: 'include/orc0.h' 'src/orc0.c' it
 
-'include/orc0.h': src/it.orc
+all: include/orc0.h src/orc0.c it
+
+include/orc0.h: src/it.orc
 	orcc -o $@ $^ --inline --header
 
-'src/orc0.c': src/it.orc
+src/orc0.c: src/it.orc
 	orcc -o $@ $^ --inline --implementation
 
 it: it.c \
