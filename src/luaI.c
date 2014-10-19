@@ -162,6 +162,17 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     return 0;
 }
 
+static int at_panic(lua_State* L) {
+    luaI_getglobalfield(L, "process", "emit");
+    lua_getglobal(L, "process");
+    lua_pushstring(L, "panic");
+    lua_pushvalue(L, -4);
+    luaI_pcall(L, 3, 0);
+    lua_pop(L, 1);
+    fprintf(stderr, "PANIC@%s\n", lua_tostring(L, -1));
+    return 0;
+}
+
 int luaI_newstate(it_states* ctx) {
     // create lua state
     lua_State* L = luaL_newstate();
@@ -171,6 +182,7 @@ int luaI_newstate(it_states* ctx) {
     }
     ctx->free = TRUE;
     ctx->lua = L;
+    lua_atpanic(L, at_panic);
     // enable JIT
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs

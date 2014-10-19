@@ -1,7 +1,9 @@
-context = require('events'):new()
+local EventEmitter = require 'events'
+
+context = EventEmitter:new()
 
 context.run    = context:bind('emit', 'run')
 context.import = context:bind('on',   'run')
 
-process = {}
+process = EventEmitter:new()
 _it.stdios(process)
