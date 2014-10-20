@@ -12,7 +12,7 @@
 #include "lua/frame.h"
 
 
-int it_stdios_lua(lua_State* L) { // ()
+int it_stdios_lua(lua_State* L) { // (process)
     // stdio
     lua_pushnil(L);
     lua_setfield(L, -2, "stdnon");
