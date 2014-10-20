@@ -16,8 +16,8 @@ static void it_frees_buffer(it_buffers* buf) {
 
 int it_new_buffer_lua(lua_State* L) { // ()
     it_buffers* buf = lua_newuserdata(L, sizeof(it_buffers));
+    memset(buf, 0, sizeof(it_buffers));
     buf->free = FALSE;
-    buf->buffer = NULL;
     luaI_setmetatable(L, "Buffer");
     return 1;
 }

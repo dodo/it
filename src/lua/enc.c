@@ -135,8 +135,7 @@ int it_new_enc_lua(lua_State* L) { // ((optional) enc_pointer)
         lua_newtable(L);
     } else {
         it_encodes* enc = lua_newuserdata(L, sizeof(it_encodes));
-        enc->encoder = NULL;
-        enc->thread = NULL;
+        memset(enc, 0, sizeof(it_encodes));
     }
     luaI_setmetatable(L, "Encoder");
     return 1;

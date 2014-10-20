@@ -21,7 +21,7 @@ int it_new_frame_lua(lua_State* L)  { // (width, height)
     size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
     size += (ROUND_UP_8(w)/2) * (ROUND_UP_2(h)/2);
     it_frames* fr = lua_newuserdata(L, sizeof(it_frames));
-    fr->frame = NULL;
+    memset(fr, 0, sizeof(it_frames));
     fr->size = size;
     fr->width = w;
     fr->height = h;
