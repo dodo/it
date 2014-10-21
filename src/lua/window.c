@@ -3,7 +3,7 @@
 #include "luaI.h"
 
 #include "lua/window.h"
-#include "lua/ctx.h"
+#include "lua/thread.h"
 
 static void it_frees_window(it_windows* win) {
     if (!win) return;
@@ -29,6 +29,47 @@ int sdlI_ref(int c) {
     return count;
 }
 
+static void sdlI_create(void* priv) {
+    it_windows* win = (it_windows*) priv;
+    // inject window handle into lua context …
+    lua_pushlightuserdata(win->thread->ctx->lua, win);
+    lua_setglobal(win->thread->ctx->lua, "window");
+}
+
+static void sdlI_free(void* priv) {
+    it_frees_window((it_windows*) priv);
+}
+
+static void sdlI_idle(void* priv) {
+    it_windows* win = (it_windows*) priv;
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+
+        switch (event.type) {
+
+            default:
+                break;
+        }
+        if (event.type == SDL_QUIT || win->thread->closed) break;
+    }
+    if (event.type == SDL_QUIT || win->thread->closed) {
+        win->thread->free = NULL;
+        sdlI_ref(1); // prevent SDL_Quit
+        sdlI_free(priv);
+        uv_close((uv_handle_t*) win->thread->idle, NULL);
+        uv_stop(win->thread->ctx->loop);
+        return;
+    }
+    // call lua …
+    luaI_getglobalfield(win->thread->ctx->lua, "context", "emit");
+    lua_getglobal(win->thread->ctx->lua, "context"); // self
+    lua_pushstring(win->thread->ctx->lua, "need render");
+    luaI_pcall(win->thread->ctx->lua, 2, 0);
+    // free all unused data and other stuff
+    if (lua_gc(win->thread->ctx->lua, LUA_GCCOLLECT, 0))
+        luaL_error(win->thread->ctx->lua, "internal error: lua_gc failed");
+}
+
 int it_new_window_lua(lua_State* L) { // ((optional) win_pointer)
     if (lua_gettop(L) == 1 && lua_islightuserdata(L, 1)) {
         lua_newtable(L);
@@ -41,9 +82,13 @@ int it_new_window_lua(lua_State* L) { // ((optional) win_pointer)
 }
 
 int it_inits_window_lua(lua_State* L) { // (win_userdata, ctx_userdata)
-    it_windows* win = luaL_checkudata(L, 1, "Window");
-    it_states*  ctx = luaL_checkudata(L, 2, "Context");
-    win->ctx = ctx;
+    it_windows* win    = luaL_checkudata(L, 1, "Window");
+    it_threads* thread = luaL_checkudata(L, 2, "Thread");
+    win->thread = thread;
+    thread->priv = win;
+    thread->init = sdlI_create;
+    thread->callback = sdlI_idle;
+    thread->free = sdlI_free;
     return 0;
 }
 

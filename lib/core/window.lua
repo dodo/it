@@ -1,4 +1,4 @@
-local Scope = require 'scope'
+local Thread = require 'thread'
 local EventEmitter = require 'events'
 
 
@@ -14,12 +14,19 @@ function Window:init(pointer)
         self.open = nil
         return
     end
-    self.scope = Scope:new()
-    self._handle:init(self.scope.state)
+    self.thread = Thread:new()
+    self.scope = self.thread.scope
+    self._handle:init(self.thread.reference)
+    -- process 'userdata' events to 'data' events
+    self.scope:import(function ()
+        -- window handle gets injected right before
+        window = require('window'):new(window)
+    end)
 end
 
 function Window:open(title, width, height, x, y)
     self._handle:create(title, x, y, width or 200, height or 200)
+    self.thread:start()
 end
 
 function Window:close()

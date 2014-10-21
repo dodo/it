@@ -63,6 +63,7 @@ typedef struct {
 } it_frames;
 
 typedef struct {
+    it_threads* thread;
     SDL_Window *window;
     SDL_Renderer *renderer;
 } it_windows;
