@@ -25,6 +25,7 @@ int sdlI_ref(int c) {
             sdlI_error("SDL_Init: failed to initialize SDL (%s)");
     }
     count += c;
+    if (count < 0) count = 0;
     if (!count) SDL_Quit();
     return count;
 }
