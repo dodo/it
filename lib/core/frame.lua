@@ -41,6 +41,20 @@ function Frame:convert(format) -- format or frame
     end
 end
 
+function Frame:buffer()
+    local buffers = {}
+    for i = 0,2 do
+        if self.raw.components[i].length > 0 then
+            table.insert(buffers, require('buffer'):new(
+                self.raw.components[i].data,
+                self.raw.components[i].length,
+                'frame' -- encoding
+            ))
+        end
+    end
+    return unpack(buffers)
+end
+
 function Frame:surface()
     if self._surface then return self._surface end
     local cairo = require('lgi').cairo -- lazy load lgi
