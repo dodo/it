@@ -41,14 +41,12 @@ function Encoder:init(filename, pointer)
         -- encoder handle gets injected right before
         encoder = require('encoder'):new(nil, encoder)
         -- expose userdata as buffers
-        local Buffer = require 'buffer'
         context:on('userdata', function (raw, len)
-            context:emit('data', Buffer:new(raw, len))
+            context:emit('data', require('buffer'):new(raw, len))
         end)
         -- expose SchroFrames as objects
-        local Frame = require 'frame'
         context:on('need frame', function ()
-            local frame = Frame:new(
+            local frame = require('frame'):new(
                 encoder.format.width,
                 encoder.format.height,
                 encoder.frame_format
