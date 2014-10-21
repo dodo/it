@@ -7,7 +7,6 @@
 
 static void it_frees_window(it_windows* win) {
     if (!win) return;
-    sdlI_ref(-1);
     if (win->window) {
         SDL_DestroyWindow(win->window);
         win->window = NULL;
@@ -16,6 +15,7 @@ static void it_frees_window(it_windows* win) {
         SDL_DestroyRenderer(win->renderer);
         win->renderer = NULL;
     }
+    sdlI_ref(-1);
 }
 
 int sdlI_ref(int c) {
