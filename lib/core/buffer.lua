@@ -10,8 +10,8 @@ function Buffer:init(data, length, encoding)
     if type(length) == 'string' then
         length, encoding = nil, length
     end
-    if type(data) == 'userdata' then
-         encoding = encoding or 'userdata'
+    if type(data) == 'userdata' or type(data) == 'cdata' then
+        encoding = encoding or 'userdata'
     end
     self.encoding = encoding
     self._buffer = _it.buffers()
