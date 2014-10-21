@@ -46,6 +46,7 @@ static const luaL_Reg luaI_reg_enc[] = {
     {"create", it_creates_enc_lua},
     {"start", it_starts_enc_lua},
     {"push", it_pushes_frame_enc_lua},
+    {"getsettings", it_gets_settings_enc_lua},
     {"getformat", it_gets_format_enc_lua},
     {"setformat", it_sets_format_enc_lua},
     {"setdebug", it_sets_debug_enc_lua},

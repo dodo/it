@@ -141,7 +141,7 @@ int it_new_enc_lua(lua_State* L) { // ((optional) enc_pointer)
     return 1;
 }
 
-int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, settings)
+int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata)
     it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
     it_states*  ctx = luaL_checkudata(L, 2, "Context");
     if (enc->encoder) return 0;
@@ -162,8 +162,6 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata, setting
         luaI_error(L, "schro_encoder_new: failed to create encoder");
     schro_video_format_set_std_video_format(&enc->encoder->video_format,
         SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
-    // fill settings table from args
-    luaI_setencodersettings(L, 3);
     return 0;
 }
 
@@ -209,6 +207,16 @@ int it_pushes_frame_enc_lua(lua_State* L) { // (enc_userdata, frame_userdata)
         lua_pushboolean(L, TRUE);
     } else {
         lua_pushboolean(L, FALSE);
+    }
+    return 1;
+}
+
+int it_gets_settings_enc_lua(lua_State* L) { // (enc_userdata)
+    if (lua_gettop(L) == 1 && !lua_isnil(L, 1)) {
+        it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
+        luaI_pushencodersettings(L, enc->encoder);
+    } else {
+        luaI_pushschrosettings(L);
     }
     return 1;
 }

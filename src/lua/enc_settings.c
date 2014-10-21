@@ -52,7 +52,7 @@ lua_Number luaI_toencodersetting_value(lua_State* L, int index, const SchroEncod
     }
 }
 
-void luaI_setencodersetting(lua_State* L, int index, const SchroEncoderSetting* info) {
+void luaI_setencodersetting(lua_State* L, int index, const SchroEncoderSetting* info, double value) {
     // create table with setting parameters (min, max, default or stringified enum)
     if (info->type == SCHRO_ENCODER_SETTING_TYPE_ENUM) {
         int len = 1 + info->max - info->min;
@@ -71,7 +71,7 @@ void luaI_setencodersetting(lua_State* L, int index, const SchroEncoderSetting* 
         luaI_pushencodersetting_value(L, info, info->max);
         lua_setfield(L, -2, "max");
     }
-    luaI_pushencodersetting_value(L, info, info->default_value);
+    luaI_pushencodersetting_value(L, info, value);
     lua_setfield(L, -2, "value");
     luaI_pushencodersetting_value(L, info, info->default_value);
     lua_setfield(L, -2, "default");
@@ -87,23 +87,10 @@ double luaI_getencodersetting(lua_State* L, int index, const SchroEncoderSetting
         k++;
     }
     value = luaI_toencodersetting_value(L, -1, info);
-    if (k == 1) {
-        // restore table if value was overwritten
-        luaI_setencodersetting(L, index, info);
-        lua_getfield(L, index, info->name);
-        lua_pushvalue(L, -2);
-        lua_setfield(L, -2, "value");
-        k++;
-    }
+    // restore table if value was overwritten
+    if (k == 1) luaI_setencodersetting(L, index, info, value);
     lua_pop(L, k);
     return value;
-}
-
-void luaI_setencodersettings(lua_State* L, int index) {
-    int i; int n = schro_encoder_get_n_settings();
-    for (i = 0; i < n; i++) {
-        luaI_setencodersetting(L, index, schro_encoder_get_setting_info(i));
-    }
 }
 
 void luaI_getencodersettings(lua_State* L, int index, SchroEncoder* encoder) {
@@ -112,5 +99,24 @@ void luaI_getencodersettings(lua_State* L, int index, SchroEncoder* encoder) {
         const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
         schro_encoder_setting_set_double(encoder, info->name,
             luaI_getencodersetting(L, index, info));
+    }
+}
+
+void luaI_pushencodersettings(lua_State* L, SchroEncoder* encoder) {
+    int i; int n = schro_encoder_get_n_settings();
+    lua_createtable(L, 0, n);
+    for (i = 0; i < n; i++) {
+        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
+        luaI_setencodersetting(L, -1, info,
+            schro_encoder_setting_get_double(encoder, info->name));
+    }
+}
+
+void luaI_pushschrosettings(lua_State* L) {
+    int i; int n = schro_encoder_get_n_settings();
+    lua_createtable(L, 0, n);
+    for (i = 0; i < n; i++) {
+        const SchroEncoderSetting* info = schro_encoder_get_setting_info(i);
+        luaI_setencodersetting(L, -1, info, info->default_value);
     }
 }

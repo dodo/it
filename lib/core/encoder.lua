@@ -18,6 +18,7 @@ function Encoder:init(filename, pointer)
     if pointer then -- other stuff not needed in scope context
         self.start = nil
         self.format = util.readonlytable(self:getformat().raw)
+        self.settings = util.readonlytable(self._handle.getsettings(pointer))
         return
     end
     if filename == false then
@@ -33,8 +34,8 @@ function Encoder:init(filename, pointer)
         left_offset = 0,
         top_offset = 0,
     }
-    self.settings = {}
-    self._handle:create(self.scope.state, self.settings) -- FIXME maybe doing this lazy?
+    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
+    self.settings = self._handle.getsettings()
     -- process 'userdata' events to 'data' events
     self.scope:import(function ()
         -- encoder handle gets injected right before
