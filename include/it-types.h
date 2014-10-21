@@ -9,6 +9,7 @@
 
 #define stdnon  (FILE*) -1
 
+typedef void (*uvI_thread_callback) (void *priv);
 
 typedef struct {
     lua_State *lua;
@@ -25,16 +26,24 @@ typedef struct {
 } it_processes;
 
 typedef struct {
-    uv_loop_t *loop;
-    uv_idle_t *idle;
     it_states *ctx;
     uv_thread_t *thread;
+    uv_idle_t *idle;
+    uvI_thread_callback init;
+    uvI_thread_callback callback;
+    uvI_thread_callback free;
+    schro_bool closed;
+    void* priv;
+} it_threads;
+
+typedef struct {
+    it_threads* thread;
     SchroEncoder *encoder;
     OGGZ *container;
     ogg_int64_t granulepos;
     ogg_int64_t packetno;
     schro_bool eos_pulled;
-    schro_bool closed;
+    schro_bool started;
     long serialno;
     int frames;
     int length;

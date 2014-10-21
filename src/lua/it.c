@@ -1,12 +1,14 @@
 #include <stdio.h>
 
 #include <uv.h>
+#include <SDL.h>
 
 #include "it.h"
 #include "luaI.h"
 
 #include "lua/it.h"
 #include "lua/ctx.h"
+#include "lua/thread.h"
 #include "lua/enc.h"
 #include "lua/buffer.h"
 #include "lua/frame.h"
@@ -50,6 +52,10 @@ int it_loads_lua(lua_State* L) { // (metatable_name)
 
 int it_forks_lua(lua_State* L) { // ()
     return it_new_ctx_lua(L);
+}
+
+int it_capsules_lua(lua_State* L) { // ((optional) thread_pointer)
+    return it_new_thread_lua(L);
 }
 
 int it_encodes_lua(lua_State* L) { // ((optional) enc_pointer)

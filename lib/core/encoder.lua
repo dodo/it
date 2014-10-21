@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 local util = require 'util'
-local Scope = require 'scope'
+local Thread = require 'thread'
 local EventEmitter = require 'events'
 
 require('cface')(_it.libdir .. "schrovideoformat.h")
@@ -24,7 +24,8 @@ function Encoder:init(filename, pointer)
     if filename == false then
         return
     end
-    self.scope = Scope:new()
+    self.thread = Thread:new()
+    self.scope = self.thread.scope
     self.output = filename or process.stdnon
     self.format = { -- defaults
         width = 352,
@@ -34,7 +35,7 @@ function Encoder:init(filename, pointer)
         left_offset = 0,
         top_offset = 0,
     }
-    self._handle:create(self.scope.state) -- FIXME maybe doing this lazy?
+    self._handle:create(self.thread.reference) -- FIXME maybe doing this lazy?
     self.settings = self._handle.getsettings()
     -- process 'userdata' events to 'data' events
     self.scope:import(function ()
@@ -64,7 +65,6 @@ local ENUMS = {
   transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
 }
 function Encoder:start()
-    process.shutdown = false -- prevent process from shutting down
     local format = self:getformat()
     util.update_ffi(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
     self._handle:setformat(format.pointer)
@@ -75,6 +75,7 @@ function Encoder:start()
     end
     self.settings = util.readonlytable(self.settings)
     self.format = util.readonlytable(self.format)
+    self.thread:start() -- at last
 end
 
 function Encoder:push(frame)

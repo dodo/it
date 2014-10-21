@@ -14,6 +14,7 @@ it: it.c \
 	src/orcI.c \
 	src/lua/it.c \
 	src/lua/ctx.c \
+	src/lua/thread.c \
 	src/lua/enc.c \
 	src/lua/enc_settings.c \
 	src/lua/process.c \
