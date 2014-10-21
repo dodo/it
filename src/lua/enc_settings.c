@@ -76,7 +76,7 @@ void luaI_setencodersetting(lua_State* L, int index, const SchroEncoderSetting* 
     luaI_pushencodersetting_value(L, info, info->default_value);
     lua_setfield(L, -2, "default");
     // now store table in settings
-    lua_setfield(L, index, info->name);
+    lua_setfield(L, index - (index < 0), info->name);
 }
 
 double luaI_getencodersetting(lua_State* L, int index, const SchroEncoderSetting* info) {
