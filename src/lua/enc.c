@@ -148,13 +148,6 @@ int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata)
     ctx->free = FALSE; // take over ctx
     schro_init();
     enc->ctx = ctx;
-    enc->length = 0;
-    enc->frames = 0;
-    enc->serialno = 0;
-    enc->packetno = 0;
-    enc->granulepos = 0;
-    enc->thread = NULL;
-    enc->buffer = NULL;
     enc->closed = FALSE;
     enc->eos_pulled = FALSE;
     enc->encoder = schro_encoder_new();
