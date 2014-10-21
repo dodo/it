@@ -1,13 +1,12 @@
 local Thread = require 'thread'
-local EventEmitter = require 'events'
+local Prototype = require 'prototype'
 
 
-local Window = EventEmitter:fork()
+local Window = Prototype:fork()
 
 
 _it.loads('Window')
 function Window:init(pointer)
-    self.prototype.init(self)
     self._pointer = pointer
     self._handle = _it.windows(pointer)
     if pointer then

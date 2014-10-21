@@ -1,16 +1,15 @@
 local ffi = require 'ffi'
 local util = require 'util'
 local Thread = require 'thread'
-local EventEmitter = require 'events'
+local Prototype = require 'prototype'
 
 require('cface')(_it.libdir .. "schrovideoformat.h")
 
 
-local Encoder = EventEmitter:fork()
+local Encoder = Prototype:fork()
 
 _it.loads('Encoder')
 function Encoder:init(filename, pointer)
-    self.prototype.init(self)
     self._pointer = pointer
     self.frame_format = 'ARGB'
     self.push = self:bind('push')
