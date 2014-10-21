@@ -5,6 +5,7 @@
 #include <lua.h>
 #include <schroedinger/schro.h>
 #include <oggz/oggz.h>
+#include <SDL.h>
 
 #define stdnon  (FILE*) -1
 
@@ -51,6 +52,11 @@ typedef struct {
     int width;
     int height;
 } it_frames;
+
+typedef struct {
+    SDL_Window *window;
+    SDL_Renderer *renderer;
+} it_windows;
 
 
 #endif /* IT_TYPES_H */

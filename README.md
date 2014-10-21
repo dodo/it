@@ -8,6 +8,7 @@ C Deps:
     * libschrödinger
     * liboggz
     * liborc
+    * libsdl2
 
 Lua Deps:
     * lgi

@@ -12,6 +12,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"encodes", it_encodes_lua},
     {"buffers", it_buffers_lua},
     {"frames", it_frames_lua},
+    {"windows", it_windows_lua},
     {"versions", it_versions_lua},
     {NULL, NULL}
 };
@@ -64,6 +65,14 @@ static const luaL_Reg luaI_reg_frame[] = {
     {NULL, NULL}
 };
 
+#include "lua/window.h"
+static const luaL_Reg luaI_reg_window[] = {
+    {"init", it_inits_window_lua},
+    {"create", it_creates_window_lua},
+    {"__gc", it_kills_window_lua},
+    {NULL, NULL}
+};
+
 
 int luaI_loadmetatable(lua_State* L, int i) {
     const char *name = lua_tostring(L, i);
@@ -74,6 +83,7 @@ int luaI_loadmetatable(lua_State* L, int i) {
         case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
         case 'F'/*rame*/:   luaI_newmetatable(L, name, luaI_reg_frame); break;
         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
+        case 'W'/*indow*/:  luaI_newmetatable(L, name, luaI_reg_window); break;
         default: luaI_error(L, "unknown metatable %s!", name); break;
     }
     lua_pop(L, 1); // dont need metatable right now

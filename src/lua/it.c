@@ -10,6 +10,7 @@
 #include "lua/enc.h"
 #include "lua/buffer.h"
 #include "lua/frame.h"
+#include "lua/window.h"
 
 
 int it_stdios_lua(lua_State* L) { // (process)
@@ -59,8 +60,12 @@ int it_buffers_lua(lua_State* L) { // ()
     return it_new_buffer_lua(L);
 }
 
-int it_frames_lua(lua_State* L)  {// (width, height)
+int it_frames_lua(lua_State* L)  { // (width, height)
     return it_new_frame_lua(L);
+}
+
+int it_windows_lua(lua_State* L)  { // ((optional) window_pointer)
+    return it_new_window_lua(L);
 }
 
 int it_versions_lua(lua_State* L) {
@@ -94,6 +99,16 @@ int it_versions_lua(lua_State* L) {
     // * liborc
     lua_pushfstring(L, "liborc %s", PKG_ORC_VERSION);
     lua_setfield(L, -2, "orc");
+    // * libsdl2
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+    lua_pushfstring(L, "libsdl2 %d.%d.%d (linked against %d.%d.%d)",
+                        compiled.major, compiled.minor, compiled.patch,
+                        linked.major, linked.minor, linked.patch);
+    lua_setfield(L, -2, "sdl");
     return 1;
 }
 
