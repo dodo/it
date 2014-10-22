@@ -55,7 +55,9 @@ function Frame:buffer()
     return unpack(buffers)
 end
 
+
 function Frame:surface()
+    self.rendered = false
     if self._surface then return self._surface end
 --     self:validate()
     self._surface = util.cairo_surface(self._handle:getdata(), 'ARGB',
@@ -72,6 +74,8 @@ function Frame:fix_endian()
 end
 
 function Frame:render()
+    if self.rendered then return self._handle end
+    self.rendered = true
     if self._surface then
         -- do any pending drawing for the surface
         self._surface.object:flush()
