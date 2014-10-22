@@ -18,9 +18,8 @@ function Window:init(pointer)
     self.thread = Thread:new()
     self.scope = self.thread.scope
     self._handle:init(self.thread.reference)
-    -- process 'userdata' events to 'data' events
+    -- window handle gets injected right before everthing else
     self.scope:import(function ()
-        -- window handle gets injected right before
         window = require('window'):new(window)
     end)
 end

@@ -41,12 +41,17 @@ function Frame:convert(format) -- format or frame
     end
 end
 
+function Frame:data()
+    return self._handle:getdata()
+end
+
 function Frame:buffer()
     local buffers = {}
+    local data = {self:data()}
     for i = 0,2 do
         if self.raw.components[i].length > 0 then
             table.insert(buffers, require('buffer'):new(
-                self.raw.components[i].data,
+                data[i+1],
                 self.raw.components[i].length,
                 'frame' -- encoding
             ))
@@ -60,8 +65,7 @@ function Frame:surface()
     self.rendered = false
     if self._surface then return self._surface end
 --     self:validate()
-    self._surface = util.cairo_surface(self._handle:getdata(), 'ARGB',
-                                       self.width, self.height)
+    self._surface = util.cairo_surface(self:data(),'ARGB',self.width,self.height)
     return self._surface
 end
 
