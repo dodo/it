@@ -91,11 +91,18 @@ function exports.table_format(s, t)
 end
 
 function exports.cairo_surface(data, format, width, height)
-    local cairo = require('lgi').cairo
-    local surface = cairo.ImageSurface.create_for_data(
-        data, format, width, height,
-        cairo.Format.stride_for_width(format, width)
-    )
+    if type(data) == 'string' then
+        data, format, width, height = nil, data, format, width
+    end
+    local cairo, surface = require('lgi').cairo, nil
+    if not data then
+        surface = cairo.ImageSurface.create(format, width, height)
+    else
+        surface = cairo.ImageSurface.create_for_data(
+            data, format, width, height,
+            cairo.Format.stride_for_width(format, width)
+        )
+    end
     return {
         object = surface,
         context = cairo.Context.create(surface),
