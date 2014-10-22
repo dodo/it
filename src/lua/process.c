@@ -1,3 +1,5 @@
+#include <uv.h>
+
 #include "it.h"
 #include "luaI.h"
 
@@ -10,7 +12,7 @@ int it_exits_process_lua(lua_State* L) { // (exit_code)
     if (lua_gettop(L) == 1 && !lua_isnil(L, 1))
         code = luaL_checkint(L, 1);
     process->exit_code = code;
-    uv_stop(process->ctx->loop);
+    uv_kill(getpid(), SIGINT);
     return 0;
 }
 
