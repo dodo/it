@@ -8,6 +8,7 @@
 
 int it_exits_process_lua(lua_State* L) { // (exit_code)
     it_processes* process = luaI_getprocess(L);
+    if (!process->sigint) return 0;
     int code = 0;
     if (lua_gettop(L) == 1 && !lua_isnil(L, 1))
         code = luaL_checkint(L, 1);

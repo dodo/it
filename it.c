@@ -9,8 +9,11 @@
 
 
 static void sigint_cb(uv_signal_t* handle, int signum) {
+    it_processes* process = (it_processes*) handle->data;
     uv_stop(handle->loop);
     uv_signal_stop(handle);
+    process->sigint = NULL;
+    handle->data = NULL;
 }
 
 int main(int argc, char *argv[]) {
@@ -27,6 +30,7 @@ int main(int argc, char *argv[]) {
     // init signals
     uv_signal_t sigint_signal;
     process.sigint = &sigint_signal;
+    sigint_signal.data = &process;
     // start signal watchers
     uv_signal_init(ctx.loop, process.sigint);
     uv_signal_start(process.sigint, sigint_cb, SIGINT);
