@@ -54,6 +54,10 @@ static void sdlI_idle(void* priv) {
         if (event.type == SDL_QUIT || win->thread->closed) break;
     }
     if (event.type == SDL_QUIT || win->thread->closed) {
+        luaI_getglobalfield(win->thread->ctx->lua, "window", "emit");
+        lua_getglobal(win->thread->ctx->lua, "window"); // self
+        lua_pushstring(win->thread->ctx->lua, "close");
+        luaI_pcall(win->thread->ctx->lua, 2, 0);
         win->thread->free = NULL;
         sdlI_ref(1); // prevent SDL_Quit
         sdlI_free(priv);
