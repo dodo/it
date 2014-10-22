@@ -42,6 +42,13 @@ int it_imports_ctx_lua(lua_State* L) { // (state_userdata, function)
     return 0;
 }
 
+int it_defines_ctx_lua(lua_State* L) { // (state_userdata, name, userdata)
+    it_states* ctx = luaL_checkudata(L, 1, "Context");
+    lua_pushlightuserdata(ctx->lua, lua_touserdata(L, 3));
+    lua_setglobal(ctx->lua, luaL_checkstring(L, 2));
+    return 0;
+}
+
 int it_calls_ctx_lua(lua_State* L) { // (state_userdata)
     it_states* ctx = luaL_checkudata(L, 1, "Context");
     luaI_getglobalfield(ctx->lua, "context", "run");

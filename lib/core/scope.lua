@@ -11,6 +11,13 @@ function Scope:import(method)
     return self.state:import(method)
 end
 
+function Scope:define(name, userdata, import)
+    self.state:define(name, userdata)
+    if import then
+        self:import(import)
+    end
+end
+
 function Scope:call()
     return self.state:call()
 end

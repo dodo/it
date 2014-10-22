@@ -38,6 +38,7 @@ static const luaL_Reg luaI_reg_buffer[] = {
 #include "lua/ctx.h"
 static const luaL_Reg luaI_reg_ctx[] = {
     {"import", it_imports_ctx_lua},
+    {"define", it_defines_ctx_lua},
     {"call", it_calls_ctx_lua},
     {"__gc", it_kills_ctx_lua},
     {NULL, NULL}
