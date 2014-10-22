@@ -5,6 +5,13 @@
 #include "lua/ctx.h"
 
 
+static void default_thread_init(void* priv) {
+    it_threads* thread = (it_threads*) priv;
+    // inject encoder handle into lua context …
+    lua_pushlightuserdata(thread->ctx->lua, thread);
+    lua_setglobal(thread->ctx->lua, "thread");
+}
+
 static void default_thread_callback(void* priv) {
     it_threads* thread = (it_threads*) priv;
     luaI_getglobalfield(thread->ctx->lua, "context", "emit");
@@ -55,6 +62,7 @@ int it_inits_thread_lua(lua_State* L) { // (thread_userdata, state_userdata)
     ctx->free = FALSE; // take over ctx
     thread->ctx = ctx;
     thread->closed = FALSE;
+    thread->init = default_thread_init;
     thread->callback = default_thread_callback;
     thread->priv = thread;
     return 0;
