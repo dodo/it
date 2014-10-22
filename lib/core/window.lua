@@ -54,7 +54,7 @@ function Window:surface(width, height, draw)
 end
 
 function Window:close()
-    self._handle:close()
+    self._handle:__gc()
 end
 
 
