@@ -57,18 +57,9 @@ end
 
 function Frame:surface()
     if self._surface then return self._surface end
-    local cairo = require('lgi').cairo -- lazy load lgi
-    local f = 'ARGB'--self.format
 --     self:validate()
-    local surface = cairo.ImageSurface.create_for_data(
-        self._handle:getdata(), f,
-        self.width, self.height,
-        cairo.Format.stride_for_width(f, self.width)
-    )
-    self._surface = {
-        object = surface,
-        context = cairo.Context.create(surface),
-    }
+    self._surface = util.cairo_surface(self._handle:getdata(), 'ARGB',
+                                       self.width, self.height)
     return self._surface
 end
 

@@ -90,6 +90,18 @@ function exports.table_format(s, t)
     return s
 end
 
+function exports.cairo_surface(data, format, width, height)
+    local cairo = require('lgi').cairo
+    local surface = cairo.ImageSurface.create_for_data(
+        data, format, width, height,
+        cairo.Format.stride_for_width(format, width)
+    )
+    return {
+        object = surface,
+        context = cairo.Context.create(surface),
+    }
+end
+
 function exports.update_ffi(interface, values, opts)
     local ffi = require 'ffi'
     for key,value in pairs(values) do
