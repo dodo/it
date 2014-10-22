@@ -26,6 +26,7 @@ function Window:init(pointer)
 end
 
 function Window:open(title, width, height, x, y)
+    self.open = nil
     self.width = width or 200
     self.height = height or 200
     self._handle:create(title, x, y, self.width, self.height)
