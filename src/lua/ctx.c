@@ -24,6 +24,8 @@ int it_new_ctx_lua(lua_State* L) { // ()
         lua_pushnil(L);
         return 1;
     }
+    lua_pushlightuserdata(ctx->lua, luaI_getprocess(L));
+    luaI_setglobalfield(ctx->lua, "_it", "process");
     luaI_setmetatable(L, "Context");
     luaI_dofile(ctx->lua, "lib/context.lua");
     return 1;

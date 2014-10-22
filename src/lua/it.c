@@ -30,16 +30,18 @@ int it_stdios_lua(lua_State* L) { // (process)
 
 int it_boots_lua(lua_State* L) { // (process)
     it_processes* process = luaI_getprocess(L);
-    // process.argv
-    lua_createtable(L, process->argc, 0);
-    int i; for (i = 0; i < process->argc; i++) {
-        lua_pushstring(L, process->argv[i]);
-        lua_rawseti(L, -2, i);
+    if (lua_gettop(L) == 1 && !lua_isnil(L, 1)) {
+        // process.argv
+        lua_createtable(L, process->argc, 0);
+        int i; for (i = 0; i < process->argc; i++) {
+            lua_pushstring(L, process->argv[i]);
+            lua_rawseti(L, -2, i);
+        }
+        lua_setfield(L, -2, "argv");
+        // process.pid
+        lua_pushinteger(L, getpid());
+        lua_setfield(L, -2, "pid");
     }
-    lua_setfield(L, -2, "argv");
-    // process.pid
-    lua_pushinteger(L, getpid());
-    lua_setfield(L, -2, "pid");
     // cfunction metatable
     lua_newtable(L);
     luaI_setmetatable(L, "Process");

@@ -10,5 +10,10 @@ context = EventEmitter:new()
 context.run    = context:bind('emit', 'run')
 context.import = context:bind('on',   'run')
 
+_it.loads('Process')
 process = EventEmitter:new()
 _it.stdios(process)
+
+function process.exit(...)
+     _it.boots().exit(...)
+end
