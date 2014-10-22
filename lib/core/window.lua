@@ -10,7 +10,7 @@ _it.loads('Window')
 function Window:init(pointer)
     self.prototype.init(self)
     self._pointer = pointer
-    self._handle = _it.windows(pointer)
+    self._handle = _it.windows(self, pointer)
     if pointer then
         self.open = nil
         return
@@ -26,7 +26,9 @@ function Window:init(pointer)
 end
 
 function Window:open(title, width, height, x, y)
-    self._handle:create(title, x, y, width or 200, height or 200)
+    self.width = width or 200
+    self.height = height or 200
+    self._handle:create(title, x, y, self.width, self.height)
     self.thread:start()
 end
 
@@ -46,9 +48,9 @@ function Window:render(width, height, userdata, stride, big_endian)
     end
 end
 
-function Window:surface(width, height, draw)
-    self:render(width, height, function (data)
-        local surface = util.cairo_surface(data, 'ARGB', width, height)
+function Window:surface(draw)
+    self:render(self.width, self.height, function (data)
+        local surface = util.cairo_surface(data, 'ARGB', self.width, self.height)
         draw(surface.context, surface.object)
     end)
 end

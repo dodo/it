@@ -75,9 +75,16 @@ static void sdlI_idle(void* priv) {
         luaL_error(win->thread->ctx->lua, "internal error: lua_gc failed");
 }
 
-int it_new_window_lua(lua_State* L) { // ((optional) win_pointer)
-    if (lua_gettop(L) == 1 && lua_islightuserdata(L, 1)) {
+int it_new_window_lua(lua_State* L) { // (window, (optional) win_pointer)
+    if (lua_gettop(L) == 2 && lua_islightuserdata(L, 2)) {
+        it_windows* win = lua_touserdata(L, 2);
         lua_newtable(L);
+        int w, h;
+        SDL_GetWindowSize(win->window, &w, &h);
+        lua_pushinteger(L, w);
+        lua_setfield(L, 1, "width");
+        lua_pushinteger(L, h);
+        lua_setfield(L, 1, "height");
     } else {
         it_windows* win = lua_newuserdata(L, sizeof(it_windows));
         memset(win, 0, sizeof(it_windows));
