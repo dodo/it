@@ -78,6 +78,7 @@ static const luaL_Reg luaI_reg_frame[] = {
 static const luaL_Reg luaI_reg_window[] = {
     {"init", it_inits_window_lua},
     {"create", it_creates_window_lua},
+    {"render", it_renders_window_lua},
     {"__gc", it_kills_window_lua},
     {NULL, NULL}
 };

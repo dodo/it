@@ -30,6 +30,22 @@ function Window:open(title, width, height, x, y)
     self.thread:start()
 end
 
+function Window:render(width, height, userdata, stride, big_endian)
+    -- userdata should be in native endian
+    if type(userdata) == 'userdata' then
+        self._handle.render(
+            self._pointer or self._handle,
+            width, height, userdata, stride
+        )
+    elseif type(userdata) == 'function' then
+        local callback = userdata
+        self._handle.render(
+            self._pointer or self._handle,
+            width, height, callback
+        )
+    end
+end
+
 function Window:surface(width, height, draw)
     self:render(width, height, function (data)
         local surface = util.cairo_surface(data, 'ARGB', width, height)

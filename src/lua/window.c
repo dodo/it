@@ -120,6 +120,53 @@ int it_creates_window_lua(lua_State* L) { // (win_userdata)
     return 0;
 }
 
+int it_renders_window_lua(lua_State* L) { // (win_userdata, width, height, void*_data, stride) or (win_userdata, width, height, function)
+    it_windows* win = luaI_checklightuserdata(L, 1, "Window");
+    if (!win->window) return 0;
+    SDL_Surface* screen = SDL_GetWindowSurface(win->window);
+    if (!screen)
+        sdlI_lua_error(L,"SDL_GetWindowSurface: failed to get window surface (%s)");
+    SDL_Surface* surface = NULL;
+    if (lua_isuserdata(L, 4)) {
+        surface = SDL_CreateRGBSurfaceFrom(
+            lua_touserdata(L, 4), // data
+            luaL_checkint(L,  2), // width
+            luaL_checkint(L,  3), // height
+            32,                   // depth
+            luaL_checkint(L,  5), // stride
+            0x00ff0000,           // Rmask
+            0x0000ff00,           // Gmask
+            0x000000ff,           // Bmask
+            0xff000000            // Amask
+        );
+    } else {
+        surface = SDL_CreateRGBSurface(
+            0,                    // flags
+            luaL_checkint(L,  2), // width
+            luaL_checkint(L,  3), // height
+            32,                   // depth
+            0x00ff0000,           // Rmask
+            0x0000ff00,           // Gmask
+            0x000000ff,           // Bmask
+            0xff000000            // Amask
+        );
+        if (lua_isfunction(L, 4)) {
+            lua_pushvalue(L, 4);
+            lua_pushlightuserdata(L, surface->pixels);
+            lua_pushinteger(L, 4 * luaL_checkint(L,  2) * luaL_checkint(L,  3)); // length
+            luaI_pcall(L, 2, 0);
+        }
+    }
+    if (!surface)
+        sdlI_lua_error(L,"SDL_CreateRGBSurfaceFrom: failed to create rgba surface (%s)");
+    if (SDL_BlitSurface(surface, NULL, screen, NULL)) // blit into screen
+        sdlI_lua_error(L, "SDL_BlitSurface: failed to blit rgba surface (%s)");
+    if (SDL_UpdateWindowSurface(win->window))
+        sdlI_lua_error(L, "SDL_UpdateWindowSurface: failed to update window surface (%s)");
+    SDL_FreeSurface(surface);
+    return 0;
+}
+
 int it_kills_window_lua(lua_State* L) { // (win_userdata)
     it_frees_window(luaL_checkudata(L, 1, "Window"));
     return 0;
