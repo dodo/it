@@ -7,7 +7,7 @@ local _table = require 'util.table'
 local Metatype = require 'metatype'
 
 cface(_it.libdir .. "schrovideoformat.h")
-cface.typedef('struct _$', 'SchroEncoder')
+cface(_it.libdir .. "schroencoder.h")
 cface.typedef('struct _$', 'OGGZ')
 
 
