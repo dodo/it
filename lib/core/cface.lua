@@ -29,12 +29,18 @@ function exports.interface(filename)
         if not src:match('^//') then
             header = header:gsub(escape(src:gsub('^[^#]*', "")), "")
             key, value = src:match('define%s+(%g+)%s*([^\n]*)\n')
-            if key then define[key] = value end
+            if key then
+                -- replace defines within define
+                for k,v in pairs(define) do
+                    value = value:gsub(k, v)
+                end
+                define[escape(key)] = value
+            end
         end
     end
     -- replace used defines
     for key,value in pairs(define) do
-        header = header:gsub(escape(key), value)
+        header = header:gsub(key, value)
     end
     -- now use that …
     cface.declaration(header)
