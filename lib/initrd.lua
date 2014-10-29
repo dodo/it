@@ -79,8 +79,7 @@ end
 
 
 if #process.argv == 0 then
-    print "no repl, no script file."
-    process.exit(1)
+    require('cli').repl()
 else
     if not fs.exists(process.argv[1]) then
         print "script file does not exist."

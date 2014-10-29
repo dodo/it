@@ -2,7 +2,7 @@ muSchro0m it
 ============
 
 
-C Deps:
+C Deps: (apt-get install *-dev)
     * libuv
     * luajit
     * libschrödinger
@@ -10,5 +10,7 @@ C Deps:
     * liborc
     * libsdl2
 
-Lua Deps:
-    * lgi
+Lua Deps: (luarocks install *)
+    * linenoise
+    * lua-term
+    * luarepl
