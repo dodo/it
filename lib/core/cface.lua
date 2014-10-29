@@ -26,8 +26,8 @@ function exports.interface(filename)
     -- remove all defines and store their key,value pairs
     local key, value
     for src in header:gmatch('(/?/?%s*#%s*define[^\n]-\n)') do
-        if not src:find('//') then
-            header = header:gsub(escape(src), "")
+        if not src:match('^//') then
+            header = header:gsub(escape(src:gsub('^[^#]*', "")), "")
             key, value = src:match('define%s+(%g+)%s*([^\n]*)\n')
             if key then define[key] = value end
         end
