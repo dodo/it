@@ -13,11 +13,37 @@ local errors = {
 }
 
 
+local function __pairs(cdata)
+    if not cdata then return end
+    local i = 1
+    return function (refct, key)
+        local member = refct:member(i)
+        if member then
+            i = i + 1
+            return member.name, cdata[member.name]
+        end
+    end, require('reflect').typeof(cdata), i
+end
+
+local function __ipairs(cdata)
+    if not cdata then return end
+    local i = 1
+    return function (refct, key)
+        local member = refct:member(i)
+        if member then
+            i = i + 1
+            return i - 1, cdata[member.name]
+        end
+    end, require('reflect').typeof(cdata), i
+end
+
 function Metatype:fork(proto)
     local fork = Prototype.fork(self, proto)
     -- no Metatype functions inside ctype plz
     fork.prototype = {}
     fork.metatable.__index = fork.prototype
+    fork.metatable.__ipairs = __ipairs
+    fork.metatable.__pairs = __pairs
     return fork
 end
 
