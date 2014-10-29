@@ -2,18 +2,20 @@
 
 #include <uv.h>
 #include <SDL.h>
+#include <schroedinger/schro.h>
+#include <schroedinger/schrodebug.h>
 
 #include "it.h"
 #include "luaI.h"
 
-#include "lua/it.h"
-#include "lua/ctx.h"
-#include "lua/thread.h"
-#include "lua/enc.h"
-#include "lua/buffer.h"
-#include "lua/frame.h"
-#include "lua/window.h"
+#include "api/it.h"
 
+
+
+void it_sets_schro_debug_level(int level) {
+    schro_init();
+    schro_debug_set_level(level);
+}
 
 int it_stdios_lua(lua_State* L) { // (process)
     // stdio
@@ -30,55 +32,26 @@ int it_stdios_lua(lua_State* L) { // (process)
 
 int it_boots_lua(lua_State* L) { // (process)
     it_processes* process = luaI_getprocess(L);
-    if (lua_gettop(L) == 1 && !lua_isnil(L, 1)) {
-        // process.argv
-        lua_createtable(L, process->argc, 0);
-        int i; for (i = 0; i < process->argc; i++) {
-            lua_pushstring(L, process->argv[i]);
-            lua_rawseti(L, -2, i);
-        }
-        lua_setfield(L, -2, "argv");
-        // process.pid
-        lua_pushinteger(L, getpid());
-        lua_setfield(L, -2, "pid");
+    // process.argv
+    lua_createtable(L, process->argc, 0);
+    int i; for (i = 0; i < process->argc; i++) {
+        lua_pushstring(L, process->argv[i]);
+        lua_rawseti(L, -2, i);
     }
-    // cfunction metatable
-    lua_newtable(L);
-    luaI_setmetatable(L, "Process");
-    return 1;
+    lua_setfield(L, -2, "argv");
+    // process.pid
+    lua_pushinteger(L, getpid());
+    lua_setfield(L, -2, "pid");
+    return 0;
 }
 
 int it_loads_lua(lua_State* L) { // (metatable_name)
     return luaI_loadmetatable(L, 1);
 }
 
-int it_forks_lua(lua_State* L) { // ()
-    return it_new_ctx_lua(L);
-}
-
-int it_capsules_lua(lua_State* L) { // ((optional) thread_pointer)
-    return it_new_thread_lua(L);
-}
-
-int it_encodes_lua(lua_State* L) { // ((optional) enc_pointer)
-    return it_new_enc_lua(L);
-}
-
-int it_buffers_lua(lua_State* L) { // ()
-    return it_new_buffer_lua(L);
-}
-
-int it_frames_lua(lua_State* L)  { // (width, height)
-    return it_new_frame_lua(L);
-}
-
-int it_windows_lua(lua_State* L)  { // ((optional) window_pointer)
-    return it_new_window_lua(L);
-}
-
 int it_versions_lua(lua_State* L) {
     lua_createtable(L, 0, 1);
-    lua_pushfstring(L, "%s %s", IT_NAMES, IT_VERSIONS);
+    lua_pushfstring(L, "[%s] %s", IT_VERSIONS, IT_NAMES);
     lua_setfield(L, -2, "it");
     // * gcc
     lua_pushfstring(L, "gcc %d.%d.%d",
@@ -119,4 +92,3 @@ int it_versions_lua(lua_State* L) {
     lua_setfield(L, -2, "sdl");
     return 1;
 }
-

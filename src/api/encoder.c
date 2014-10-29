@@ -1,17 +1,22 @@
 #include <stdio.h>
-#include <stdint.h>
-#include <string.h>
 
 #include <uv.h>
 
 #include <oggz/oggz.h>
 
-#define SCHRO_ENABLE_UNSTABLE_API
-
 #include <schroedinger/schro.h>
+#include <schroedinger/schroencoder.h>
 #include <schroedinger/schrodebug.h>
 #include <schroedinger/schroutils.h>
 #include <schroedinger/schrobuffer.h>
+
+#include "it.h"
+#include "luaI.h"
+
+#include "api/encoder.h"
+#include "api/encoder_settings.h"
+#include "api/thread.h"
+#include "api/scope.h"
 
 #include "it.h"
 #include "luaI.h"
@@ -21,7 +26,7 @@
 #include "lua/ctx.h"
 
 
-static void schroI_encoder_wait(void* priv) {
+void schroI_encoder_wait(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     if (enc->eos_pulled) return;
     SchroStateEnum state = schro_encoder_wait(enc->encoder);
@@ -38,7 +43,8 @@ static void schroI_encoder_wait(void* priv) {
                 // hopefully calls schro_encoder_push_frame
                 luaI_pcall(enc->thread->ctx->lua, 2, 0);
                 if (enc->frames == frames)
-                    it_prints_error("no schro_encoder_push_frame happened!");
+                    it_errors("no schro_encoder_push_frame happened!");
+//                     it_prints_error("no schro_encoder_push_frame happened!");
                 // free all unused frames and other stuff
                 if (lua_gc(enc->thread->ctx->lua, LUA_GCCOLLECT, 0))
                     luaL_error(enc->thread->ctx->lua, "internal error: lua_gc failed");
@@ -58,8 +64,7 @@ static void schroI_encoder_wait(void* priv) {
             // close in cose of eos
             if (state == SCHRO_STATE_END_OF_STREAM) {
                 enc->eos_pulled = TRUE;
-                uv_close((uv_handle_t*) enc->thread->idle, NULL);
-                uv_stop(enc->thread->ctx->loop);
+                it_closes_thread(enc->thread);
             }
             // skip lua and ogg in case buffer is not a full picture yet
             if (!SCHRO_PARSE_CODE_IS_PICTURE(parse_code)) {
@@ -110,23 +115,24 @@ static void schroI_encoder_wait(void* priv) {
     oggz_run(enc->container); // flush ogg pages to ogg output // FIXME thread?
 }
 
-static void schroI_encoder_start(void* priv) {
+void schroI_encoder_start(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     if (enc->started) return;
     enc->started = TRUE;
     schro_encoder_start(enc->encoder);
-    // inject encoder handle into lua context …
-    lua_pushlightuserdata(enc->thread->ctx->lua, enc);
-    lua_setglobal(enc->thread->ctx->lua, "encoder");
 }
 
-static void schroI_encoder_free(void* priv) {
+void schroI_encoder_free(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     if (!enc->encoder) return;
-    schro_encoder_free(enc->encoder);
+    SchroEncoder* encoder = enc->encoder;
     enc->encoder = NULL;
-    oggz_close(enc->container);
+    // might take a while …
+    schro_encoder_free(encoder);
+    OGGZ* container = enc->container;
     enc->container = NULL;
+    // might take a while …
+    oggz_close(container);
     if (enc->length) {
         free(enc->buffer);
         enc->buffer = NULL;
@@ -134,39 +140,33 @@ static void schroI_encoder_free(void* priv) {
     }
 }
 
-int it_new_enc_lua(lua_State* L) { // ((optional) enc_pointer)
-    if (lua_gettop(L) == 1 && lua_islightuserdata(L, 1)) {
-        lua_newtable(L);
-    } else {
-        it_encodes* enc = lua_newuserdata(L, sizeof(it_encodes));
-        memset(enc, 0, sizeof(it_encodes));
-    }
-    luaI_setmetatable(L, "Encoder");
-    return 1;
-}
-
-int it_creates_enc_lua(lua_State* L) { // (enc_userdata, state_userdata)
-    it_encodes* enc    = luaL_checkudata(L, 1, "Encoder");
-    it_threads* thread = luaL_checkudata(L, 2, "Thread");
-    if (enc->encoder) return 0;
+void it_inits_encoder(it_encodes* enc, it_threads* thread) {
+    if (enc->encoder || !thread) return;
     enc->thread = thread;
     thread->priv = enc;
-    thread->init = schroI_encoder_start;
-    thread->callback = schroI_encoder_wait;
-    thread->free = schroI_encoder_free;
+    thread->on_init = schroI_encoder_start;
+    thread->on_idle = schroI_encoder_wait;
+    thread->on_free = schroI_encoder_free;
     schro_init();
     enc->started = FALSE;
     enc->eos_pulled = FALSE;
     enc->encoder = schro_encoder_new();
     if (!enc->encoder)
-        luaI_error(L, "schro_encoder_new: failed to create encoder");
+        it_errors("schro_encoder_new: failed to create encoder");
     schro_video_format_set_std_video_format(&enc->encoder->video_format,
         SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
-    return 0;
 }
 
-int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
-    it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr) {
+    if (!enc->encoder || !fr->frame) return 0;
+    // … and right into encoder. hopefully everything is right!
+    schro_encoder_push_frame(enc->encoder, fr->frame);
+    fr->frame = NULL; // prevent schro_frame_unref
+    return ++(enc->frames);
+}
+
+int it_starts_encoder_lua(lua_State* L) { // (enc_userdata, output, settings)
+    it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);
     if (enc->started) return 0;
     // fill encoder settings with state from lua
     luaI_getencodersettings(L, 3, enc->encoder);
@@ -190,24 +190,9 @@ int it_starts_enc_lua(lua_State* L) { // (enc_userdata, output, settings)
     return 0;
 }
 
-int it_pushes_frame_enc_lua(lua_State* L) { // (enc_userdata, frame_userdata)
-    it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
-    it_frames* fr = luaI_checklightuserdata(L, 2, "Frame");
-    if (enc->encoder && fr->frame) {
-        // … and right into encoder. hopefully everything is right!
-        schro_encoder_push_frame(enc->encoder, fr->frame);
-        fr->frame = NULL; // prevent schro_frame_unref
-        (enc->frames)++;
-        lua_pushboolean(L, TRUE);
-    } else {
-        lua_pushboolean(L, FALSE);
-    }
-    return 1;
-}
-
-int it_gets_settings_enc_lua(lua_State* L) { // (enc_userdata)
+int it_gets_settings_encoder_lua(lua_State* L) { // (enc_userdata)
     if (lua_gettop(L) == 1 && !lua_isnil(L, 1)) {
-        it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
+        it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);
         luaI_pushencodersettings(L, enc->encoder);
     } else {
         luaI_pushschrosettings(L);
@@ -215,24 +200,20 @@ int it_gets_settings_enc_lua(lua_State* L) { // (enc_userdata)
     return 1;
 }
 
-int it_gets_format_enc_lua(lua_State* L) { // (enc_userdata)
-    it_encodes* enc = luaI_checklightuserdata(L, 1, "Encoder");
+int it_gets_format_encoder_lua(lua_State* L) { // (enc_userdata)
+    it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = schro_encoder_get_video_format(enc->encoder);
+    if (!format) return 0;
     lua_pushlightuserdata(L, format);
     return 1;
 }
 
-int it_sets_format_enc_lua(lua_State* L) { // (enc_userdata, videoformat_userdata)
-    it_encodes* enc = luaL_checkudata(L, 1, "Encoder");
+int it_sets_format_encoder_lua(lua_State* L) { // (enc_userdata, videoformat_userdata)
+    it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);
     if (!enc->encoder) return 0;
     SchroVideoFormat *format = lua_touserdata(L, 2);
     schro_encoder_set_video_format(enc->encoder, format);
     free(format);
-    return 0;
-}
-
-int it_sets_debug_enc_lua(lua_State* L) { // (level)
-    schro_debug_set_level(luaL_checkint(L, 1));
     return 0;
 }

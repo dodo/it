@@ -41,7 +41,5 @@
         luaI_error(L, msg, SDL_GetError()); \
     }
 
-int it_gets_cwd_lua(lua_State* L);
-
 
 #endif /* IT_H */

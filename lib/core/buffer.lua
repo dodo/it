@@ -1,8 +1,11 @@
+local ffi = require 'ffi'
 local Prototype = require 'prototype'
+local Metatype = require 'metatype'
 
 local Buffer = Prototype:fork()
+Buffer.type = Metatype:typedef('void*')
 
-_it.loads('Buffer')
+
 function Buffer:init(data, length, encoding)
     if type(data) == 'number' then
         data, length, encoding = nil, data, length
@@ -11,32 +14,35 @@ function Buffer:init(data, length, encoding)
         length, encoding = nil, length
     end
     if type(data) == 'userdata' or type(data) == 'cdata' then
-        encoding = encoding or 'userdata'
+        encoding = encoding or 'cdata'
     end
+    self.free = false
     self.encoding = encoding
-    self._buffer = _it.buffers()
     if data then
         if length then self.length = length end
-        self._buffer:user(data, length)
+        self.data = self.type:new(data)
     elseif length then
-        self.length = length
-        self._buffer:malloc(length)
+        self:malloc(length)
     end
+end
+
+function Buffer:malloc(length)
+    self.free = true
+    self.length = length
+    self.data = ffi.gc(self.type:new(ffi.C.malloc(length)), ffi.C.free)
 end
 
 function Buffer:setEncoding(encoding)
     self.encoding = encoding
 end
 
-function Buffer:copy(buf)
-    if not buf or not buf.length then return end
+function Buffer:copy(buffer)
+    if not buffer or not buffer.length then return end
     if not self.length then
-        self.length = buf.length
-        self._buffer:malloc(buf.length)
+        self:malloc(buffer.length)
     end
-    self.encoding = buf.encoding
-    -- dest:memcpy(src, dest.length)
-    self._buffer:memcpy(buf._buffer, self.length)
+    self.encoding = buffer.encoding
+    ffi.copy(self.data, buffer.data, self.length)
 end
 
 return Buffer

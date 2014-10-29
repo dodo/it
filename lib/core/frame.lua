@@ -1,57 +1,92 @@
 local ffi = require 'ffi'
-local util = require 'util'
+local _ffi = require 'util._ffi'
 local Prototype = require 'prototype'
+local Metatype = require 'metatype'
 -- local lgi = require 'lgi' -- lazy ↓
 
 require('cface')(_it.libdir .. "schroframe.h")
 
 
 local Frame = Prototype:fork()
+Frame.type = Metatype:struct("it_frames", {
+    "SchroFrame *frame";
+    "int size";
+    "int width";
+    "int height";
+})
 
-_it.loads('Frame')
+Frame.type:load(_it.libdir .. "/api.so", {
+    init = [[void it_inits_frame(it_frames* fr, int width, int height)]];
+    ref = [[void it_refs_frame(it_frames* fr, SchroFrame* frame)]];
+    create = [[void it_creates_frame(it_frames* fr, SchroFrameFormat format)]];
+    convert = [[void it_converts_frame(it_frames* src, it_frames* dst)]];
+    reverse_order = [[void it_reverses_order_frame(it_frames* fr)]];
+    __gc = [[void it_frees_frame(it_frames* fr)]];
+})
+
+
 function Frame:init(width, height, format, pointer)
     self.format = format or 'ARGB'
+    self._handle = self.type:create(nil, width, height)
     self.width, self.height = width, height
-    self._handle = _it.frames(width, height)
     self:create(pointer)
 end
 
 function Frame:create(pointer)
-    self._pointer = self._handle:create(pointer or
-        util.convert_enum('format', self.format,
-        "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"))
-    self.raw = ffi.new("SchroFrame*", self._pointer)
+    if pointer then
+        self._handle:ref(pointer)
+    else
+        self._handle:create(_ffi.convert_enum('format', self.format,
+            "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"))
+    end
+    self.raw = self._handle.frame
     return self.raw
+end
+function Frame:new_convert(format) -- format or frame
+    if not format then return self end
+    if Frame:isinstance(format) then
+        format = format.format
+    end
+    local frame = Frame:new(self.width, self.height, format)
+    self._handle:convert(frame._handle)
+    frame:create(frame._handle.frame)
+    return frame
 end
 
 function Frame:convert(format) -- format or frame
     if format and Frame:isinstance(format) then
         local frame = format
-        frame:create(self._handle:convert(frame._pointer))
+        self._handle:convert(frame._handle)
+        frame:create(frame._handle.frame)
         return frame
     elseif format then
-        local pointer = self._handle:convert(
-            util.convert_enum('format', format,
-                "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"
-            )
-        )
-        return Frame:new(self.width, self.height, format, pointer)
+        local frame = self:new_convert(format)
+        self._handle.frame = frame.raw
+        self.raw = self._handle.frame
+        frame._handle = nil
+        frame.raw = nil
+        return self
     else
         return self
     end
 end
 
 function Frame:data()
-    return self._handle:getdata()
+    local data = {}
+    for i = 0,2 do
+        if self.raw.components[i].length > 0 then
+            table.insert(data, self.raw.components[i].data)
+        end
+    end
+    return unpack(data)
 end
 
 function Frame:buffer()
     local buffers = {}
-    local data = {self:data()}
     for i = 0,2 do
         if self.raw.components[i].length > 0 then
             table.insert(buffers, require('buffer'):new(
-                data[i+1],
+                self.raw.components[i].data,
                 self.raw.components[i].length,
                 'frame' -- encoding
             ))
@@ -65,7 +100,10 @@ function Frame:surface()
     self.rendered = false
     if self._surface then return self._surface end
 --     self:validate()
-    self._surface = util.cairo_surface(self:data(),'ARGB',self.width,self.height)
+    self._surface = require('cairo').surface_from(
+        self.raw.components[0].data, 'ARGB32',
+        self.width, self.height,
+        self.raw.components[0].stride)
     return self._surface
 end
 
@@ -100,8 +138,8 @@ function Frame:write_to_png(filename)
 end
 
 function Frame:validate()
-    local cairo = require('lgi').cairo -- lazy load lgi
-    local surface_stride = cairo.Format.stride_for_width(self.format, self.width)
+    local cairo = require 'cairo'
+    local surface_stride = cairo.C.format_stride_for_width('CAIRO_FORMAT_ARGB32', self.width)
     local frame_stride = self.raw.components[0].stride +
                          self.raw.components[1].stride +
                          self.raw.components[2].stride

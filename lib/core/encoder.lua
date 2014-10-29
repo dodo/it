@@ -1,26 +1,49 @@
 local ffi = require 'ffi'
-local util = require 'util'
+local _ffi = require 'util._ffi'
+local cface = require 'cface'
+local Frame = require 'frame'
 local Thread = require 'thread'
+local _table = require 'util.table'
 local Prototype = require 'prototype'
+local Metatype = require 'metatype'
 
-require('cface')(_it.libdir .. "schrovideoformat.h")
+cface(_it.libdir .. "schrovideoformat.h")
+cface.typedef('struct _$', 'SchroEncoder')
+cface.typedef('struct _$', 'OGGZ')
 
 
 local Encoder = Prototype:fork()
+Encoder.type = Metatype:struct("it_encodes", {
+    "it_threads *thread";
+    "SchroEncoder *encoder";
+    "OGGZ *container";
+    "int64_t granulepos";
+    "int64_t packetno";
+    "bool eos_pulled";
+    "bool started";
+    "long serialno";
+    "int frames";
+    "int length";
+    "unsigned char *buffer";
+})
 
-_it.loads('Encoder')
+
+Encoder.type:api('Encoder', {'start', 'getsettings', 'getformat', 'setformat'})
+Encoder.type:load(_it.libdir .. "/api.so", {
+    init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread)]];
+    push = [[int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr)]];
+})
+
+
 function Encoder:init(filename, pointer)
-    self._pointer = pointer
     self.frame_format = 'ARGB'
     self.push = self:bind('push')
-    self._handle = _it.encodes(pointer)
     if pointer then -- other stuff not needed in scope context
+        self._handle = self.type:ptr(pointer)
+        self.thread = thread -- reuse context global
+        self.format = _table.readonly(self:getformat().raw)
+        self.settings = _table.readonly(self._handle:getsettings())
         self.start = nil
-        self.format = util.readonlytable(self:getformat().raw)
-        self.settings = util.readonlytable(self._handle.getsettings(pointer))
-        return
-    end
-    if filename == false then
         return
     end
     self.thread = Thread:new()
@@ -34,11 +57,9 @@ function Encoder:init(filename, pointer)
         left_offset = 0,
         top_offset = 0,
     }
-    self._handle:create(self.thread.reference) -- FIXME maybe doing this lazy?
-    self.settings = self._handle.getsettings()
-    -- process 'userdata' events to 'data' events
-    self.scope:import(function ()
-        -- encoder handle gets injected right before
+    self._handle = self.type:create(nil, self.thread.reference)
+    self.settings = self._handle:getsettings()
+    self.scope:define('encoder', self._handle, function ()
         encoder = require('encoder'):new(nil, encoder)
         -- expose userdata as buffers
         context:on('userdata', function (raw, len)
@@ -65,40 +86,39 @@ local ENUMS = {
 }
 function Encoder:start()
     local format = self:getformat()
-    util.update_ffi(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
+    _ffi.update(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
     self._handle:setformat(format.pointer)
     self._handle:start(self.output, self.settings)
     -- make format and settings readonly
     for key, value in pairs(self.settings) do
-        self.settings[key] = util.readonlytable(value)
+        self.settings[key] = _table.readonly(value)
     end
-    self.settings = util.readonlytable(self.settings)
-    self.format = util.readonlytable(self.format)
+    self.settings = _table.readonly(self.settings)
+    self.format = _table.readonly(self.format)
     self.thread:start() -- at last
 end
 
 function Encoder:push(frame)
     if self._handle and frame and frame.render then
-        return self._handle.push(
-            self._pointer or self._handle,
-            frame:render() -- userdata or lightuserdata of it_frames* exptected
-        )
+        frame.raw = nil -- C: fr->frame = NULL; // prevent schro_frame_unref
+        return self._handle:push(frame:render())
     end
-    return false
+    return 0
 end
 
 function Encoder:getformat()
-    local pointer = self._handle.getformat(self._pointer or self._handle)
+    local pointer = self._handle:getformat()
     return {
-        raw = ffi.new("SchroVideoFormat*", pointer),
+        raw = ffi.cast('SchroVideoFormat*', pointer),
         pointer = pointer,
     }
 end
 
 
-function Encoder:debug(level)
-    self._handle.setdebug(
-        util.table_index(
+function Encoder.debug(level)
+    ffi.cdef [[void it_sets_schro_debug_level(int level);]]
+    cface.register(_it.libdir .. "/api.so").it_sets_schro_debug_level(
+        _table.index(
             {"ERROR","WARNING","INFO","DEBUG","LOG"},
             string.upper(level)
         ) or 0

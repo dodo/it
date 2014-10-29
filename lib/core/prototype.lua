@@ -1,4 +1,4 @@
-local bind = require('util').bind
+local bind = require('util.bind').call
 
 local Prototype = {}
 Prototype.prototype = Prototype
@@ -11,7 +11,6 @@ function Prototype:fork(proto)
     local fork = setmetatable(proto, { __index = self })
     fork.metatable = { __index = fork }
     return fork
---     return proto
 end
 
 function Prototype:new(...)

@@ -48,6 +48,10 @@
     } while (0)
 
 
+typedef int (*luaI_createstate_t)(it_processes* process);
+typedef void (*luaI_close_t)(lua_State* L, const char *global, int code);
+
+
 int luaI_loadmetatable(lua_State* L, int i);
 void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
@@ -60,9 +64,13 @@ it_states* luaI_getstate(lua_State* L);
 int luaI_setstate(lua_State* L, it_states* ctx);
 
 int luaI_newstate(it_states* ctx);
-int luaI_createstate(it_processes* process);
+#ifndef IT_SLAVES
+    int luaI_createstate(it_processes* process);
+#endif
 
 int luaI_stacktrace(lua_State* L);
-void luaI_close(lua_State* L, const char *global, int code);
+#ifndef IT_SLAVES
+    void luaI_close(lua_State* L, const char *global, int code);
+#endif
 
 #endif /* LUAI_H */

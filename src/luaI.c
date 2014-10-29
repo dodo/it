@@ -3,98 +3,42 @@
 #include "it.h"
 
 
-#include "lua/it.h"
+
+#include "api/it.h"
 static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
-    {"stdios", it_stdios_lua},
     {"loads", it_loads_lua},
-    {"forks", it_forks_lua},
-    {"capsules", it_capsules_lua},
-    {"encodes", it_encodes_lua},
-    {"buffers", it_buffers_lua},
-    {"frames", it_frames_lua},
-    {"windows", it_windows_lua},
     {"versions", it_versions_lua},
     {NULL, NULL}
 };
 
-#include "lua/process.h"
-static const luaL_Reg luaI_reg_process[] = {
-    {"exit", it_exits_process_lua},
-    {"cwd",  it_gets_cwd_process_lua},
+#include "api/scope.h"
+static const luaL_Reg luaI_reg_scope[] = {
+    {"import", it_imports_scope_lua},
     {NULL, NULL}
 };
 
-#include "lua/buffer.h"
-static const luaL_Reg luaI_reg_buffer[] = {
-    {"malloc", it_mallocs_buffer_lua},
-    {"memcpy", it_memcpies_buffer_lua},
-    {"user", it_uses_userdata_buffer_lua},
-    {"__gc", it_kills_buffer_lua},
+#include "api/encoder.h"
+static const luaL_Reg luaI_reg_encoder[] = {
+    {"start", it_starts_encoder_lua},
+    {"getsettings", it_gets_settings_encoder_lua},
+    {"getformat", it_gets_format_encoder_lua},
+    {"setformat", it_sets_format_encoder_lua},
     {NULL, NULL}
 };
 
-
-#include "lua/ctx.h"
-static const luaL_Reg luaI_reg_ctx[] = {
-    {"import", it_imports_ctx_lua},
-    {"define", it_defines_ctx_lua},
-    {"call", it_calls_ctx_lua},
-    {"__gc", it_kills_ctx_lua},
-    {NULL, NULL}
-};
-
-#include "lua/thread.h"
-static const luaL_Reg luaI_reg_thread[] = {
-    {"init", it_inits_thread_lua},
-    {"create", it_creates_thread_lua},
-    {"__gc", it_kills_thread_lua},
-    {NULL, NULL}
-};
-
-#include "lua/enc.h"
-static const luaL_Reg luaI_reg_enc[] = {
-    {"create", it_creates_enc_lua},
-    {"start", it_starts_enc_lua},
-    {"push", it_pushes_frame_enc_lua},
-    {"getsettings", it_gets_settings_enc_lua},
-    {"getformat", it_gets_format_enc_lua},
-    {"setformat", it_sets_format_enc_lua},
-    {"setdebug", it_sets_debug_enc_lua},
-    {NULL, NULL}
-};
-
-#include "lua/frame.h"
-static const luaL_Reg luaI_reg_frame[] = {
-    {"create", it_creates_frame_lua},
-    {"convert", it_converts_frame_lua},
-    {"getdata", it_gets_data_frame_lua},
-    {"reverse_order", it_reverses_order_frame_lua},
-    {"__gc", it_kills_frame_lua},
-    {NULL, NULL}
-};
-
-#include "lua/window.h"
-static const luaL_Reg luaI_reg_window[] = {
-    {"init", it_inits_window_lua},
-    {"create", it_creates_window_lua},
-    {"render", it_renders_window_lua},
-    {"__gc", it_kills_window_lua},
-    {NULL, NULL}
-};
 
 
 int luaI_loadmetatable(lua_State* L, int i) {
     const char *name = lua_tostring(L, i);
     switch (name[0]) {
-        case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it); break;
-        case 'B'/*uffer*/:  luaI_newmetatable(L, name, luaI_reg_buffer); break;
-        case 'C'/*ontext*/: luaI_newmetatable(L, name, luaI_reg_ctx); break;
-        case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_enc); break;
-        case 'F'/*rame*/:   luaI_newmetatable(L, name, luaI_reg_frame); break;
-        case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
-        case 'T'/*hread*/:  luaI_newmetatable(L, name, luaI_reg_thread); break;
-        case 'W'/*indow*/:  luaI_newmetatable(L, name, luaI_reg_window); break;
+        case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it);            break;
+        case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_encoder); break;
+//         case 'F'/*rame*/:   luaI_newmetatable(L, name, luaI_reg_frame);   break;
+//         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
+        case 'S'/*cope*/:   luaI_newmetatable(L, name, luaI_reg_scope);   break;
+//         case 'T'/*hread*/:  luaI_newmetatable(L, name, luaI_reg_thread);  break;
+//         case 'W'/*indow*/:  luaI_newmetatable(L, name, luaI_reg_window);  break;
         default: luaI_error(L, "unknown metatable %s!", name); break;
     }
     lua_pop(L, 1); // dont need metatable right now
@@ -180,6 +124,8 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
         // remove executable name and append libdir
         "_it.libdir = _it.execpath:match('^(.*)/[^/]+$') .. '/lib/' "
         // prepend to lua search paths
+        "package.path = './?/init.lua;' .. package.path "
+        "package.path = _it.libdir .. 'core/?/init.lua;' .. package.path "
         "package.path = _it.libdir .. 'core/?.lua;' .. package.path");
     lua_pushlstring(L, exec_path, size);
     lua_call(L, 1, 0);
@@ -187,8 +133,15 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
 }
 
 static int at_panic(lua_State* L) {
-    luaI_getglobalfield(L, "process", "emit");
     lua_getglobal(L, "process");
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        fprintf(stderr, "FATALPANIC@%s\n", lua_tostring(L, -1));
+        return 0;
+    }
+    lua_getfield( L, -1, "emit");
+    lua_pushvalue(L, -2);
+    lua_remove(   L, -3);
     lua_pushstring(L, "panic");
     lua_pushvalue(L, -4);
     luaI_pcall(L, 3, 0);

@@ -1,13 +1,11 @@
 #include <string.h>
 
-#define SCHRO_ENABLE_UNSTABLE_API
-
 #include <schroedinger/schro.h>
 
 #include "it.h"
 #include "luaI.h"
 
-#include "lua/enc_settings.h"
+#include "api/encoder_settings.h"
 
 
 void luaI_pushencodersetting_value(lua_State* L, const SchroEncoderSetting* info, double value) {
