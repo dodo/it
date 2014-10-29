@@ -14,7 +14,7 @@ ffi.cdef [[
     uint16_t next;
     uint32_t name;
   } CType;
-  
+
   typedef struct CTState {
     CType *tab;
     uint32_t top;
@@ -178,7 +178,7 @@ local CTAs = {[0] =
 }
 
 -- C function calling conventions (CTCC_* constants in lj_refct.h)
-local CTCCs = {[0] = 
+local CTCCs = {[0] =
   "cdecl",
   "thiscall",
   "fastcall",
@@ -195,7 +195,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
     typeid = id,
     name = gc_str(ctype.name),
   }, metatables[what])
-  
+
   -- Interpret (most of) the CType::info field
   for i = 5, #CT do
     if bit.band(ctype.info, CT[i][1]) ~= 0 then
@@ -211,7 +211,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
   elseif what == "func" then
     refct.convention = CTCCs[bit.band(bit.rshift(ctype.info, 16), 3)]
   end
-  
+
   if CT[2] ~= "" then -- Interpret the CType::cid field
     local k = CT[2]
     local cid = bit.band(ctype.info, 0xffff)
@@ -224,7 +224,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
     end
     refct[k] = cid
   end
-  
+
   if CT[3] ~= "" then -- Interpret the CType::size field
     local k = CT[3]
     refct[k] = ctype.size
@@ -232,7 +232,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
       refct[k] = "none"
     end
   end
-  
+
   if what == "attrib" then
     -- Merge leading attributes onto the type being decorated.
     local CTA = CTAs[bit.band(bit.rshift(ctype.info, 16), 0xff)]
@@ -259,7 +259,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
     }
     refct.bool, refct.const, refct.volatile, refct.unsigned = nil
   end
-  
+
   if CT[4] then -- Merge sibling attributes onto this type.
     while ctype.sib ~= 0 do
       local entry = CTState.tab[ctype.sib]
@@ -270,7 +270,7 @@ local function refct_from_id(id) -- refct = refct_from_id(CTypeID)
       ctype = entry
     end
   end
-  
+
   return refct
 end
 
