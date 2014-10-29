@@ -27,19 +27,19 @@ Frame.type:load(_it.libdir .. "/api.so", {
 
 function Frame:init(width, height, format, pointer)
     self.format = format or 'ARGB'
-    self._handle = self.type:create(nil, width, height)
+    self.handle = self.type:create(nil, width, height)
     self.width, self.height = width, height
     self:create(pointer)
 end
 
 function Frame:create(pointer)
     if pointer then
-        self._handle:ref(pointer)
+        self.handle:ref(pointer)
     else
-        self._handle:create(_ffi.convert_enum('format', self.format,
+        self.handle:create(_ffi.convert_enum('format', self.format,
             "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"))
     end
-    self.raw = self._handle.frame
+    self.raw = self.handle.frame
     return self.raw
 end
 function Frame:new_convert(format) -- format or frame
@@ -48,22 +48,22 @@ function Frame:new_convert(format) -- format or frame
         format = format.format
     end
     local frame = Frame:new(self.width, self.height, format)
-    self._handle:convert(frame._handle)
-    frame:create(frame._handle.frame)
+    self.handle:convert(frame.handle)
+    frame:create(frame.handle.frame)
     return frame
 end
 
 function Frame:convert(format) -- format or frame
     if format and Frame:isinstance(format) then
         local frame = format
-        self._handle:convert(frame._handle)
-        frame:create(frame._handle.frame)
+        self.handle:convert(frame.handle)
+        frame:create(frame.handle.frame)
         return frame
     elseif format then
         local frame = self:new_convert(format)
-        self._handle.frame = frame.raw
-        self.raw = self._handle.frame
-        frame._handle = nil
+        self.handle.frame = frame.raw
+        self.raw = self.handle.frame
+        frame.handle = nil
         frame.raw = nil
         return self
     else
@@ -111,12 +111,12 @@ function Frame:fix_endian()
     --- from cairo docs:
     -- CAIRO_FORMAT_ARGB32 […] The 32-bit quantities are stored native-endian […]
     if not _it.is_big_endian then
-        self._handle:reverse_order()
+        self.handle:reverse_order()
     end
 end
 
 function Frame:render()
-    if self.rendered then return self._handle end
+    if self.rendered then return self.handle end
     self.rendered = true
     if self._surface then
         -- do any pending drawing for the surface
@@ -125,7 +125,7 @@ function Frame:render()
         -- revert cairo mess
         self:fix_endian()
     end
-    return self._handle
+    return self.handle
 end
 
 function Frame:write_to_png(filename)

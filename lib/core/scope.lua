@@ -34,9 +34,11 @@ Scope.type:load(_it.libdir .. "/api.so", {
 function Scope:init(pointer)
     if pointer then
         self.state = self.type:ptr(pointer)
+        self.raw = self.state.lua
         return
     end
     self.state = self.type:create(nil, _it.process, _it.state)
+    self.raw = self.state.lua
 end
 
 function Scope:import(lua_function)

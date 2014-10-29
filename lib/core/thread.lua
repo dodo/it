@@ -33,6 +33,7 @@ function Thread:init(pointer)
     if self.prototype.init then self.prototype.init(self) end
     if pointer then
         self.reference = self.type:ptr(pointer)
+        self.raw = self.reference.thread
         self.scope = Scope:new(self.reference.ctx)
         self.start = nil
         return
@@ -40,6 +41,7 @@ function Thread:init(pointer)
     self.close = nil
     self.scope = Scope:new()
     self.reference = self.type:create(nil, self.scope.state)
+    self.raw = self.reference.thread
 --     self.reference = self.type:create(nil)
     self.scope:define('thread', self.reference, function ()
         -- thread handle gets injected right before
