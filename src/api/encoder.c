@@ -18,13 +18,6 @@
 #include "api/thread.h"
 #include "api/scope.h"
 
-#include "it.h"
-#include "luaI.h"
-
-#include "lua/enc.h"
-#include "lua/enc_settings.h"
-#include "lua/ctx.h"
-
 
 void schroI_encoder_wait(void* priv) {
     it_encodes* enc = (it_encodes*) priv;

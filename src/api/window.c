@@ -4,12 +4,6 @@
 #include "api/window.h"
 #include "api/thread.h"
 
-#include "it.h"
-#include "luaI.h"
-
-#include "lua/window.h"
-#include "lua/thread.h"
-
 
 int sdlI_ref(int c) {
     static int count = 0;
