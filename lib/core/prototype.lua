@@ -1,5 +1,3 @@
-local bind = require('util.bind').call
-
 local Prototype = {}
 Prototype.prototype = Prototype
 Prototype.metatable = { __index = Prototype }
@@ -20,9 +18,9 @@ function Prototype:new(...)
 end
 
 function Prototype:bind(name, ...)
-    local fn = self[name .. "*"] or bind(self, self[name], ...)
-    self[name .. "*"] = fn
-    return fn
+    self[name .. "*"] = self[name .. "*"] or
+        require('util.bind').call(self, self[name], ...)
+    return self[name .. "*"]
 end
 
 function Prototype:isinstance(instance)
