@@ -47,6 +47,9 @@
       lua_remove(L, 0 - nresults - 1);\
     } while (0)
 
+# define luaI_globalemit(L,gn,ev) \
+    (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
+
 
 typedef int (*luaI_createstate_t)(it_processes* process);
 typedef void (*luaI_close_t)(lua_State* L, const char *global, int code);

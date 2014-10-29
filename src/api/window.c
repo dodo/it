@@ -35,9 +35,7 @@ void sdlI_idle(void* priv) {
         if (event.type == SDL_QUIT || win->thread->closed) break;
     }
     if (event.type == SDL_QUIT || win->thread->closed) {
-        luaI_getglobalfield(win->thread->ctx->lua, "window", "emit");
-        lua_getglobal(win->thread->ctx->lua, "window"); // self
-        lua_pushstring(win->thread->ctx->lua, "close");
+        luaI_globalemit(win->thread->ctx->lua, "window", "close");
         luaI_pcall(win->thread->ctx->lua, 2, 0);
         win->thread->on_free = NULL;
         sdlI_ref(1); // prevent SDL_Quit
@@ -45,10 +43,8 @@ void sdlI_idle(void* priv) {
         it_closes_thread(win->thread);
         return;
     }
-//     // call lua …
-    luaI_getglobalfield(win->thread->ctx->lua, "context", "emit");
-    lua_getglobal(win->thread->ctx->lua, "context"); // self
-    lua_pushstring(win->thread->ctx->lua, "need render");
+    // call lua …
+    luaI_globalemit(win->thread->ctx->lua, "window", "need render");
     luaI_pcall(win->thread->ctx->lua, 2, 0);
     // free all unused data and other stuff
     if (need_gc && lua_gc(win->thread->ctx->lua, LUA_GCCOLLECT, 0))

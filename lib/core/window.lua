@@ -2,7 +2,6 @@ local ffi = require 'ffi'
 local util = require 'util'
 local cface = require 'cface'
 local Thread = require 'thread'
-local EventEmitter = require 'events'
 local Metatype = require 'metatype'
 
 cface(_it.libdir .. "sdlsurface.h")
@@ -11,7 +10,7 @@ cface.typedef('struct _$', 'SDL_Renderer')
 
 
 
-local Window = EventEmitter:fork()
+local Window = require(thread and 'events' or 'prototype'):fork()
 Window.type = Metatype:struct("it_windows", {
     "it_threads *thread";
     "SDL_Window *window";
@@ -34,7 +33,7 @@ Window.type:load(_it.libdir .. "/api.so", {
 
 
 function Window:init(pointer)
-    self.prototype.init(self)
+    if self.prototype.init then self.prototype.init(self) end
     if pointer then
         self._handle = self.type:ptr(pointer)
         self.thread = thread -- reuse context global

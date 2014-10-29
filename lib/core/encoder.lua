@@ -4,7 +4,6 @@ local cface = require 'cface'
 local Frame = require 'frame'
 local Thread = require 'thread'
 local _table = require 'util.table'
-local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 
 cface(_it.libdir .. "schrovideoformat.h")
@@ -12,7 +11,7 @@ cface.typedef('struct _$', 'SchroEncoder')
 cface.typedef('struct _$', 'OGGZ')
 
 
-local Encoder = Prototype:fork()
+local Encoder = require(thread and 'events' or 'prototype'):fork()
 Encoder.type = Metatype:struct("it_encodes", {
     "it_threads *thread";
     "SchroEncoder *encoder";
@@ -36,6 +35,7 @@ Encoder.type:load(_it.libdir .. "/api.so", {
 
 
 function Encoder:init(filename, pointer)
+    if self.prototype.init then self.prototype.init(self) end
     self.frame_format = 'ARGB'
     self.push = self:bind('push')
     if pointer then -- other stuff not needed in scope context
@@ -62,17 +62,17 @@ function Encoder:init(filename, pointer)
     self.scope:define('encoder', self._handle, function ()
         encoder = require('encoder'):new(nil, encoder)
         -- expose userdata as buffers
-        context:on('userdata', function (raw, len)
-            context:emit('data', require('buffer'):new(raw, len))
+        encoder:on('userdata', function (raw, len)
+            encoder:emit('data', require('buffer'):new(raw, len))
         end)
         -- expose SchroFrames as objects
-        context:on('need frame', function ()
+        encoder:on('need frame', function ()
             local frame = require('frame'):new(
                 encoder.format.width,
                 encoder.format.height,
                 encoder.frame_format
             )
-            _ = context:emit('frame', frame) or encoder:push(frame)
+            _ = encoder:emit('frame', frame) or encoder:push(frame)
         end)
     end)
 end

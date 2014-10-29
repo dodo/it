@@ -1,6 +1,5 @@
 local ffi = require 'ffi'
 local Scope = require 'scope'
-local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 
 ffi.cdef[[
@@ -10,7 +9,7 @@ ffi.cdef[[
 ]]
 
 
-local Thread = Prototype:fork()
+local Thread = require(thread and 'events' or 'prototype'):fork()
 Thread.type = Metatype:struct("it_threads", {
     "it_states *ctx";
     "uv_thread_t *thread";
@@ -31,6 +30,7 @@ Thread.type:load(_it.libdir .. "/api.so", {
 
 
 function Thread:init(pointer)
+    if self.prototype.init then self.prototype.init(self) end
     if pointer then
         self.reference = self.type:ptr(pointer)
         self.scope = Scope:new(self.reference.ctx)

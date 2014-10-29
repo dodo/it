@@ -11,9 +11,7 @@ void default_thread_idle(void* priv) {
         it_closes_thread(thread);
         return;
     }
-    luaI_getglobalfield(thread->ctx->lua, "context", "emit");
-    lua_getglobal(thread->ctx->lua, "context"); // self
-    lua_pushstring(thread->ctx->lua, "idle");
+    luaI_globalemit(thread->ctx->lua, "thread", "idle");
     luaI_pcall(thread->ctx->lua, 2, 0);
 }
 

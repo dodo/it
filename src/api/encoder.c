@@ -28,11 +28,9 @@ void schroI_encoder_wait(void* priv) {
             if (enc->thread->closed) {
                 schro_encoder_end_of_stream(enc->encoder);
             } else {
-                int frames = enc->frames;
                 // chance to create frame …
-                luaI_getglobalfield(enc->thread->ctx->lua, "context", "emit");
-                lua_getglobal(enc->thread->ctx->lua, "context"); // self
-                lua_pushstring(enc->thread->ctx->lua, "need frame");
+                int frames = enc->frames;
+                luaI_globalemit(enc->thread->ctx->lua, "encoder", "need frame");
                 // hopefully calls schro_encoder_push_frame
                 luaI_pcall(enc->thread->ctx->lua, 2, 0);
                 if (enc->frames == frames)
@@ -65,9 +63,7 @@ void schroI_encoder_wait(void* priv) {
                 break;
             }
             // one time change to do something with this buffer …
-            luaI_getglobalfield(enc->thread->ctx->lua, "context", "emit");
-            lua_getglobal(enc->thread->ctx->lua, "context"); // self
-            lua_pushstring(enc->thread->ctx->lua, "userdata");
+            luaI_globalemit(enc->thread->ctx->lua, "encoder", "userdata");
             lua_pushlightuserdata(enc->thread->ctx->lua, enc->buffer);
             lua_pushinteger(enc->thread->ctx->lua, enc->length);
             luaI_pcall(enc->thread->ctx->lua, 4, 0);
