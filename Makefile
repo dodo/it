@@ -43,7 +43,7 @@ lib/api.so: src/api.c \
 	vendor/schroedinger/schroedinger/.libs/libschroedinger-1.0.a
 	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ $(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
 
-it: it.c
+it: it.c src/uvI.c
 	gcc $(IT_WARNS) -o $@ $^ $(IT_INCLUDES) $(DEBUG) \
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --cflags --libs luajit) \

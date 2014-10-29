@@ -23,6 +23,10 @@
         return luaL_error(L, "internal error: "msg, ##__VA_ARGS__); \
     }
 
+#define uvI_dlerror(lib, msg, ...) { \
+         it_errors(msg " (%s)", ##__VA_ARGS__, uv_dlerror(lib)); \
+    }
+
 #define uvI_error(loop,msg) { \
         uv_err_t err = uv_last_error(loop); \
         it_errors(msg, uv_err_name(err), uv_strerror(err)); \
