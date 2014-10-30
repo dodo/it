@@ -21,14 +21,23 @@ end
 
 function util.dump(t)
     local color = require('console').color
-    local s = color.bold .. color.red .. " -- \n" .. color.reset
-    for k,v in pairs(t) do
-        s = s .. color.magenta .. tostring(k) .. color.reset
-              ..  " = "
-              .. color.bold .. color.yellow ..  tostring(v) .. color.reset
-              .. "\n"
+    if not t then
+        return color.bold .. color.red .. " -- nil" .. color.reset
     end
-    return s
+    local s = util.xpcall(function (t)
+        local s = ""
+        for k,v in pairs(t) do
+            s = s .. color.magenta .. tostring(k) .. color.reset
+                ..  " = "
+                .. color.bold .. color.yellow ..  tostring(v) .. color.reset
+                .. "\n"
+        end
+        return s
+    end, function (err)
+        if err:match("has no '__pairs' metamethod$") then return end
+        return err
+    end, t) or ""
+    return color.bold .. color.red .. " -- \n" .. color.reset .. s
 end
 
 
