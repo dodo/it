@@ -47,7 +47,7 @@
 
 extern int at_panic(lua_State* L);
 extern void at_fatal_panic(int signum);
-extern int at_jit_cfunc_call(lua_State* L, lua_CFunction func);
+extern int at_luajit_cfunction_call(lua_State* L, lua_CFunction func);
 
 int luaI_stacktrace(lua_State* L);
 int luaI_init_errorhandling(lua_State* L);

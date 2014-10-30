@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#include <string.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <execinfo.h>
@@ -40,21 +41,39 @@ int at_panic(lua_State* L) {
 }
 
 void at_fatal_panic(int signum) {
+    // first things first
     cbacktrace.count = backtrace(cbacktrace.addrs, BACK_TRACE_SIZE);
-    longjmp(cbacktrace.jmp, 1);
+    // shorten back trace by removing 'it'-internals
+    Dl_info dlinfo;
+    int i; for (i = 0; i < cbacktrace.count ; i ++) {
+        if (cbacktrace.addrs[i] && dladdr(cbacktrace.addrs[i], &dlinfo)) {
+            if (dlinfo.dli_saddr == at_luajit_cfunction_call) {
+                cbacktrace.count = i;
+                break;
+            }
+        }
+    }
+    // jump back …
+    longjmp(cbacktrace.jmp, signum);
 }
 
-int at_jit_cfunc_call(lua_State* L, lua_CFunction func) {
-    if (!setjmp(cbacktrace.jmp)) {
+int at_luajit_cfunction_call(lua_State* L, lua_CFunction func) {
+    int signum = setjmp(cbacktrace.jmp);
+    if (!signum) {
+        signal(SIGILL, &at_fatal_panic);
         signal(SIGABRT, &at_fatal_panic);
+        signal(SIGFPE, &at_fatal_panic);
+        signal(SIGSEGV, &at_fatal_panic);
+        signal(SIGSYS, &at_fatal_panic);
         return func(L);
-    } else luaI_error(L, "ABORT");
+    } else luaI_error(L, "%s", strsignal(signum));
 }
 
 int luaI_stacktrace(lua_State* L) {
     lua_CFunction func;
     lua_Debug info;
     Dl_info dlinfo;
+    char nr[LUA_IDSIZE];
     char addr[LUA_IDSIZE];
     int skips = 0;
     int level = 0 - cbacktrace.count;
@@ -80,7 +99,7 @@ int luaI_stacktrace(lua_State* L) {
         if (func) {
             if (dladdr(func, &dlinfo) || dladdr(&func, &dlinfo)) {
                 if (dlinfo.dli_saddr)
-                    sprintf(addr, "|%p%c", dlinfo.dli_saddr, '\0');
+                    sprintf(addr, "|%p(%p)%c", dlinfo.dli_saddr, func, '\0');
                 sprintf(info.short_src, "%s%c", dlinfo.dli_fname, '\0');
                 info.name = dlinfo.dli_sname;
                 if (!info.namewhat[0])
@@ -101,9 +120,10 @@ int luaI_stacktrace(lua_State* L) {
         // prepare addr if missing
         if (!addr[0] && info.linedefined > 0)
             sprintf(addr, " +%d%c", info.linedefined, '\0');
+        sprintf(nr, "%3d%c", level - skips, '\0');
         // print everything in multiple steps per line
-        lua_pushfstring(L, "  %d  in %s  ",
-            level - skips, (info.name ? info.name : "<unknown>"));
+        lua_pushfstring(L, "%s  in %s  ",
+            nr, (info.name ? info.name : "<unknown>"));
         ++strings;
         if (info.namewhat[0]) {
             lua_pushfstring(L, "(%s %s at %s%s)",
@@ -150,12 +170,14 @@ int luaI_stacktrace(lua_State* L) {
 }
 
 int luaI_init_errorhandling(lua_State* L) {
+    signal(SIGPIPE, SIG_IGN); // ignore borken pipe
     cbacktrace.count = 0;
     lua_atpanic(L, at_panic);
     lua_pushcfunction(L, luaI_stacktrace);
     lua_setglobal(L, "_TRACEBACK");
     // Define cfunction wrapper
-    lua_pushlightuserdata(L, at_jit_cfunc_call);
+    // FIXME wrap only when needed
+    lua_pushlightuserdata(L, at_luajit_cfunction_call);
     luaJIT_setmode(L, -1, LUAJIT_MODE_WRAPCFUNC|LUAJIT_MODE_ON);
     lua_pop(L, 1);
     return 0;
