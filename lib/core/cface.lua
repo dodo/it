@@ -2,15 +2,14 @@ local fs = require 'fs'
 local ffi = require 'ffi'
 local util = require 'util'
 
-local exports = {}
-local cface = exports
+local cface = {metatype = require('util._ffi').metatype}
 
 local function escape(match)
     return match:gsub("([%^%$%(%)%%%.%[%]%*%+%-%?])", "%%%1");
 end
 
 _CFACE_REGISTRY = {}
-function exports.register(clib)
+function cface.register(clib)
     if type(clib) == 'string' then
         local name = clib
         clib = _CFACE_REGISTRY[name] or ffi.load(name)
@@ -19,7 +18,7 @@ function exports.register(clib)
     return clib
 end
 
-function exports.interface(filename)
+function cface.interface(filename)
     local header = fs.read(filename)
     -- at least support simple `#define key value` usage
     local define = {}
@@ -48,7 +47,7 @@ function exports.interface(filename)
 end
 
 _CFACE_ERROR_SIZE = 10
-function exports.declaration(cdecl, ...)
+function cface.declaration(cdecl, ...)
     util.xpcall(ffi.cdef, function (err)
         if err:match('at line %d+$') then
             cdecl = cdecl .. "\n"
@@ -76,9 +75,9 @@ function exports.declaration(cdecl, ...)
         return err
     end, cdecl, ...)
 end
-exports.decl = exports.declaration -- alias
+cface.decl = cface.declaration -- alias
 
-function exports.typedef(ct, name)
+function cface.typedef(ct, name)
     if ct:find('%$') then
         ct = ct:gsub('%$', name)
     end
@@ -86,7 +85,7 @@ function exports.typedef(ct, name)
     return ct
 end
 
-function exports.struct(name, fields)
+function cface.struct(name, fields)
     local header = ""
     for _, field in pairs(fields) do
         header = header .. field .. ";"
@@ -94,19 +93,21 @@ function exports.struct(name, fields)
     cface.typedef(string.format("struct _%s {%s}", name, header), name)
 end
 
-function exports.struct_from(name, filename)
+function cface.struct_from(name, filename)
     -- TODO load only on struct from filename (maybe recursive?)
 end
 
-exports.int = ffi.typeof(ffi.new('int'))
+ -- TODO move following code into util._ffi :
 
-function exports.optint(number)
+cface.int = ffi.typeof(ffi.new('int'))
+
+function cface.optint(number)
     if number then
         return cface.int(number)
     end
 end
 
-function exports.assert(NIL)
+function cface.assert(NIL)
     if NIL == nil then
         assert(not NIL) -- NULL pointer
     end
@@ -117,11 +118,11 @@ cface.struct("it_strings", {
     "const char *data";
     "int *length";
 })
-function exports.string(cstring)
+function cface.string(cstring)
     return ffi.string(cstring.data, cstring.length)
 end
 
 
 return setmetatable(cface, { __call = function (mt,...)
-    return exports.interface(...)
+    return cface.interface(...)
 end })
