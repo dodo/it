@@ -110,7 +110,7 @@ end
 function Frame:fix_endian()
     --- from cairo docs:
     -- CAIRO_FORMAT_ARGB32 […] The 32-bit quantities are stored native-endian […]
-    if not _it.is_big_endian then
+    if ffi.abi 'le' then
         self.handle:reverse_order()
     end
 end
