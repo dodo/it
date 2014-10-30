@@ -292,8 +292,11 @@ local function siblings(refct)
   return sib_iter, nil, refct
 end
 
+metatables.struct.__index.siblings = siblings
 metatables.struct.__index.members = siblings
+metatables.func.__index.siblings = siblings
 metatables.func.__index.arguments = siblings
+metatables.enum.__index.siblings = siblings
 metatables.enum.__index.values = siblings
 
 local function find_sibling(refct, name)

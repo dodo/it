@@ -26,4 +26,15 @@ function exports.convert_enum(key, value, typ, prefix)
     })[key]
 end
 
+function exports.ptraddr(ptr)
+    return tonumber(ffi.cast('intptr_t', ffi.cast('void *', ptr)))
+end
+
+function exports.metatype(name, metatable)
+    metatable = metatable or {}
+    metatable.__ipairs = metatable.__ipairs or require('inspect').ipairs
+    metatable.__pairs  = metatable.__pairs  or require('inspect').pairs
+    return ffi.metatype(name, metatable)
+end
+
 return exports

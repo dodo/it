@@ -9,6 +9,8 @@ local Metatype = require 'metatype'
 cface(_it.libdir .. "schrovideoformat.h")
 cface(_it.libdir .. "schroencoder.h")
 cface.typedef('struct _$', 'OGGZ')
+cface.metatype('SchroEncoder')
+cface.metatype('SchroVideoFormat')
 
 
 local Encoder = require(thread and 'events' or 'prototype'):fork()
