@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
-#include <signal.h>
 #include <unistd.h>
 
 #include "it-types.h"
@@ -23,12 +22,10 @@ static void sigint_cb(uv_signal_t* handle, int signum) {
 }
 
 int main(int argc, char *argv[]) {
-    signal(SIGPIPE, SIG_IGN);
-
     // load lua state con/de-structor …
     uv_lib_t* api = uvI_dlopen("lib/api.so");
-    uvI_dlsym(api, "luaI_createstate", (void**) &luaI_createstate);
-    uvI_dlsym(api, "luaI_close", (void**) &luaI_close);
+    uvI_dlsym(api, "luaI_createstate", &luaI_createstate);
+    uvI_dlsym(api, "luaI_close", &luaI_close);
 
     it_states ctx;
     it_processes process;

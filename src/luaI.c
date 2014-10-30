@@ -1,7 +1,10 @@
+#define __USE_GNU
+#define _GNU_SOURCE
+#include <dlfcn.h>
+
 #include "luaI.h"
 
 #include "it.h"
-
 
 
 #include "api/it.h"
@@ -131,23 +134,6 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     return 0;
 }
 
-static int at_panic(lua_State* L) {
-    lua_getglobal(L, "process");
-    if (lua_isnil(L, -1)) {
-        lua_pop(L, 1);
-        fprintf(stderr, "FATALPANIC@%s\n", lua_tostring(L, -1));
-        return 0;
-    }
-    lua_getfield( L, -1, "emit");
-    lua_pushvalue(L, -2);
-    lua_remove(   L, -3);
-    lua_pushstring(L, "panic");
-    lua_pushvalue(L, -4);
-    luaI_pcall(L, 3, 0);
-    fprintf(stderr, "PANIC@%s\n", lua_tostring(L, -1));
-    return 0;
-}
-
 int luaI_newstate(it_states* ctx) {
     // create lua state
     lua_State* L = luaL_newstate();
@@ -157,9 +143,7 @@ int luaI_newstate(it_states* ctx) {
     }
     ctx->free = TRUE;
     ctx->lua = L;
-    lua_atpanic(L, at_panic);
-    lua_pushcfunction(L, luaI_stacktrace);
-    lua_setglobal(L, "_TRACEBACK");
+    luaI_init_errorhandling(L);
     // enable JIT
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs
@@ -184,39 +168,6 @@ int luaI_createstate(it_processes* process) {
     luaI_setglobalfield(ctx->lua, "_it", "process");
     luaI_dofile(ctx->lua, "lib/initrd.lua");
     return 0;
-}
-
-int luaI_stacktrace(lua_State* L) {
-    lua_Debug info;
-    int level = 0;
-    int strings = 1; // starts with error message on top of stack
-    while (lua_getstack(L, level, &info)) {
-        lua_getinfo(L, "nSl", &info);
-        lua_pushfstring(L, "  %d  in %s  (%s at %s:%d)\n",
-            level, (info.name ? info.name : "<unknown>"),
-             info.namewhat, info.short_src, info.currentline);
-        ++strings;
-        // get source code
-        lua_pushstring(L, "        ");
-        luaI_getglobalfield(L, "_it", "getlines");
-        lua_pushstring(L, info.short_src);
-        lua_pushinteger(L, info.currentline);
-        lua_call(L, 2, 1);
-        if (lua_isnil(L, -1)) {
-            lua_pop(L, 2);
-        } else {
-            lua_pushstring(L, "\n");
-            strings += 3;
-        }
-        ++level;
-    }
-    if (level) {
-        lua_pushstring(L, "\n");
-        lua_insert(L, 2);
-        strings++;
-    }
-    lua_concat(L, strings);
-    return 1;
 }
 
 void luaI_close(lua_State* L, const char *global, int code) {

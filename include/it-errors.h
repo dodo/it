@@ -1,10 +1,13 @@
 #ifndef IT_ERRORS_H
 #define IT_ERRORS_H
 
-#include <assert.h>
+#include <stdlib.h>
 
 #include <uv.h>
 #include <lua.h>
+
+
+#define BACK_TRACE_SIZE 64
 
 
 #define it_prints_error(msg, ...) \
@@ -12,7 +15,7 @@
 
 #define it_errors(msg, ...) { \
         it_prints_error(msg, ##__VA_ARGS__); \
-        assert(0); \
+        abort(); \
     }
 
 #define luaI_error(L, msg, ...) { \
@@ -40,6 +43,14 @@
 #define sdlI_lua_error(L, msg) { \
         luaI_error(L, msg, SDL_GetError()); \
     }
+
+
+extern int at_panic(lua_State* L);
+extern void at_fatal_panic(int signum);
+extern int at_jit_cfunc_call(lua_State* L, lua_CFunction func);
+
+int luaI_stacktrace(lua_State* L);
+int luaI_init_errorhandling(lua_State* L);
 
 
 #endif /* IT_ERRORS_H */

@@ -17,7 +17,8 @@ IT_INCLUDES = -I./include
 IT_WARNS = -Wall
 
 # DEBUG = ""
-DEBUG = -g -O0
+# DEBUG = -O0
+DEBUG = -O3
 
 
 all: include/orc0.h src/orc0.c lib/api.so it
@@ -29,6 +30,7 @@ src/orc0.c: src/it.orc
 	orcc -o $@ $^ --inline --implementation
 
 lib/api.so: src/api.c \
+	src/errors.c \
 	src/luaI.c \
 	src/orc0.c \
 	src/orcI.c \
@@ -41,7 +43,8 @@ lib/api.so: src/api.c \
 	src/api/frame.c \
 	src/api/window.c \
 	vendor/schroedinger/schroedinger/.libs/libschroedinger-1.0.a
-	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ $(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
+	gcc $(IT_WARNS) -shared -rdynamic -o $@ -fPIC $^ -g \
+		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
 
 it: it.c src/uvI.c
 	gcc $(IT_WARNS) -o $@ $^ $(IT_INCLUDES) $(DEBUG) \
