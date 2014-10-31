@@ -41,11 +41,11 @@ function Encoder:init(filename, pointer)
     self.frame_format = 'ARGB'
     self.push = self:bind('push')
     if pointer then -- other stuff not needed in scope context
-        self.handle = self.type:ptr(pointer)
-        self.raw = self.handle.encoder
+        self.native = self.type:ptr(pointer)
+        self.raw = self.native.encoder
         self.thread = thread -- reuse context global
         self.format = _table.readonly(self:getformat().raw)
-        self.settings = _table.readonly(self.handle:getsettings())
+        self.settings = _table.readonly(self.native:getsettings())
         self.start = nil
         return
     end
@@ -60,10 +60,10 @@ function Encoder:init(filename, pointer)
         left_offset = 0,
         top_offset = 0,
     }
-    self.handle = self.type:create(nil, self.thread.reference)
-    self.raw = self.handle.encoder
-    self.settings = self.handle:getsettings()
-    self.scope:define('encoder', self.handle, function ()
+    self.native = self.type:create(nil, self.thread.reference)
+    self.raw = self.native.encoder
+    self.settings = self.native:getsettings()
+    self.scope:define('encoder', self.native, function ()
         encoder = require('encoder'):new(nil, encoder)
         -- expose userdata as buffers
         encoder:on('userdata', function (raw, len)
@@ -91,8 +91,8 @@ local ENUMS = {
 function Encoder:start()
     local format = self:getformat()
     _ffi.update(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
-    self.handle:setformat(format.pointer)
-    self.handle:start(self.output, self.settings)
+    self.native:setformat(format.pointer)
+    self.native:start(self.output, self.settings)
     -- make format and settings readonly
     for key, value in pairs(self.settings) do
         self.settings[key] = _table.readonly(value)
@@ -103,15 +103,15 @@ function Encoder:start()
 end
 
 function Encoder:push(frame)
-    if self.handle and frame and frame.render then
+    if self.native and frame and frame.render then
         frame.raw = nil -- C: fr->frame = NULL; // prevent schro_frame_unref
-        return self.handle:push(frame:render())
+        return self.native:push(frame:render())
     end
     return 0
 end
 
 function Encoder:getformat()
-    local pointer = self.handle:getformat()
+    local pointer = self.native:getformat()
     return {
         raw = ffi.cast('SchroVideoFormat*', pointer),
         pointer = pointer,

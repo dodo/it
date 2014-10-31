@@ -35,36 +35,36 @@ Window.type:load(_it.libdir .. "/api.so", {
 function Window:init(pointer)
     if self.prototype.init then self.prototype.init(self) end
     if pointer then
-        self.handle = self.type:ptr(pointer)
-        self.raw = self.handle.window
+        self.native = self.type:ptr(pointer)
+        self.raw = self.native.window
         self.thread = thread -- reuse context global
-        self.height = tonumber(self.handle.height)
-        self.width = tonumber(self.handle.width)
+        self.height = tonumber(self.native.height)
+        self.width = tonumber(self.native.width)
         self.open = nil
         return
     end
     self.thread = Thread:new()
     self.scope = self.thread.scope
-    self.handle = self.type:create(nil, self.thread.reference)
-    self.scope:define('window', self.handle, function ()
+    self.native = self.type:create(nil, self.thread.reference)
+    self.scope:define('window', self.native, function ()
         window = require('window'):new(window)
     end)
 end
 
 function Window:open(title, width, height, x, y)
     self.open = nil
-    self.handle:create(title,
+    self.native:create(title,
         cface.optint(x), cface.optint(y),
         width or 200, height or 200)
-    self.height = tonumber(self.handle.height)
-    self.width = tonumber(self.handle.width)
-    self.raw = self.handle.window
+    self.height = tonumber(self.native.height)
+    self.width = tonumber(self.native.width)
+    self.raw = self.native.window
     self.thread:start()
 end
 
 function Window:render(userdata)
     -- userdata should be in native endian
-    self.handle:blit(self.handle:surface_from(userdata))
+    self.native:blit(self.native:surface_from(userdata))
 end
 
 function Window:surface(draw)
