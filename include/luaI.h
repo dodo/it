@@ -36,7 +36,7 @@
     (lua_getglobal(L,gn), lua_getfield(L,-1,fn), lua_remove(L,-2))
 
 #define luaI_setglobalfield(L,gn,fn) \
-    (lua_getglobal(L,gn), lua_pushvalue(L,-2), lua_setfield(L,-2,fn), lua_pop(L,2))
+    (lua_getglobal(L,gn), lua_insert(L,-2), lua_setfield(L,-2,fn), lua_pop(L,1))
 
 #define luaI_pcall(L,nargs,nresults) \
     do{lua_getglobal(L, "_TRACEBACK"); \
@@ -62,6 +62,10 @@ void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
 it_processes* luaI_getprocess(lua_State* L);
 it_states* luaI_getstate(lua_State* L);
 int luaI_setstate(lua_State* L, it_states* ctx);
+
+void luaI_createdefinetable(lua_State* L);
+void luaI_getdefine(lua_State* L, const char* key);
+void luaI_setdefine(lua_State* L, const char* key);
 
 int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);

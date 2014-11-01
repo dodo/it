@@ -10,7 +10,7 @@ cface.typedef('struct _$', 'SDL_Renderer')
 
 
 
-local Window = require(thread and 'events' or 'prototype'):fork()
+local Window = require(context and 'events' or 'prototype'):fork()
 Window.type = Metatype:struct("it_windows", {
     "it_threads *thread";
     "SDL_Window *window";
@@ -37,7 +37,9 @@ function Window:init(pointer)
     if pointer then
         self.native = self.type:ptr(pointer)
         self.raw = self.native.window
-        self.thread = thread -- reuse context global
+        self.thread = context.thread
+        self.thread = (pointer == _D.window) and
+                context.thread or Thread:new(self.native.thread)
         self.height = tonumber(self.native.height)
         self.width = tonumber(self.native.width)
         self.open = nil
@@ -47,7 +49,7 @@ function Window:init(pointer)
     self.scope = self.thread.scope
     self.native = self.type:create(nil, self.thread.reference)
     self.scope:define('window', self.native, function ()
-        window = require('window'):new(window)
+        window = require('window'):new(_D.window)
     end)
 end
 

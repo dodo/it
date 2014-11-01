@@ -13,7 +13,7 @@ cface.metatype('SchroEncoder')
 cface.metatype('SchroVideoFormat')
 
 
-local Encoder = require(thread and 'events' or 'prototype'):fork()
+local Encoder = require(context and 'events' or 'prototype'):fork()
 Encoder.type = Metatype:struct("it_encodes", {
     "it_threads *thread";
     "SchroEncoder *encoder";
@@ -43,7 +43,9 @@ function Encoder:init(filename, pointer)
     if pointer then -- other stuff not needed in scope context
         self.native = self.type:ptr(pointer)
         self.raw = self.native.encoder
-        self.thread = thread -- reuse context global
+        self.thread = context.thread
+        self.thread = (pointer == _D.encoder) and
+                context.thread or Thread:new(self.native.thread)
         self.format = _table.readonly(self:getformat().raw)
         self.settings = _table.readonly(self.native:getsettings())
         self.start = nil

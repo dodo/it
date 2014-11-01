@@ -18,7 +18,7 @@ process.stdin = io.stdin
 function process.exit(code)
     process._type:load(_it.libdir .. "/api.so", {
     exit = "void it_exits_process(it_processes* process, int exit_code)";
-    }):ptr(_it.process):exit(code or 0)
+    }):ptr(_D.process):exit(code or 0)
 end
 
 -- -- -- -- -- -- -- --

@@ -19,26 +19,26 @@ void it_inits_scope(it_states* ctx, it_processes* process, it_states* state) {
     ctx->loop = state->loop;
     if (luaI_newstate(ctx)) return;
     lua_pushlightuserdata(ctx->lua, process);
-    luaI_setglobalfield(ctx->lua, "_it", "process");
+    luaI_setdefine(ctx->lua, "process");
     luaI_dofile(ctx->lua, "lib/context.lua");
 }
 
 void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata) {
     if (!ctx) return;
     lua_pushlightuserdata(ctx->lua, cdata);
-    lua_setglobal(ctx->lua, name);
+    luaI_setdefine(ctx->lua, name);
 }
 
 void it_defines_number_scope(it_states* ctx, const char* name, double number) {
     if (!ctx) return;
     lua_pushnumber(ctx->lua, number);
-    lua_setglobal(ctx->lua, name);
+    luaI_setdefine(ctx->lua, name);
 }
 
 void it_defines_string_scope(it_states* ctx, const char* name, const char* string) {
     if (!ctx) return;
     lua_pushstring(ctx->lua, string);
-    lua_setglobal(ctx->lua, name);
+    luaI_setdefine(ctx->lua, name);
 }
 
 void it_calls_scope(it_states* ctx) {

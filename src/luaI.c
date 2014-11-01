@@ -99,14 +99,14 @@ void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable) {
 }
 
 it_processes* luaI_getprocess(lua_State* L) {
-    luaI_getglobalfield(L, "_it", "process");
+    luaI_getdefine(L, "process");
     it_processes* process = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return process;
 }
 
 it_states* luaI_getstate(lua_State* L) {
-    luaI_getglobalfield(L, "_it", "state");
+    luaI_getdefine(L, "state");
     it_states* state = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return state;
@@ -118,7 +118,7 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     if (uv_exepath(exec_path, &size))
         uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
-    luaI_setglobalfield(L, "_it", "state");
+    luaI_setdefine(L, "state");
     luaL_loadstring(L,
         // concat arguments to get one string
         "_it.execpath = table.concat({...}, '') "
@@ -132,6 +132,27 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     lua_pushlstring(L, exec_path, size);
     lua_call(L, 1, 0);
     return 0;
+}
+
+void luaI_createdefinetable(lua_State* L) {
+    // creates table containing all variables that get defined via C
+    lua_newtable(L);
+    lua_setglobal(L, "_D");
+    // expose them as globals
+    lua_getglobal(L, "_G");
+    lua_createtable(L, 0, 1);
+    lua_getglobal(L, "_D");
+    lua_setfield(L, -2, "__index");
+    lua_setmetatable(L, -2);
+    lua_pop(L, 1);
+}
+
+void luaI_getdefine(lua_State* L, const char* key) {
+    luaI_getglobalfield(L, "_D", key);
+}
+
+void luaI_setdefine(lua_State* L, const char* key) {
+    luaI_setglobalfield(L, "_D", key);
 }
 
 int luaI_newstate(it_states* ctx) {
@@ -149,6 +170,7 @@ int luaI_newstate(it_states* ctx) {
     // load lua libs
     lua_gc(L, LUA_GCSTOP, 0);  // stop collector during initialization
     luaL_openlibs(L);
+    luaI_createdefinetable(L);
     luaI_newlib(ctx->lua, "_it", luaI_reg_it);
     if (luaI_setstate(L, ctx)) {
         lua_gc(L, LUA_GCRESTART, -1);
@@ -165,7 +187,7 @@ int luaI_createstate(it_processes* process) {
         return 1;
     }
     lua_pushlightuserdata(ctx->lua, process);
-    luaI_setglobalfield(ctx->lua, "_it", "process");
+    luaI_setdefine(ctx->lua, "process");
     luaI_dofile(ctx->lua, "lib/initrd.lua");
     return 0;
 }
