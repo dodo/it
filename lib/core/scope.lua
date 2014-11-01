@@ -11,12 +11,16 @@ local Scope = Prototype:fork()
 Scope.type = Metatype:struct("it_states", {
     "lua_State *lua";
     "uv_loop_t *loop";
+    "const char *err";
     "bool free";
 })
 
 Scope.type:api("Scope", {'import'})
 Scope.type:load(_it.libdir .. "/api.so", {
     init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
+    defboolean = [[void it_defines_boolean_scope(it_states* ctx,
+                                               const char* name,
+                                               int b)]];
     defcdata  = [[void it_defines_cdata_scope( it_states* ctx,
                                                const char* name,
                                                void* cdata)]];
@@ -54,6 +58,8 @@ function Scope:define(name, data, import)
         self.state:defstring(name, data)
     elseif type(data) == 'number' then
         self.state:defnumber(name, data)
+    elseif type(data) == 'boolean' then
+        self.state:defboolean(name, data)
     else
         self.state:defcdata(name, data)
     end

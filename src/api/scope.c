@@ -41,6 +41,12 @@ void it_defines_string_scope(it_states* ctx, const char* name, const char* strin
     luaI_setdefine(ctx->lua, name);
 }
 
+void it_defines_boolean_scope(it_states* ctx, const char* name, int b) {
+    if (!ctx) return;
+    lua_pushboolean(ctx->lua, b);
+    luaI_setdefine(ctx->lua, name);
+}
+
 void it_calls_scope(it_states* ctx) {
     if (!ctx) return;
     luaI_getglobalfield(ctx->lua, "context", "run");
