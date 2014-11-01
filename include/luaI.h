@@ -47,12 +47,9 @@
       lua_remove(L, 0 - nresults - 1);\
     } while (0)
 
-# define luaI_globalemit(L,gn,ev) \
+#define luaI_globalemit(L,gn,ev) \
     (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
 
-
-typedef int (*luaI_createstate_t)(it_processes* process);
-typedef void (*luaI_close_t)(lua_State* L, const char *global, int code);
 
 
 int luaI_loadmetatable(lua_State* L, int i);
@@ -67,13 +64,8 @@ it_states* luaI_getstate(lua_State* L);
 int luaI_setstate(lua_State* L, it_states* ctx);
 
 int luaI_newstate(it_states* ctx);
-#ifndef IT_SLAVES
-    int luaI_createstate(it_processes* process);
-#endif
+int luaI_createstate(it_processes* process);
+void luaI_close(lua_State* L, const char *global, int code);
 
-int luaI_stacktrace(lua_State* L);
-#ifndef IT_SLAVES
-    void luaI_close(lua_State* L, const char *global, int code);
-#endif
 
 #endif /* LUAI_H */

@@ -5,13 +5,13 @@
 #include <unistd.h>
 
 #include "it-types.h"
-#include "luaI.h"
 #include "uvI.h"
 #include "it.h"
 
 
-static luaI_createstate_t luaI_createstate;
-static luaI_close_t luaI_close;
+static int  (*luaI_createstate)(it_processes*);
+static void (*luaI_close)(lua_State*, const char*, int);
+
 
 static void sigint_cb(uv_signal_t* handle, int signum) {
     it_processes* process = (it_processes*) handle->data;
