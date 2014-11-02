@@ -26,6 +26,14 @@ function exports.convert_enum(key, value, typ, prefix)
     })[key]
 end
 
+function exports.enum_string(val, ct, prefix)
+    local str = require('reflect').typeof(ct):value(val + 1).name
+    if prefix == string.sub(str, 1 , string.len(prefix)) then
+        str   =  string.sub(str, 1 + string.len(prefix))
+    end
+    return string.lower(str)--:gsub('_', ' ')
+end
+
 function exports.ptraddr(ptr)
     return tonumber(ffi.cast('intptr_t', ffi.cast('void *', ptr)))
 end

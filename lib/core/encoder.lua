@@ -2,6 +2,7 @@ local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
 local cface = require 'cface'
 local Frame = require 'frame'
+local Scope = require 'scope'
 local Thread = require 'thread'
 local _table = require 'util.table'
 local Metatype = require 'metatype'
@@ -10,12 +11,14 @@ cface(_it.libdir .. "schrovideoformat.h")
 cface(_it.libdir .. "schroencoder.h")
 cface.typedef('struct _$', 'OGGZ')
 cface.metatype('SchroEncoder')
+cface.metatype('SchroEncoderFrame')
 cface.metatype('SchroVideoFormat')
 
 
 local Encoder = require(context and 'events' or 'prototype'):fork()
 Encoder.type = Metatype:struct("it_encodes", {
     "it_threads *thread";
+    "it_states *hooks[SCHRO_ENCODER_FRAME_STAGE_LAST]";
     "SchroEncoder *encoder";
     "OGGZ *container";
     "int64_t granulepos";
@@ -32,6 +35,9 @@ Encoder.type = Metatype:struct("it_encodes", {
 Encoder.type:api('Encoder', {'start', 'getsettings', 'getformat', 'setformat'})
 Encoder.type:load(_it.libdir .. "/api.so", {
     init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread)]];
+    hook = [[void it_hooks_stage_encoder(it_encodes* enc,
+                                         SchroEncoderFrameStateEnum stage,
+                                         it_states* ctx)]];
     push = [[int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr)]];
 })
 
@@ -62,6 +68,7 @@ function Encoder:init(filename, pointer)
         left_offset = 0,
         top_offset = 0,
     }
+    self.stage = {} -- lazy filled when needed
     self.native = self.type:create(nil, self.thread.reference)
     self.raw = self.native.encoder
     self.settings = self.native:getsettings()
@@ -101,7 +108,32 @@ function Encoder:start()
     end
     self.settings = _table.readonly(self.settings)
     self.format = _table.readonly(self.format)
+    for _, stage in pairs(self.stage) do
+        local err = stage:run()
+        if err then error(err) end
+    end
     self.thread:start() -- at last
+end
+
+local STAGE_ENUM = {
+    typ="SchroEncoderFrameStateEnum", prefix="SCHRO_ENCODER_FRAME_STAGE_"}
+function Encoder:hook(stage)
+    stage = _ffi.convert_enum('stage', stage, STAGE_ENUM.typ, STAGE_ENUM.prefix)
+    local stage_name =_ffi.enum_string(stage, STAGE_ENUM.typ, STAGE_ENUM.prefix)
+    local scope = Scope:new()
+    self.stage[stage_name] = scope
+    self.native:hook(stage, scope.state)
+    scope:define('stage', stage_name)
+    scope:define('encoder', self.native, function ()
+        encoder = require('encoder'):new(nil, _D.encoder)
+        encoder.stage = _D.stage
+        -- expose SchroEncoderFrames
+        encoder:on('run stage', function (pointer)
+            local frame = require('ffi').cast('SchroEncoderFrame*', pointer)
+            encoder:emit('stage', frame)
+        end)
+    end)
+    return scope
 end
 
 function Encoder:push(frame)

@@ -481,6 +481,7 @@ struct _SchroEncoderFrame {
 struct _SchroEncoder {
   /*< private >*/
   SchroAsync *async;
+  void *userdata;
 
   SchroPictureNumber next_frame_number;
 
@@ -579,6 +580,7 @@ struct _SchroEncoder {
   /* hooks */
 
   void (*init_frame) (SchroEncoderFrame *frame);
+  void (*user_stage) (SchroEncoderFrame *frame);
   void (*handle_gop) (SchroEncoder *encoder, int i);
   int (*setup_frame) (SchroEncoderFrame *frame);
   int (*handle_quants) (SchroEncoder *encoder, int i);

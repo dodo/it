@@ -101,6 +101,10 @@ function Metatype:new(...)
     return self.ctype(...)
 end
 
+function Metatype:ispointer(native, pointer)
+    return native == self:cast(pointer)
+end
+
 function Metatype:load(clib, cfunctions)
     local cname
     clib = cface.register(clib)

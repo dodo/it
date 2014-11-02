@@ -139,7 +139,7 @@ end
 
 function Frame:validate()
     local cairo = require 'cairo'
-    local surface_stride = cairo.C.format_stride_for_width('CAIRO_FORMAT_ARGB32', self.width)
+    local surface_stride = cairo.C.format_stride_for_width('ARGB32', self.width)
     local frame_stride = self.raw.components[0].stride +
                          self.raw.components[1].stride +
                          self.raw.components[2].stride

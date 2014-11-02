@@ -68,8 +68,10 @@ function Scope:define(name, data, import)
     end
 end
 
-function Scope:call()
-    return self.state:call()
+function Scope:run()
+    self.state:call()
+    if self.state.err == nil then return end
+    return ffi.string(self.state.err)
 end
 
 return Scope

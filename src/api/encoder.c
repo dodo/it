@@ -37,8 +37,7 @@ void schroI_encoder_wait(void* priv) {
                     it_errors("no schro_encoder_push_frame happened!");
 //                     it_prints_error("no schro_encoder_push_frame happened!");
                 // free all unused frames and other stuff
-                if (lua_gc(enc->thread->ctx->lua, LUA_GCCOLLECT, 0))
-                    luaL_error(enc->thread->ctx->lua, "internal error: lua_gc failed");
+                luaI_gc(enc->thread->ctx->lua);
             }
             break;
         case SCHRO_STATE_END_OF_STREAM:
@@ -104,6 +103,17 @@ void schroI_encoder_wait(void* priv) {
     oggz_run(enc->container); // flush ogg pages to ogg output // FIXME thread?
 }
 
+void schroI_run_stage(SchroEncoderFrame* frame) {
+    it_encodes* enc = (it_encodes*) frame->encoder->userdata;
+    it_states*  ctx = enc->hooks[frame->working];
+    if (!ctx) return;
+    luaI_globalemit(ctx->lua, "encoder", "run stage");
+    lua_pushlightuserdata(ctx->lua, frame);
+    luaI_pcall(ctx->lua, 3, 0);
+    // free all unused frames and other stuff
+    luaI_gc(ctx->lua);
+}
+
 void schroI_encoder_start(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     if (enc->started) return;
@@ -122,6 +132,14 @@ void schroI_encoder_free(void* priv) {
     enc->container = NULL;
     // might take a while …
     oggz_close(container);
+    // close all opened hook scope
+    int i; for (i = 0; i < SCHRO_ENCODER_FRAME_STAGE_LAST; i++) {
+        if (enc->hooks[i]) {
+            enc->hooks[i]->free = TRUE; // now we can
+            it_frees_scope(enc->hooks[i]);
+            enc->hooks[i] = NULL;
+        }
+    }
     if (enc->length) {
         free(enc->buffer);
         enc->buffer = NULL;
@@ -144,6 +162,17 @@ void it_inits_encoder(it_encodes* enc, it_threads* thread) {
         it_errors("schro_encoder_new: failed to create encoder");
     schro_video_format_set_std_video_format(&enc->encoder->video_format,
         SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
+}
+
+void it_hooks_stage_encoder(it_encodes* enc,
+                           SchroEncoderFrameStateEnum stage, it_states* ctx) {
+    if (!enc->encoder || !ctx) return;
+    // install encoding stage hook
+    enc->encoder->user_stage = schroI_run_stage;
+    enc->encoder->userdata = enc;
+    // add hook
+    enc->hooks[stage] = ctx;
+    ctx->free = FALSE; // take over ctx
 }
 
 int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr) {

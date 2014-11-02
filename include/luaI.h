@@ -50,6 +50,10 @@
 #define luaI_globalemit(L,gn,ev) \
     (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
 
+#define luaI_gc(L) \
+    do {if (lua_gc(L, LUA_GCCOLLECT, 0)) \
+        luaL_error(L, "internal error: lua_gc failed"); \
+    } while (0)
 
 
 int luaI_loadmetatable(lua_State* L, int i);

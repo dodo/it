@@ -49,8 +49,11 @@ void it_defines_boolean_scope(it_states* ctx, const char* name, int b) {
 
 void it_calls_scope(it_states* ctx) {
     if (!ctx) return;
+    lua_getglobal(ctx->lua, "_TRACEBACK");
     luaI_getglobalfield(ctx->lua, "context", "run");
-    luaI_pcall(ctx->lua, 0, 0);
+    if (lua_pcall(ctx->lua, 0, 0, -2)) {
+        ctx->err = lua_tostring(ctx->lua, -1);
+    }
 }
 
 void it_frees_scope(it_states* ctx) {

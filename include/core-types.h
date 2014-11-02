@@ -5,6 +5,7 @@
 #include <lua.h>
 
 #include <schroedinger/schro.h>
+#include <schroedinger/schroencoder.h>
 #include <oggz/oggz.h>
 #include <SDL.h>
 
@@ -23,7 +24,8 @@ typedef struct {
 } it_threads;
 
 typedef struct {
-    it_threads* thread;
+    it_threads *thread;
+    it_states *hooks[SCHRO_ENCODER_FRAME_STAGE_LAST];
     SchroEncoder *encoder;
     OGGZ *container;
     ogg_int64_t granulepos;
@@ -49,7 +51,7 @@ typedef struct {
 } it_frames;
 
 typedef struct {
-    it_threads* thread;
+    it_threads *thread;
     SDL_Window *window;
     SDL_Renderer *renderer;
     int width;
