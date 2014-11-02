@@ -4,6 +4,7 @@
 #include "api/window.h"
 #include "api/thread.h"
 
+// TODO make thread safe (only main should draw)
 
 int sdlI_ref(int c) {
     static int count = 0;

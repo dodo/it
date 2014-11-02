@@ -75,7 +75,7 @@ void it_frees_thread(it_threads* thread) {
     }
     free(thread->thread);
     thread->thread = NULL;
-    thread->ctx->free = TRUE; //now we can
+    thread->ctx->free = TRUE; // now we can
     it_frees_scope(thread->ctx);
     thread->ctx = NULL;
     // call callback …

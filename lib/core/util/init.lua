@@ -4,13 +4,17 @@ local util = {}
 
 
 function util.xpcall(f, errhandler, ...)
+    errhandler = errhandler or _TRACEBACK
     local result = {xpcall(f, errhandler, ...)} -- thanks to luajit
---     print(result)
     local status = table.remove(result, 1)
     if status then return unpack(result) end
     if type(result) == 'string' then error(result) end
-    if type(result) == 'cdata' then error(ffi.string(result)) end
-    if type(result[1]) == 'cdata' then error(ffi.string(result[1])) end
+    if type(result) == 'cdata' and ffi.istype('const char*', result[1]) then
+        error(ffi.string(result))
+    end
+    if type(result[1]) == 'cdata' and ffi.istype('const char*', result[1]) then
+        error(ffi.string(result[1]))
+    end
     if result[1] then error(result[1]) end
     -- else error ingored
 end

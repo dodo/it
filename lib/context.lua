@@ -2,10 +2,6 @@ local io = require 'io'
 local Metatype = require 'metatype'
 local EventEmitter = require 'events'
 
---  needed to build stacktrace
-_it.getlines = function (...)
-    return require('fs').line(...)
-end
 
 process = EventEmitter:new()
 process._type = Metatype:typedef('struct _$', 'it_processes')
@@ -25,5 +21,7 @@ end
 
 context = EventEmitter:new()
 
-context.run    = context:bind('emit', 'run')
-context.import = context:bind('on',   'run')
+context.run    = context:bind('emit', '__run')
+context.import = context:bind('on',   '__run')
+
+-- print(require('util').dump(_G))

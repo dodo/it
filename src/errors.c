@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#include <assert.h>
 #include <string.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -24,10 +25,13 @@ it_debugs cbacktrace;
 
 
 int at_panic(lua_State* L) {
+    // first things first
+    cbacktrace.count = backtrace(cbacktrace.addrs, BACK_TRACE_SIZE);
     lua_getglobal(L, "process");
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);
-        fprintf(stderr, "FATALPANIC@%s\n", lua_tostring(L, -1));
+        luaI_stacktrace(L);
+        fprintf(stderr, "internal error during boot: %s\n", lua_tostring(L,-1));
         return 0;
     }
     lua_getfield( L, -1, "emit");
@@ -36,6 +40,7 @@ int at_panic(lua_State* L) {
     lua_pushstring(L, "panic");
     lua_pushvalue(L, -4);
     luaI_pcall(L, 3, 0);
+    luaI_stacktrace(L);
     fprintf(stderr, "PANIC@%s\n", lua_tostring(L, -1));
     return 0;
 }
@@ -53,6 +58,7 @@ void at_fatal_panic(int signum) {
             }
         }
     }
+    if (signum < 0) return;
     // jump back …
     longjmp(cbacktrace.jmp, signum);
 }
@@ -77,7 +83,7 @@ int luaI_stacktrace(lua_State* L) {
     char addr[LUA_IDSIZE];
     int skips = 0;
     int level = 0 - cbacktrace.count;
-    int strings = 1; // starts with error message on top of stack
+    int strings = lua_isstring(L, 1); // starts with error message on top of stack
     while (level < 0 || lua_getstack(L, level, &info)) {
         func = NULL;
         addr[0] = '\0';
@@ -97,9 +103,9 @@ int luaI_stacktrace(lua_State* L) {
         }
         // silently overlook problems with finding the ptr
         if (func) {
-            if (dladdr(func, &dlinfo) || dladdr(&func, &dlinfo)) {
+            if (dladdr(func, &dlinfo)) {
                 if (dlinfo.dli_saddr)
-                    sprintf(addr, "|%p(%p)%c", dlinfo.dli_saddr, func, '\0');
+                    sprintf(addr, "|%p%c", dlinfo.dli_saddr, '\0');
                 sprintf(info.short_src, "%s%c", dlinfo.dli_fname, '\0');
                 info.name = dlinfo.dli_sname;
                 if (!info.namewhat[0])
@@ -147,7 +153,7 @@ int luaI_stacktrace(lua_State* L) {
             continue;
         }
         lua_pushstring(L, "        ");
-        luaI_getglobalfield(L, "_it", "getlines");
+        luaL_loadstring(L, "return require('fs').line(...)");
         lua_pushstring(L, info.short_src);
         lua_pushinteger(L, info.currentline);
         lua_call(L, 2, 1);

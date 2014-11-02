@@ -6,8 +6,6 @@ local EventEmitter = require 'events'
 local Metatype = require 'metatype'
 local haz = require('util.table').index
 
---  needed to build stacktrace
-_it.getlines = fs.line
 
 local Process = EventEmitter:fork()
 Process._type = Metatype:typedef('struct _$', 'it_processes')

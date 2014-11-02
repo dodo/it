@@ -10,8 +10,11 @@
 #define BACK_TRACE_SIZE 64
 
 
+#define printerr(msg, ...) \
+        fprintf(stderr, msg"\n", ##__VA_ARGS__)
+
 #define it_prints_error(msg, ...) \
-        fprintf(stderr, "internal error: "msg"\n", ##__VA_ARGS__)
+        printerr("internal error: "msg, ##__VA_ARGS__)
 
 #define it_errors(msg, ...) { \
         it_prints_error(msg, ##__VA_ARGS__); \
