@@ -17,8 +17,8 @@ IT_INCLUDES = -I./include
 IT_WARNS = -Wall
 
 # DEBUG = ""
-# DEBUG = -O0
-DEBUG = -O3
+# DEBUG = -g -O0
+DEBUG = -O2
 
 
 all: include/orc0.h src/orc0.c lib/api.so it
