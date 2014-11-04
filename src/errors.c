@@ -14,24 +14,30 @@
 #include "luaI.h"
 
 
-typedef struct {
-    jmp_buf jmp;
-    int count;
-    void *addrs[BACK_TRACE_SIZE];
-} it_debugs;
 
+static it_debugs cbacktrace;
+static bool panic = FALSE;
 
-it_debugs cbacktrace;
+it_debugs* get_stack_trace() {
+    return &cbacktrace;
+}
 
 
 int at_panic(lua_State* L) {
+    if (panic) {
+        printerr("FATAL PANIC %s\n", lua_tostring(L, -1));
+        return 0;
+    }
+    panic = TRUE;
     // first things first
-    cbacktrace.count = backtrace(cbacktrace.addrs, BACK_TRACE_SIZE);
+    if (!cbacktrace.count)
+         cbacktrace.count = backtrace(cbacktrace.addrs, BACK_TRACE_SIZE);
     lua_getglobal(L, "process");
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);
         luaI_stacktrace(L);
-        fprintf(stderr, "internal error during boot: %s\n", lua_tostring(L,-1));
+        printerr("internal error during boot: %s\n", lua_tostring(L,-1));
+        panic = FALSE;
         return 0;
     }
     lua_getfield( L, -1, "emit");
@@ -40,8 +46,9 @@ int at_panic(lua_State* L) {
     lua_pushstring(L, "panic");
     lua_pushvalue(L, -4);
     luaI_pcall(L, 3, 0);
-    luaI_stacktrace(L);
-    fprintf(stderr, "PANIC@%s\n", lua_tostring(L, -1));
+//     luaI_stacktrace(L);
+    printerr("PANIC@%s\n", lua_tostring(L, -1));
+    panic = FALSE;
     return 0;
 }
 
@@ -58,21 +65,14 @@ void at_fatal_panic(int signum) {
             }
         }
     }
-    if (signum < 0) return;
     // jump back …
-    longjmp(cbacktrace.jmp, signum);
+    longjmp(get_stack_trace()->jmp, signum);
 }
 
+
 int at_luajit_cfunction_call(lua_State* L, lua_CFunction func) {
-    int signum = setjmp(cbacktrace.jmp);
-    if (!signum) {
-        signal(SIGILL, &at_fatal_panic);
-        signal(SIGABRT, &at_fatal_panic);
-        signal(SIGFPE, &at_fatal_panic);
-        signal(SIGSEGV, &at_fatal_panic);
-        signal(SIGSYS, &at_fatal_panic);
-        return func(L);
-    } else luaI_error(L, "%s", strsignal(signum));
+    guarded_cfunction_call(L, func);
+    return 0;
 }
 
 int luaI_stacktrace(lua_State* L) {

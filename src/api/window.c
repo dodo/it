@@ -24,20 +24,22 @@ void sdlI_free(void* priv) {
 
 void sdlI_idle(void* priv) {
     it_windows* win = (it_windows*) priv;
-    schro_bool need_gc = FALSE;
+    bool need_gc = FALSE;
     SDL_Event event;
-    while (SDL_PollEvent(&event)) {
+    if (win->thread->ctx->err) return;
+    while (!win->thread->closed && SDL_PollEvent(&event)) {
+        if (win->thread->ctx->err) return;
 
         switch (event.type) {
 
             default:
                 break;
         }
-        if (event.type == SDL_QUIT || win->thread->closed) break;
+        if (event.type == SDL_QUIT) break;
     }
     if (event.type == SDL_QUIT || win->thread->closed) {
         luaI_globalemit(win->thread->ctx->lua, "window", "close");
-        luaI_pcall(win->thread->ctx->lua, 2, 0);
+        luaI_pcall_in(win->thread->ctx, 2, 0);
         win->thread->on_free = NULL;
         sdlI_ref(1); // prevent SDL_Quit
         sdlI_free(priv);
@@ -46,9 +48,10 @@ void sdlI_idle(void* priv) {
     }
     // call lua …
     luaI_globalemit(win->thread->ctx->lua, "window", "need render");
-    luaI_pcall(win->thread->ctx->lua, 2, 0);
+    luaI_pcall_in(win->thread->ctx, 2, 0);
     // free all unused data and other stuff
-    if (need_gc && lua_gc(win->thread->ctx->lua, LUA_GCCOLLECT, 0))
+    if (need_gc && !win->thread->ctx->err)
+        if (lua_gc(win->thread->ctx->lua, LUA_GCCOLLECT, 0))
         luaL_error(win->thread->ctx->lua, "internal error: lua_gc failed");
 //     SDL_Delay(2); // FIXME
 }

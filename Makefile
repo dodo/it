@@ -1,17 +1,21 @@
 
+IT_SRC_BIN =  it.c src/uvI.c
+IT_SRC_API = src/api.c \
+	src/errors.c \
+	src/uvI.c \
+	src/luaI.c \
+	src/api/it.c \
+	src/api/scope.c \
+	src/api/thread.c \
+	src/api/process.c \
+	src/api/window.c
+
 
 IT_DEPENDS = \
 	$(shell pkg-config --cflags --libs libuv) \
 	$(shell pkg-config --cflags --libs luajit) \
-	$(shell pkg-config --cflags --libs orc-0.4) \
-	$(shell PKG_CONFIG_PATH="`pwd`/vendor/schroedinger" pkg-config --cflags --libs --static schroedinger) \
-	$(shell pkg-config --cflags --libs oggz) \
 	$(shell pkg-config --cflags --libs sdl2)
 
-IT_FLAGS = \
-	-D SCHRO_ENABLE_UNSTABLE_API \
-	-D PKG_ORC_VERSION='"$(shell pkg-config --modversion orc-0.4)"' \
-	-D PKG_OGGZ_VERSION='"$(shell pkg-config --modversion oggz)"'
 
 IT_INCLUDES = -I./include
 IT_WARNS = -Wall
@@ -20,38 +24,39 @@ IT_WARNS = -Wall
 # DEBUG = -g -O0
 DEBUG = -O2
 
+IT_RPATHS = /tmp/it-rpath
 
-all: include/orc0.h src/orc0.c lib/api.so it
 
-include/orc0.h: src/it.orc
-	orcc -o $@ $^ --inline --header
+cleanall: clean all
 
-src/orc0.c: src/it.orc
-	orcc -o $@ $^ --inline --implementation
+all: api plugins it
 
-lib/api.so: src/api.c \
-	src/errors.c \
-	src/luaI.c \
-	src/orc0.c \
-	src/orcI.c \
-	src/api/it.c \
-	src/api/scope.c \
-	src/api/thread.c \
-	src/api/encoder.c \
-	src/api/encoder_settings.c \
-	src/api/process.c \
-	src/api/frame.c \
-	src/api/window.c \
-	vendor/schroedinger/schroedinger/.libs/libschroedinger-1.0.a
-	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ \
-		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
+standalone: api it
 
-it: it.c src/uvI.c
-	gcc $(IT_WARNS) -o $@ $^ $(IT_INCLUDES) $(DEBUG) \
+api: libapi.so
+	echo -n "return nil" > lib/plugins.lua
+	echo -n '$$ORIGIN' >  $(IT_RPATHS)
+
+plugins: api lib/plugins.lua
+	make -C plugin/encoder \
+		&& echo -n ",'encoder'" >> lib/plugins.lua \
+		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS)
+
+
+libapi.so:  $(IT_SRC_API)
+	gcc $(IT_WARNS) -shared -o $@ -fPIC $(IT_SRC_API) \
+		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) \
+
+it: api $(IT_SRC_BIN)
+	gcc $(IT_WARNS) -o $@ $(IT_SRC_BIN) $(IT_INCLUDES) $(DEBUG) \
+		-L. -lapi \
 		$(shell pkg-config --cflags --libs libuv) \
-		$(shell pkg-config --cflags --libs luajit)
+		$(shell pkg-config --cflags --libs luajit) \
+		-Wl,-z,origin -Wl,-rpath,'$(shell cat $(IT_RPATHS))'
+
 
 clean:
-	rm -f include/orc0.h src/orc0.c lib/api.so it
+	rm -f .rpath libapi.so lib/plugins.lua it
+	make -C plugin/encoder clean
 
 .PHONY: all

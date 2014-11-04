@@ -5,48 +5,9 @@
 #include "luaI.h"
 
 #include "it.h"
+#include "api.h"
+#include "core-types.h"
 
-
-#include "api/it.h"
-static const luaL_Reg luaI_reg_it[] = {
-    {"boots", it_boots_lua},
-    {"loads", it_loads_lua},
-    {"versions", it_versions_lua},
-    {NULL, NULL}
-};
-
-#include "api/scope.h"
-static const luaL_Reg luaI_reg_scope[] = {
-    {"import", it_imports_scope_lua},
-    {NULL, NULL}
-};
-
-#include "api/encoder.h"
-static const luaL_Reg luaI_reg_encoder[] = {
-    {"start", it_starts_encoder_lua},
-    {"getsettings", it_gets_settings_encoder_lua},
-    {"getformat", it_gets_format_encoder_lua},
-    {"setformat", it_sets_format_encoder_lua},
-    {NULL, NULL}
-};
-
-
-
-int luaI_loadmetatable(lua_State* L, int i) {
-    const char *name = lua_tostring(L, i);
-    switch (name[0]) {
-        case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it);            break;
-        case 'E'/*ncoder*/: luaI_newmetatable(L, name, luaI_reg_encoder); break;
-//         case 'F'/*rame*/:   luaI_newmetatable(L, name, luaI_reg_frame);   break;
-//         case 'P'/*rocess*/: luaI_newmetatable(L, name, luaI_reg_process); break;
-        case 'S'/*cope*/:   luaI_newmetatable(L, name, luaI_reg_scope);   break;
-//         case 'T'/*hread*/:  luaI_newmetatable(L, name, luaI_reg_thread);  break;
-//         case 'W'/*indow*/:  luaI_newmetatable(L, name, luaI_reg_window);  break;
-        default: luaI_error(L, "unknown metatable %s!", name); break;
-    }
-    lua_pop(L, 1); // dont need metatable right now
-    return 0;
-}
 
 void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l) {
     if (luaL_newmetatable(L, name)) {
@@ -62,13 +23,16 @@ void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l) {
     }
 }
 
+int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc) {
+    guarded_cfunction_call(L, lua_pcall, nargs, nresults, errfunc);
+    return 0;
+}
 
 static int buf_writer(lua_State* L, const void* b, size_t n, void* B) {
   (void)L;
   luaL_addlstring((luaL_Buffer*) B, (const char *)b, n);
   return 0;
 }
-
 int luaI_copyfunction(lua_State* L, lua_State* src) {
     char const* name = NULL;
     size_t sz;
@@ -121,17 +85,27 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     luaI_setdefine(L, "state");
     luaL_loadstring(L,
         // concat arguments to get one string
-        "_it.execpath = table.concat({...}, '') "
-        // remove executable name and append libdir
-        "_it.libdir = _it.execpath:match('^(.*)/[^/]+$') .. '/lib/' "
-        // prepend to lua search paths
-        "package.path = './?/init.lua;' .. package.path "
-        "package.path = _it.libdir .. 'core/?/init.lua;' .. package.path "
-        "package.path = _it.libdir .. 'core/?.lua;' .. package.path"
+        "_it.execcmd = ... "
+        // remove executable name
+        "_it.execpath = _it.execcmd:match('^(.*/)[^/]+$') "
+        // build some static paths
+        "_it.apifile = 'api' "
+        "_it.plugindir = _it.execpath .. 'plugin/' "
+        "_it.libdir = _it.execpath .. 'lib/' "
+        // load package patches
+        "dofile(_it.libdir .. 'package.lua')"
     );
     lua_pushlstring(L, exec_path, size);
     lua_call(L, 1, 0);
     return 0;
+}
+
+const char* luaI_getlibpath(lua_State* L, const char* filename) {
+    luaI_getglobalfield(L, "_it", "libdir");
+    lua_pushstring(L, filename);
+    lua_concat(L, 2);
+    filename = lua_tostring(L, -1); lua_pop(L, 1);
+    return filename;
 }
 
 void luaI_createdefinetable(lua_State* L) {
@@ -164,19 +138,20 @@ int luaI_newstate(it_states* ctx) {
     }
     ctx->free = TRUE;
     ctx->lua = L;
-    luaI_init_errorhandling(L);
     // enable JIT
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs
     lua_gc(L, LUA_GCSTOP, 0);  // stop collector during initialization
     luaL_openlibs(L);
     luaI_createdefinetable(L);
-    luaI_newlib(ctx->lua, "_it", luaI_reg_it);
+    register_api(ctx->lua, "_it"); // api.c main
+
     if (luaI_setstate(L, ctx)) {
         lua_gc(L, LUA_GCRESTART, -1);
         it_prints_error("failed to initialize lua state!");
         return 1;
     }
+    luaI_init_errorhandling(L);
     lua_gc(L, LUA_GCRESTART, -1);
     return 0;
 }
@@ -188,7 +163,7 @@ int luaI_createstate(it_processes* process) {
     }
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setdefine(ctx->lua, "process");
-    luaI_dofile(ctx->lua, "lib/initrd.lua");
+    luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "initrd.lua"));
     return 0;
 }
 

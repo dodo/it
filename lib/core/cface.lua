@@ -9,11 +9,15 @@ local function escape(match)
 end
 
 _CFACE_REGISTRY = {}
-function cface.register(clib)
+function cface.register(clib, apifile)
     if type(clib) == 'string' then
         local name = clib
-        clib = _CFACE_REGISTRY[name] or ffi.load(name)
-        _CFACE_REGISTRY[name] = clib
+        if apifile then
+            clib = _it.loads(name, apifile)
+        else
+            clib = _CFACE_REGISTRY[name] or ffi.load(name)
+            _CFACE_REGISTRY[name] = clib
+        end
     end
     return clib
 end

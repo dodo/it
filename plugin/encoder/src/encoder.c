@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <uv.h>
 
 #include <oggz/oggz.h>
@@ -11,17 +9,19 @@
 #include <schroedinger/schrobuffer.h>
 
 #include "it.h"
+#include "api.h"
 #include "luaI.h"
 
-#include "api/encoder.h"
-#include "api/encoder_settings.h"
+#include "encoder.h"
+#include "encoder_settings.h"
+
 #include "api/thread.h"
 #include "api/scope.h"
 
 
 void schroI_encoder_wait(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
-    if (enc->eos_pulled) return;
+    if (enc->eos_pulled || enc->thread->ctx->err) return;
     SchroStateEnum state = schro_encoder_wait(enc->encoder);
     switch (state) {
         case SCHRO_STATE_NEED_FRAME:
@@ -32,7 +32,8 @@ void schroI_encoder_wait(void* priv) {
                 int frames = enc->frames;
                 luaI_globalemit(enc->thread->ctx->lua, "encoder", "need frame");
                 // hopefully calls schro_encoder_push_frame
-                luaI_pcall(enc->thread->ctx->lua, 2, 0);
+                luaI_pcall_in(enc->thread->ctx, 2, 0);
+                if (enc->thread->ctx->err) return;
                 if (enc->frames == frames)
                     it_errors("no schro_encoder_push_frame happened!");
 //                     it_prints_error("no schro_encoder_push_frame happened!");
@@ -65,7 +66,8 @@ void schroI_encoder_wait(void* priv) {
             luaI_globalemit(enc->thread->ctx->lua, "encoder", "userdata");
             lua_pushlightuserdata(enc->thread->ctx->lua, enc->buffer);
             lua_pushinteger(enc->thread->ctx->lua, enc->length);
-            luaI_pcall(enc->thread->ctx->lua, 4, 0);
+            luaI_pcall_in(enc->thread->ctx, 4, 0);
+            if (enc->thread->ctx->err) return;
             { // … now pump it out …
                 ogg_packet op = {
                     .packet = enc->buffer,
@@ -109,7 +111,8 @@ void schroI_run_stage(SchroEncoderFrame* frame) {
     if (!ctx) return;
     luaI_globalemit(ctx->lua, "encoder", "run stage");
     lua_pushlightuserdata(ctx->lua, frame);
-    luaI_pcall(ctx->lua, 3, 0);
+    luaI_pcall_in(ctx, 3, 0);
+    if (ctx->err) return;
     // free all unused frames and other stuff
     luaI_gc(ctx->lua);
 }

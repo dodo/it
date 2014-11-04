@@ -1,37 +1,9 @@
 local io = require 'io'
 local fs = require 'fs'
-local ffi = require 'ffi'
 local util = require 'util'
-local EventEmitter = require 'events'
-local Metatype = require 'metatype'
 local haz = require('util.table').index
 
-
-local Process = EventEmitter:fork()
-Process._type = Metatype:typedef('struct _$', 'it_processes')
-
-function Process:init()
-    self.prototype.init(self)
-    _it.boots(self)
-    self.exit = self:bind('exit')
-    self.shutdown = true
-    -- stdio
-    self.stdnon = nil
-    self.stdout = io.stdout
-    self.stderr = io.stderr
-    self.stdin = io.stdin
-end
-
-function Process:cwd()
-    ffi.cdef("char *getcwd(char *buf, size_t size);")
-    return ffi.string(ffi.C.getcwd(nil, 0)) -- thanks to gnu c
-end
-
-function Process:exit(code)
-    self._type:load(_it.libdir .. "/api.so", {
-    exit = "void it_exits_process(it_processes* process, int exit_code)";
-    }):ptr(_D.process):exit(code or 0)
-end
+local Process = dofile(_it.libdir .. 'process.lua')
 
 function Process:usage()
     return [[
@@ -42,9 +14,9 @@ Options:
   -h --help         magic flag
 ]] end
 
--- -- -- -- -- -- -- --
-
 process = Process:new()
+
+-- -- -- -- -- -- -- --
 
 if haz(process.argv, "-h") or haz(process.argv, "--help") then
     print(process.usage())
@@ -70,7 +42,8 @@ end
 if haz(process.argv, "--debug") then
     local color = require('console').color
     print(color.bold .. "[debug mode]" .. color.reset)
-    require('encoder').debug('warning') -- at least
+    local loaded, encoder = pcall(require, 'encoder')
+    if loaded then encoder.debug('warning') end
     require('jit.v').start() -- TODO start in threads as well
 --     require('jit.dump').start() -- TODO start in threads as well
 end

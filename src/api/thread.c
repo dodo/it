@@ -1,5 +1,6 @@
  #include "it.h"
 #include "luaI.h"
+#include "core-types.h"
 
 #include "api/thread.h"
 #include "api/scope.h"
@@ -7,18 +8,22 @@
 
 void default_thread_idle(void* priv) {
     it_threads* thread = (it_threads*) priv;
-    if (thread->closed) {
+    if (thread->closed || thread->ctx->err) {
         it_closes_thread(thread);
         return;
     }
     luaI_globalemit(thread->ctx->lua, "thread", "idle");
-    luaI_pcall(thread->ctx->lua, 2, 0);
+    luaI_pcall_in(thread->ctx, 2, 0);
 }
 
 void uvI_thread_idle(uv_idle_t* handle, int status) {
     it_threads* thread = (it_threads*) handle->data;
-    // call callback …
-    thread->on_idle(thread->priv);
+    if (!thread->ctx->err) {
+        // call callback …
+        thread->on_idle(thread->priv);
+        return;
+    }
+    it_closes_thread(thread);
 }
 
 void it_runs_thread(void* priv) {
@@ -35,9 +40,12 @@ void it_runs_thread(void* priv) {
     }
     // … then call into lua state first …
     luaI_getglobalfield(thread->ctx->lua, "context", "run");
-    luaI_pcall(thread->ctx->lua, 0, 0);
-    // … and now run!
-    uv_run(thread->ctx->loop, UV_RUN_DEFAULT);
+    luaI_pcall_in(thread->ctx, 0, 0);
+    if (!thread->ctx->err)
+        // … and now run!
+        uv_run(thread->ctx->loop, UV_RUN_DEFAULT);
+    if (thread->ctx->err)
+        printerr("thread halted: scope error: %s", thread->ctx->err);
     thread->closed = TRUE;
 }
 

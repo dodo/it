@@ -3,8 +3,6 @@
 
 #include <lua.h>
 
-#include <stdio.h>
-
 #include <uv.h>
 
 #include <oggz/oggz.h>
@@ -16,14 +14,14 @@
 #include <schroedinger/schrobuffer.h>
 
 #include "it.h"
-#include "api.h"
 #include "luaI.h"
+#include "encoder-types.h"
 
-#include "api/encoder.h"
-#include "api/encoder_settings.h"
+#include "encoder.h"
+#include "encoder_settings.h"
 #include "api/thread.h"
 #include "api/scope.h"
-#include "api/frame.h"
+#include "frame.h"
 
 
 extern void schroI_encoder_wait(void* priv);

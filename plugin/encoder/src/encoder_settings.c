@@ -3,9 +3,10 @@
 #include <schroedinger/schro.h>
 
 #include "it.h"
+#include "api.h"
 #include "luaI.h"
 
-#include "api/encoder_settings.h"
+#include "encoder_settings.h"
 
 
 void luaI_pushencodersetting_value(lua_State* L, const SchroEncoderSetting* info, double value) {

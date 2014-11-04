@@ -108,7 +108,7 @@ end
 function Metatype:load(clib, cfunctions)
     local cname
     clib = cface.register(clib)
-    for name, cdecl in pairs(cfunctions) do
+    for name, cdecl in pairs(cfunctions or {}) do
         cface.declaration(cdecl .. ";")
         cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
         self.prototype[name] = clib[cname]
@@ -135,15 +135,15 @@ end
 local _define
 local function lua_pushlightuserdata(name, pointer)
     if not _define then
-        _define = Metatype:fork():load(_it.libdir .. "/api.so", {
+        _define = Metatype:fork():load('api', {
             define = [[void it_defines_cdata_scope(void* ctx, const char* name,
                                              void* cdata)]];
         }):virt().define
     end
     _define(ffi.cast('void*', _D.state), name, ffi.cast('void*', pointer))
 end
-function Metatype:api(metaname, cfunctions)
-    _it.loads(metaname)
+function Metatype:api(metaname, cfunctions, apifile)
+    cface.register(metaname, apifile or 'libapi.so')
     if not self.prototype._userdata then
         local data = _table.weak({})
         self.prototype._userdata = function (pointer)

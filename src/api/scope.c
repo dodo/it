@@ -1,5 +1,6 @@
 #include "it.h"
 #include "luaI.h"
+#include "core-types.h"
 
 #include "api/scope.h"
 
@@ -11,7 +12,7 @@ int it_imports_scope_lua(lua_State* L) {
     // copy function and import into context
     luaI_getglobalfield(ctx->lua, "context", "import");
     luaI_copyfunction(ctx->lua, L);
-    luaI_pcall(ctx->lua, 1, 0);
+    luaI_pcall_in(ctx, 1, 0);
     return 0;
 }
 
@@ -20,7 +21,7 @@ void it_inits_scope(it_states* ctx, it_processes* process, it_states* state) {
     if (luaI_newstate(ctx)) return;
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setdefine(ctx->lua, "process");
-    luaI_dofile(ctx->lua, "lib/context.lua");
+    luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "context.lua"));
 }
 
 void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata) {
@@ -49,11 +50,8 @@ void it_defines_boolean_scope(it_states* ctx, const char* name, int b) {
 
 void it_calls_scope(it_states* ctx) {
     if (!ctx) return;
-    lua_getglobal(ctx->lua, "_TRACEBACK");
     luaI_getglobalfield(ctx->lua, "context", "run");
-    if (lua_pcall(ctx->lua, 0, 0, -2)) {
-        ctx->err = lua_tostring(ctx->lua, -1);
-    }
+    luaI_pcall_in(ctx, 0, 0);
 }
 
 void it_frees_scope(it_states* ctx) {

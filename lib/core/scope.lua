@@ -16,7 +16,7 @@ Scope.type = Metatype:struct("it_states", {
 })
 
 Scope.type:api("Scope", {'import'})
-Scope.type:load(_it.libdir .. "/api.so", {
+Scope.type:load('libapi.so', {
     init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
     defboolean = [[void it_defines_boolean_scope(it_states* ctx,
                                                const char* name,
@@ -50,7 +50,9 @@ function Scope:init(pointer)
 end
 
 function Scope:import(lua_function)
-    return self.state:import(lua_function)
+    self.state:import(lua_function)
+    if self.state.err == nil then return end
+    error(ffi.string(self.state.err))
 end
 
 function Scope:define(name, data, import)
@@ -71,7 +73,7 @@ end
 function Scope:run()
     self.state:call()
     if self.state.err == nil then return end
-    return ffi.string(self.state.err)
+    error(ffi.string(self.state.err))
 end
 
 return Scope

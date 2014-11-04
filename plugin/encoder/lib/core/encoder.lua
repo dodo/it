@@ -7,8 +7,8 @@ local Thread = require 'thread'
 local _table = require 'util.table'
 local Metatype = require 'metatype'
 
-cface(_it.libdir .. "schrovideoformat.h")
-cface(_it.libdir .. "schroencoder.h")
+cface(_it.plugin.encoder.libdir .. "schrovideoformat.h")
+cface(_it.plugin.encoder.libdir .. "schroencoder.h")
 cface.typedef('struct _$', 'OGGZ')
 cface.metatype('SchroEncoder')
 cface.metatype('SchroEncoderFrame')
@@ -32,8 +32,10 @@ Encoder.type = Metatype:struct("it_encodes", {
 })
 
 
-Encoder.type:api('Encoder', {'start', 'getsettings', 'getformat', 'setformat'})
-Encoder.type:load(_it.libdir .. "/api.so", {
+Encoder.type:api('Encoder',
+    {'start', 'getsettings', 'getformat', 'setformat'},
+    _it.plugin.encoder.apifile)
+Encoder.type:load('libencoder.so', {
     init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread)]];
     hook = [[void it_hooks_stage_encoder(it_encodes* enc,
                                          SchroEncoderFrameStateEnum stage,
@@ -109,8 +111,7 @@ function Encoder:start()
     self.settings = _table.readonly(self.settings)
     self.format = _table.readonly(self.format)
     for _, stage in pairs(self.stage) do
-        local err = stage:run()
-        if err then error(err) end
+        stage:run()
     end
     self.thread:start() -- at last
 end
@@ -155,7 +156,7 @@ end
 
 function Encoder.debug(level)
     ffi.cdef [[void it_sets_schro_debug_level(int level);]]
-    cface.register(_it.libdir .. "/api.so").it_sets_schro_debug_level(
+    cface.register(_it.plugin.encoder.apifile).it_sets_schro_debug_level(
         _table.index(
             {"ERROR","WARNING","INFO","DEBUG","LOG"},
             string.upper(level)

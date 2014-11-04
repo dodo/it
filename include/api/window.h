@@ -7,6 +7,7 @@
 #include "it.h"
 #include "api.h"
 #include "luaI.h"
+#include "core-types.h"
 
 #include "api/thread.h"
 

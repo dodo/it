@@ -19,7 +19,7 @@ Window.type = Metatype:struct("it_windows", {
     "int height";
 })
 
-Window.type:load(_it.libdir .. "/api.so", {
+Window.type:load('libapi.so', {
     init = [[void it_inits_window(it_windows* win, it_threads* thread)]];
     create = [[void it_creates_window(it_windows* win, const char* title,
                                       const int* x, const int* y,

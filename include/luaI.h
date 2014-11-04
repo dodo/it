@@ -11,6 +11,7 @@
 #include <lauxlib.h>
 
 #include "it-types.h"
+#include "it-errors.h"
 
 
 #ifndef luaL_newlib
@@ -41,11 +42,21 @@
 #define luaI_pcall(L,nargs,nresults) \
     do{lua_getglobal(L, "_TRACEBACK"); \
       lua_insert(L,0 - nargs - 2); \
-      if (lua_pcall(L,nargs,nresults,0 - nargs - 2)) { \
+      if (luaI_xpcall(L,nargs,nresults,0 - nargs - 2)) { \
         lua_error(L); \
       } \
       lua_remove(L, 0 - nresults - 1);\
     } while (0)
+
+#define luaI_pcall_in(ctx,nargs,nresults) \
+    do{if (!ctx->err) { \
+      lua_getglobal(ctx->lua, "_TRACEBACK"); \
+      lua_insert(ctx->lua,0 - nargs - 2); \
+      if (luaI_xpcall(ctx->lua,nargs,nresults,0 - nargs - 2)) { \
+        ctx->err = lua_tostring(ctx->lua, -1); \
+        lua_pop(ctx->lua, 2); \
+      } else lua_remove(ctx->lua, 0 - nresults - 1);\
+    }} while (0)
 
 #define luaI_globalemit(L,gn,ev) \
     (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
@@ -59,6 +70,7 @@
 int luaI_loadmetatable(lua_State* L, int i);
 void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
+int luaI_xpcall(lua_State* L, int nargs, int nresult, int errfunc);
 int luaI_copyfunction(lua_State* L, lua_State* src);
 int luaI_dofile(lua_State* L, const char *filename);
 void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
@@ -66,6 +78,7 @@ void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
 it_processes* luaI_getprocess(lua_State* L);
 it_states* luaI_getstate(lua_State* L);
 int luaI_setstate(lua_State* L, it_states* ctx);
+const char* luaI_getlibpath(lua_State* L, const char* filename);
 
 void luaI_createdefinetable(lua_State* L);
 void luaI_getdefine(lua_State* L, const char* key);

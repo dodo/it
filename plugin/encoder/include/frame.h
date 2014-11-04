@@ -6,8 +6,8 @@
 #include <schroedinger/schroframe.h>
 
 #include "it.h"
-#include "api.h"
 #include "luaI.h"
+#include "encoder-types.h"
 
 
 extern void it_inits_frame(it_frames* fr, int width, int height);

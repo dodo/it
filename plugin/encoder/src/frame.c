@@ -2,10 +2,11 @@
 #include <schroedinger/schroframe.h>
 
 #include "it.h"
+#include "api.h"
 #include "luaI.h"
 #include "orcI.h"
 
-#include "api/frame.h"
+#include "frame.h"
 
 
 void it_inits_frame(it_frames* fr, int width, int height)  {
