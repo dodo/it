@@ -1,8 +1,5 @@
 #include <stdio.h>
 
-#include <uv.h>
-#include <SDL.h>
-
 #include "it.h"
 #include "uvI.h"
 #include "luaI.h"
@@ -52,51 +49,10 @@ int it_loads_lua(lua_State* L) { // (metatable_name, apifile_path)
     return 0;
 }
 
-int it_versions_lua(lua_State* L) {
-    lua_createtable(L, 0, 1);
-    lua_pushfstring(L, "[%s] %s", IT_VERSIONS, IT_NAMES);
-    lua_setfield(L, -2, "it");
-    // * gcc
-    lua_pushfstring(L, "gcc %d.%d.%d",
-                        __GNUC__,
-                        __GNUC_MINOR__,
-                        __GNUC_PATCHLEVEL__);
-    lua_setfield(L, -2, "gcc");
-    // * libuv
-    lua_pushfstring(L, "libuv %s", uv_version_string());
-    lua_setfield(L, -2, "uv");
-    // * luajit
-    lua_pushfstring(L, "%s with %s",
-                        LUAJIT_VERSION, LUA_RELEASE); // + _VERSION
-    lua_setfield(L, -2, "lua");
-    // * libsdl2
-    SDL_version compiled;
-    SDL_version linked;
-
-    SDL_VERSION(&compiled);
-    SDL_GetVersion(&linked);
-    lua_pushfstring(L, "libsdl2 %d.%d.%d (linked against %d.%d.%d)",
-                        compiled.major, compiled.minor, compiled.patch,
-                        linked.major, linked.minor, linked.patch);
-    lua_setfield(L, -2, "sdl");
-
-
-
-    // TODO FIXME
-    // inject version from plugins now
-    // * libschrödinger
-//     lua_pushfstring(L, "libschrödinger %d.%d.%d (Dirac %d.%d)",
-//                         SCHRO_VERSION_MAJOR,
-//                         SCHRO_VERSION_MINOR,
-//                         SCHRO_VERSION_MICRO,
-//                         SCHRO_ENCODER_VERSION_MAJOR,
-//                         SCHRO_ENCODER_VERSION_MINOR);
-//     lua_setfield(L, -2, "schroedinger");
-//     // * liboggz
-//     lua_pushfstring(L, "liboggz %s", PKG_OGGZ_VERSION);
-//     lua_setfield(L, -2, "ogg");
-//     // * liborc
-//     lua_pushfstring(L, "liborc %s", PKG_ORC_VERSION);
-//     lua_setfield(L, -2, "orc");
-    return 1;
+int it_versions_lua(lua_State* L) { // (apifile_path)
+    if (lua_isnil(L, 1)) return api_version(L);
+    int (*plugin_version)(lua_State*);
+    uv_lib_t* api = uvI_dlopen(lua_tostring(L, 1));
+    uvI_dlsym(api, "api_version", &plugin_version);
+    return plugin_version(L);
 }

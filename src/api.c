@@ -1,5 +1,8 @@
 #include <stdio.h>
 
+#include <uv.h>
+#include <SDL.h>
+
 #include "it.h"
 #include "luaI.h"
 
@@ -31,3 +34,32 @@ int register_api(lua_State* L, const char *name) {
     return 0;
 }
 
+int api_version(lua_State* L) {
+    lua_createtable(L, 0, 5);
+    lua_pushfstring(L, "[%s] %s", IT_VERSIONS, IT_NAMES);
+    lua_setfield(L, -2, "it");
+    // * gcc
+    lua_pushfstring(L, "gcc %d.%d.%d",
+                        __GNUC__,
+                        __GNUC_MINOR__,
+                        __GNUC_PATCHLEVEL__);
+    lua_setfield(L, -2, "gcc");
+    // * libuv
+    lua_pushfstring(L, "libuv %s", uv_version_string());
+    lua_setfield(L, -2, "uv");
+    // * luajit
+    lua_pushfstring(L, "%s with %s",
+                        LUAJIT_VERSION, LUA_RELEASE); // + _VERSION
+    lua_setfield(L, -2, "lua");
+    // * libsdl2
+    SDL_version compiled;
+    SDL_version linked;
+
+    SDL_VERSION(&compiled);
+    SDL_GetVersion(&linked);
+    lua_pushfstring(L, "libsdl2 %d.%d.%d (linked against %d.%d.%d)",
+                        compiled.major, compiled.minor, compiled.patch,
+                        linked.major, linked.minor, linked.patch);
+    lua_setfield(L, -2, "sdl");
+    return 1;
+}
