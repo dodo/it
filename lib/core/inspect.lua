@@ -4,7 +4,6 @@ local inspect = {}
 
 
 function inspect.value(refct, cdata)
-    print(refct.what, refct.value or cdata[refct.name])
     if refct.what == 'constant' then
         return refct.value
     end

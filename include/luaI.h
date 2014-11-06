@@ -70,7 +70,6 @@
 int luaI_loadmetatable(lua_State* L, int i);
 void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
-int luaI_xpcall(lua_State* L, int nargs, int nresult, int errfunc);
 int luaI_copyfunction(lua_State* L, lua_State* src);
 int luaI_dofile(lua_State* L, const char *filename);
 void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);

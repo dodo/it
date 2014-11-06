@@ -1,4 +1,5 @@
- #include "it.h"
+#include "it.h"
+#include "uvI.h"
 #include "luaI.h"
 #include "core-types.h"
 
@@ -62,10 +63,11 @@ void it_creates_thread(it_threads* thread) {
     if (thread->thread) return;
     if (!thread->on_idle) it_errors("thread has no idle callback");
     // now start the thread to run the encoder
-    thread->thread = malloc(sizeof(uv_thread_t));
-    if (!thread->thread)
+    uvI_thread_t* uvthread = uvI_thread_new();
+    if (!uvthread)
         it_errors("failed to initialize thread!");
-    if (uv_thread_create(thread->thread, it_runs_thread, thread))
+    thread->thread = &(uvthread->pthread);
+    if (uvI_thread_create(uvthread, it_runs_thread, thread))
         it_errors("uv_thread_create: failed to create thread!");
 }
 
@@ -81,7 +83,7 @@ void it_frees_thread(it_threads* thread) {
         if (uv_thread_join(thread->thread))
             it_errors("uv_thread_join: failed to join thread!");
     }
-    free(thread->thread);
+    uvI_thread_free(uvI_thread_pool(*(thread->thread)));
     thread->thread = NULL;
     thread->ctx->free = TRUE; // now we can
     it_frees_scope(thread->ctx);

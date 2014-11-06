@@ -111,6 +111,7 @@ void schroI_run_stage(SchroEncoderFrame* frame) {
     if (!ctx) return;
     luaI_globalemit(ctx->lua, "encoder", "run stage");
     lua_pushlightuserdata(ctx->lua, frame);
+    // FIXME this runs in an unregistered thread (not known to our thread pool in uvI.c)
     luaI_pcall_in(ctx, 3, 0);
     if (ctx->err) return;
     // free all unused frames and other stuff

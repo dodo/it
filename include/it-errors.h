@@ -8,7 +8,8 @@
 #include <lua.h>
 
 
-#define BACK_TRACE_SIZE 64
+#define BACK_TRACE_SIZE 128
+#define    C_STACK_SIZE 512
 
 
 #define printerr(msg, ...) \
@@ -48,35 +49,13 @@
         luaI_error(L, msg, SDL_GetError()); \
     }
 
-#define guarded_cfunction_call(L, func, ...) \
-    do{ int signum = setjmp(get_stack_trace()->jmp); \
-       if (!signum) { \
-            signal(SIGILL, &at_fatal_panic); \
-            signal(SIGABRT, &at_fatal_panic); \
-            signal(SIGFPE, &at_fatal_panic); \
-            signal(SIGSEGV, &at_fatal_panic); \
-            signal(SIGSYS, &at_fatal_panic); \
-            return func(L, ##__VA_ARGS__); \
-       } else { \
-           luaI_error(L, "%s", strsignal(signum));} \
-    } while (0)
-
-
-typedef struct {
-    jmp_buf jmp;
-    int count;
-    void *addrs[BACK_TRACE_SIZE];
-} it_debugs;
-
-
-it_debugs* get_stack_trace();
 
 extern int at_panic(lua_State* L);
 extern void at_fatal_panic(int signum);
-extern int at_luajit_cfunction_call(lua_State* L, lua_CFunction func);
+extern int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc);
 
-int luaI_stacktrace(lua_State* L);
-int luaI_init_errorhandling(lua_State* L);
+extern int luaI_stacktrace(lua_State* L);
+extern int luaI_init_errorhandling(lua_State* L);
 
 
 #endif /* IT_ERRORS_H */

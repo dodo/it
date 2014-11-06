@@ -2,6 +2,7 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#include "uvI.h"
 #include "luaI.h"
 
 #include "it.h"
@@ -21,11 +22,6 @@ void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l) {
             }
         }
     }
-}
-
-int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc) {
-    guarded_cfunction_call(L, lua_pcall, nargs, nresults, errfunc);
-    return 0;
 }
 
 static int buf_writer(lua_State* L, const void* b, size_t n, void* B) {
@@ -157,6 +153,7 @@ int luaI_newstate(it_states* ctx) {
 }
 
 int luaI_createstate(it_processes* process) {
+    uvI_init();
     it_states* ctx = process->ctx;
     if (luaI_newstate(ctx)) {
         return 1;
@@ -176,4 +173,13 @@ void luaI_close(lua_State* L, const char *global, int code) {
     luaI_pcall(L, (code == -1) ? 2 : 3, 0);
     // we are done now:
     lua_close(L);
+}
+
+const char* uvI_debug_stacktrace(uvI_thread_t* thread, lua_State* L) {
+    lua_pushstring(L, "DEBUG");
+    uvI_thread_stacktrace(thread);
+    luaI_stacktrace(L);
+    const char* st = lua_tostring(L, -1);
+    lua_pop(L, 1);
+    return st;
 }
