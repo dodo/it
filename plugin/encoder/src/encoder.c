@@ -10,6 +10,7 @@
 
 #include "it.h"
 #include "api.h"
+#include "uvI.h"
 #include "luaI.h"
 
 #include "encoder.h"
@@ -109,10 +110,13 @@ void schroI_run_stage(SchroEncoderFrame* frame) {
     it_encodes* enc = (it_encodes*) frame->encoder->userdata;
     it_states*  ctx = enc->hooks[frame->working];
     if (!ctx) return;
+    // need a temporary thread register here cuz stages can switch threads
+    uvI_thread_t* thread = uvI_thread_tmp();
     luaI_globalemit(ctx->lua, "encoder", "run stage");
     lua_pushlightuserdata(ctx->lua, frame);
     // FIXME this runs in an unregistered thread (not known to our thread pool in uvI.c)
     luaI_pcall_in(ctx, 3, 0);
+    uvI_thread_free(thread);
     if (ctx->err) return;
     // free all unused frames and other stuff
     luaI_gc(ctx->lua);

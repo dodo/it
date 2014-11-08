@@ -9,7 +9,7 @@
 #include "uvI.h"
 
 
-uvI_thread_t pool;
+static uvI_thread_t* pool;
 
 
 uv_lib_t* uvI_dlopen(const char* filename) {
@@ -26,30 +26,42 @@ void uvI_init() {
     if (inited) return;
     inited = TRUE;
 
-    pool.next = NULL;
-    pool.count = 0;
-    pool.pthread = pthread_self();
-    pool.backtrace = malloc(sizeof(uvI_stacktrace_t));
-    if (!pool.backtrace)
-        it_errors("malloc(sizeof(uvI_stacktrace_t)) failed!");
-    pool.backtrace->count = 0;
+    pool = NULL;
+    pool = uvI_thread_tmp();
+    if (!pool) it_errors("failed to create thread pool!");
 }
 
-uvI_thread_t* uvI_thread_new() {
+uvI_thread_t* uvI_thread_malloc() {
     uvI_thread_t* thread = malloc(sizeof(uvI_thread_t));
     if (!thread) return NULL;
-    thread->next = NULL;
-    thread->count = 0;
+    memset(thread, 0, sizeof(uvI_thread_t));
     thread->backtrace = malloc(sizeof(uvI_stacktrace_t));
     if (!thread->backtrace) {
         free(thread);
         return NULL;
     }
+    thread->size = C_STACK_MINSIZE;
     thread->backtrace->count = 0;
+    return thread;
+}
+
+uvI_thread_t* uvI_thread_new() {
+    uvI_thread_t* thread = uvI_thread_malloc();
+    if (!thread) return NULL;
     // append to pool
-    uvI_thread_t* next = &pool;
+    uvI_thread_t* next = pool;
     while (next->next) next = next->next;
     next->next = thread;
+    return thread;
+}
+
+uvI_thread_t* uvI_thread_tmp() {
+    uvI_thread_t* thread = uvI_thread_malloc();
+    if (!thread) return NULL;
+    thread->pthread = pthread_self();
+    // prepend tmps to pool
+    thread->next = pool;
+    pool = thread;
     return thread;
 }
 
@@ -62,13 +74,31 @@ uvI_thread_t* uvI_thread_self() {
 }
 
 uvI_thread_t* uvI_thread_pool(const uv_thread_t pthread) {
-    uvI_thread_t* next = &pool;
+    uvI_thread_t* next = pool;
     while (next) {
         if (pthread_equal(pthread, next->pthread))
             return next;
         next = next->next;
     }
     return NULL;
+}
+
+int uvI_thread_notch(uvI_thread_t* thread) {
+    int pos = thread->count;
+    if (++(thread->count) < thread->size)
+        return pos;
+    int old_size = thread->size;
+    thread->size = thread->size == 0 ? 1 : 2 * thread->size;
+    // resize struct, since it contains full jmp_buf
+    thread = // stub to disable attribute warn_unused_result (noop)
+    realloc(thread, sizeof(uvI_thread_t) +
+                    sizeof(jmp_buf) *
+                    (thread->size - old_size - C_STACK_MINSIZE));
+    return pos;
+}
+
+void uvI_thread_unnotch(uvI_thread_t* thread) {
+    --(thread->count);
 }
 
 void uvI_thread_stacktrace(uvI_thread_t* thread) {
@@ -82,17 +112,21 @@ void uvI_thread_jmp(uvI_thread_t* thread, int num) {
 void uvI_thread_free(uvI_thread_t* thread) {
     if (!thread) return;
     // remove from pool
-    uvI_thread_t* next = &pool;
-    while (next->next) {
-        if (next->next == thread) {
-            if (thread->next) {
-                next->next = thread->next;
-            } else {
-                next->next = NULL;
+    if (thread == pool) {
+        pool = thread->next;
+    } else {
+        uvI_thread_t* next = pool;
+        while (next->next) {
+            if (next->next == thread) {
+                if (thread->next) {
+                    next->next = thread->next;
+                } else {
+                    next->next = NULL;
+                }
+                break;
             }
-            break;
+            next = next->next;
         }
-        next = next->next;
     }
     // free all mallocd
     free(thread->backtrace);

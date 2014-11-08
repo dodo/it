@@ -8,8 +8,8 @@
 #include <lua.h>
 
 
-#define BACK_TRACE_SIZE 128
-#define    C_STACK_SIZE 512
+#define BACK_TRACE_SIZE 64
+#define C_STACK_MINSIZE 2
 
 
 #define printerr(msg, ...) \

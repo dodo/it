@@ -21,10 +21,11 @@ typedef struct {
 typedef struct uvI_thread_s uvI_thread_t;
 struct uvI_thread_s {
     uv_thread_t pthread;
-    jmp_buf jmp[C_STACK_SIZE];
-    int count;
     uvI_stacktrace_t *backtrace;
     uvI_thread_t *next;
+    int size;
+    int count;
+    jmp_buf jmp[C_STACK_MINSIZE];
 };
 
 
@@ -32,11 +33,17 @@ extern uv_lib_t* uvI_dlopen(const char* filename);
 
 
 extern void uvI_init();
+extern uvI_thread_t* uvI_thread_malloc();
 extern uvI_thread_t* uvI_thread_new();
+extern uvI_thread_t* uvI_thread_tmp();
 extern int uvI_thread_create(uvI_thread_t* thread, void (*entry)(void *arg), void* arg);
 
 extern uvI_thread_t* uvI_thread_self();
 extern uvI_thread_t* uvI_thread_pool(pthread_t pthread);
+
+extern int  uvI_thread_notch(uvI_thread_t* thread);
+extern void uvI_thread_unnotch(uvI_thread_t* thread);
+
 extern void uvI_thread_stacktrace(uvI_thread_t* thread);
 extern const char* uvI_debug_stacktrace(uvI_thread_t* thread, lua_State* L);
 

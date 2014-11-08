@@ -75,16 +75,14 @@ void at_fatal_panic(int signum) {
 int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc) {
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) it_errors("current thread not found!");
-    int pos = thread->count;
-    if (++(thread->count) >= C_STACK_SIZE)
-        it_errors("c stack too large for exception recovery!");
+    int pos = uvI_thread_notch(thread);
     int num = setjmp(thread->jmp[pos]);
-    if (num) --(thread->count);
-    if (num < 0) return luaL_error(L, ": %s", strsignal(-num)); // got signal
+    if (num) uvI_thread_unnotch(thread);
+    if (num < 0) return luaL_error(L, "%s%s", (lua_isstring(L, -1)?": ":""), strsignal(-num)); // got signal
     if (num > 0) return num - 1; // ignore error and keep running
     int result = lua_pcall(L, nargs, nresults, errfunc);
     // success
-    --(thread->count);
+    uvI_thread_unnotch(thread);
     return result;
 }
 
@@ -103,8 +101,6 @@ int luaI_stacktrace(lua_State* L) {
         if (lua_isstring(L, -2)) {
             lua_insert(L, -2); // swap lua err msg with luaI_xpcall err msg
         }
-        lua_pushstring(L, "\n");
-        ++strings;
     }
     while (level < 0 || lua_getstack(L, level, &info)) {
         func = NULL;
@@ -196,7 +192,7 @@ int luaI_stacktrace(lua_State* L) {
     }
     if (level + thread->backtrace->count - skips) {
         lua_pushstring(L, "\n");
-        lua_insert(L, 2 - strings);
+        lua_insert(L, -strings);
         strings++;
     }
     lua_concat(L, strings);
