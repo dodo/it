@@ -155,7 +155,7 @@ void schroI_encoder_free(void* priv) {
     }
 }
 
-void it_inits_encoder(it_encodes* enc, it_threads* thread) {
+void it_inits_encoder(it_encodes* enc, it_threads* thread, SchroVideoFormatEnum format) {
     if (enc->encoder || !thread) return;
     enc->thread = thread;
     thread->priv = enc;
@@ -168,8 +168,8 @@ void it_inits_encoder(it_encodes* enc, it_threads* thread) {
     enc->encoder = schro_encoder_new();
     if (!enc->encoder)
         it_errors("schro_encoder_new: failed to create encoder");
-    schro_video_format_set_std_video_format(&enc->encoder->video_format,
-        SCHRO_VIDEO_FORMAT_SIF);// SCHRO_VIDEO_FORMAT_HD720P_60);
+    schro_video_format_set_std_video_format(
+        &enc->encoder->video_format, format);
 }
 
 void it_hooks_stage_encoder(it_encodes* enc,

@@ -37,7 +37,8 @@ Encoder.type:api('Encoder',
     {'start', 'debug', 'getsettings', 'getformat', 'setformat'},
     _it.plugin.encoder.apifile)
 Encoder.type:load('libencoder.so', {
-    init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread)]];
+    init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread,
+                                   SchroVideoFormatEnum format)]];
     hook = [[void it_hooks_stage_encoder(it_encodes* enc,
                                          SchroEncoderFrameStateEnum stage,
                                          it_states* ctx)]];
@@ -45,11 +46,20 @@ Encoder.type:load('libencoder.so', {
 })
 
 
-function Encoder:init(filename, pointer)
+local SCHRO = {prefix="SCHRO_", enums={
+  index             = {typ="SchroVideoFormatEnum", prefix="VIDEO_FORMAT_"},
+  chroma_format     = {typ="SchroChromaFormat",    prefix="CHROMA_"},
+  colour_primaries  = {typ="SchroColourPrimaries", prefix="COLOUR_PRIMARY_"},
+  colour_matrix     = {typ="SchroColourMatrix",    prefix="COLOUR_MATRIX_"},
+  transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
+}}
+function Encoder:init(filename, pointer, opts)
     if self.prototype.init then self.prototype.init(self) end
     self.frame_format = 'ARGB'
     self.push = self:bind('push')
-    if pointer then -- other stuff not needed in scope context
+    if pointer and type(pointer) == 'table' then
+        pointer, opts = nil, pointer
+    elseif pointer then -- other stuff not needed in scope context
         self.native = self.type:ptr(pointer)
         self.raw = self.native.encoder
         self.thread = context.thread
@@ -60,19 +70,29 @@ function Encoder:init(filename, pointer)
         self.start = nil
         return
     end
+    opts = opts or {}
     self.thread = Thread:new()
     self.scope = self.thread.scope
     self.output = filename or process.stdnon
-    self.format = { -- defaults
-        width = 352,
-        height = 240,
-        clean_width = 352,
-        clean_height = 240,
-        left_offset = 0,
-        top_offset = 0,
-    }
+    if not opts.format then
+        self.format = { -- defaults
+            width = opts.width or 352,
+            height = opts.height or 240,
+            clean_width = opts.width or 352,
+            clean_height = opts.height or 240,
+            left_offset = 0,
+            top_offset = 0,
+        }
+    end
     self.stage = {} -- lazy filled when needed
-    self.native = self.type:create(nil, self.thread.reference)
+    self.native = self.type:create(nil, self.thread.reference,
+        -- schroEncoder will autoguess later a better std video format
+        _ffi.convert_enum('format', opts.format or 'custom',
+            SCHRO.enums.index.typ, SCHRO.prefix .. SCHRO.enums.index.prefix)
+    )
+    if opts.format then
+        self.format = _table.slowcopy(_ffi.update(self:getformat().raw, {}, SCHRO))
+    end
     self.raw = self.native.encoder
     self.settings = self.native:getsettings()
     self.scope:define('encoder', self.native, function ()
@@ -93,19 +113,14 @@ function Encoder:init(filename, pointer)
     end)
 end
 
-local ENUMS = {
-  index             = {typ="SchroVideoFormatEnum", prefix="VIDEO_FORMAT_"},
-  chroma_format     = {typ="SchroChromaFormat",    prefix="CHROMA_"},
-  colour_primaries  = {typ="SchroColourPrimaries", prefix="COLOUR_PRIMARY_"},
-  colour_matrix     = {typ="SchroColourMatrix",    prefix="COLOUR_MATRIX_"},
-  transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
-}
 function Encoder:start()
     -- turn on errors at least
     if not debug_level then Encoder.debug('error') end
     local format = self:getformat()
-    _ffi.update(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
-    self.native:setformat(format.pointer)
+    local _, changed = _ffi.update(format.raw, self.format, SCHRO)
+    if changed then
+        self.native:setformat(format.pointer)
+    end
     self.native:start(self.output, self.settings)
     -- make format and settings readonly
     for key, value in pairs(self.settings) do

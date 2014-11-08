@@ -4,6 +4,7 @@ local exports = {}
 
 
 local function update(interface, values, opts)
+    local changed = false
     for key,value in pairs(values) do
         if type(value) == 'string' then
             value = string.upper(value):gsub("%s", "_")
@@ -14,9 +15,10 @@ local function update(interface, values, opts)
                 value = ffi.new(opts.enums[key].typ, value)
             end
         end
+        changed = changed or (interface[key] ~= value)
         interface[key] = value
     end
-    return interface
+    return interface, changed
 end
 exports.update = update
 

@@ -25,6 +25,14 @@ function _table.copy(t)
     return {unpack(t)}
 end
 
+function _table.slowcopy(t)
+    local r = {}
+    for k,v in pairs(t) do
+        r[k] = v
+    end
+    return r
+end
+
 function _table.append(t1, t2)
     for i=1,#t2 do
         t1[#t1+1] = t2[i]
