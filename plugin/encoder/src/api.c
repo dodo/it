@@ -12,6 +12,7 @@
 #include "encoder.h"
 static const luaL_Reg luaI_reg_encoder[] = {
     {"start", it_starts_encoder_lua},
+    {"debug", it_debugs_encoder_lua},
     {"getsettings", it_gets_settings_encoder_lua},
     {"getformat", it_gets_format_encoder_lua},
     {"setformat", it_sets_format_encoder_lua},

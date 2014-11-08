@@ -212,6 +212,12 @@ int it_starts_encoder_lua(lua_State* L) { // (enc_userdata, output, settings)
     return 0;
 }
 
+int it_debugs_encoder_lua(lua_State* L) { // (level)
+    schro_init();
+    schro_debug_set_level(luaL_checkint(L, 1));
+    return 0;
+}
+
 int it_gets_settings_encoder_lua(lua_State* L) { // (enc_userdata)
     if (lua_gettop(L) == 1 && !lua_isnil(L, 1)) {
         it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);

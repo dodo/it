@@ -32,6 +32,7 @@ extern void it_inits_encoder(it_encodes* enc, it_threads* thread);
 extern int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr);
 
 extern int it_starts_encoder_lua(lua_State* L);
+extern int it_debugs_encoder_lua(lua_State* L);
 extern int it_gets_settings_encoder_lua(lua_State* L);
 extern int it_gets_format_encoder_lua(lua_State* L);
 extern int it_sets_format_encoder_lua(lua_State* L);

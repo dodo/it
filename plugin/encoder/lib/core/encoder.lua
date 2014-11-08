@@ -6,6 +6,7 @@ local Scope = require 'scope'
 local Thread = require 'thread'
 local _table = require 'util.table'
 local Metatype = require 'metatype'
+local debug_level
 
 cface(_it.plugin.encoder.libdir .. "schrovideoformat.h")
 cface(_it.plugin.encoder.libdir .. "schroencoder.h")
@@ -33,7 +34,7 @@ Encoder.type = Metatype:struct("it_encodes", {
 
 
 Encoder.type:api('Encoder',
-    {'start', 'getsettings', 'getformat', 'setformat'},
+    {'start', 'debug', 'getsettings', 'getformat', 'setformat'},
     _it.plugin.encoder.apifile)
 Encoder.type:load('libencoder.so', {
     init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread)]];
@@ -100,6 +101,8 @@ local ENUMS = {
   transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
 }
 function Encoder:start()
+    -- turn on errors at least
+    if not debug_level then Encoder.debug('error') end
     local format = self:getformat()
     _ffi.update(format.raw, self.format, {prefix="SCHRO_", enums=ENUMS})
     self.native:setformat(format.pointer)
@@ -155,13 +158,11 @@ end
 
 
 function Encoder.debug(level)
-    ffi.cdef [[void it_sets_schro_debug_level(int level);]]
-    cface.register(_it.plugin.encoder.apifile).it_sets_schro_debug_level(
-        _table.index(
-            {"ERROR","WARNING","INFO","DEBUG","LOG"},
-            string.upper(level)
-        ) or 0
-    )
+    debug_level = _table.index(
+        {"ERROR","WARNING","INFO","DEBUG","LOG"},
+        string.upper(level)
+    ) or 0
+    debug.getregistry().Encoder.__index.debug(debug_level)
 end
 
 return Encoder

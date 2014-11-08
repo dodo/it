@@ -7,12 +7,6 @@
 #include "api/it.h"
 
 
-
-void it_sets_schro_debug_level(int level) {
-//     schro_init(); // FIXME
-//     schro_debug_set_level(level);
-}
-
 int it_stdios_lua(lua_State* L) { // (process)
     // stdio
     lua_pushnil(L);

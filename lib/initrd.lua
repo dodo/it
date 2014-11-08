@@ -53,9 +53,10 @@ if haz(process.argv, "--debug") then
     local color = require('console').color
     print(color.bold .. "[debug mode]" .. color.reset)
     local loaded, encoder = pcall(require, 'encoder')
-    if loaded then encoder.debug('warning') end
+    if loaded then encoder.debug('debug') end
     require('jit.v').start() -- TODO start in threads as well
 --     require('jit.dump').start() -- TODO start in threads as well
+    table.remove(process.argv, haz(process.argv, "--debug"))
 end
 
 

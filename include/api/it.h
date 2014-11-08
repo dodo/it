@@ -8,8 +8,6 @@
 #include "luaI.h"
 
 
-extern void it_sets_schro_debug_level(int level);
-
 extern int it_stdios_lua(lua_State* L);
 extern int it_boots_lua(lua_State* L);
 extern int it_loads_lua(lua_State* L);
