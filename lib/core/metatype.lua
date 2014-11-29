@@ -3,6 +3,7 @@ local util = require 'util'
 local _table = require 'util.table'
 local cface = require 'cface'
 local Prototype = require 'prototype'
+local doc = require 'util.doc'
 
 local Metatype = Prototype:fork()
 Metatype.bind = nil
@@ -106,12 +107,14 @@ function Metatype:ispointer(native, pointer)
 end
 
 function Metatype:load(clib, cfunctions)
-    local cname
+    local cname, cargs
     clib = cface.register(clib)
     for name, cdecl in pairs(cfunctions or {}) do
         cface.declaration(cdecl .. ";")
         cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
+        cargs = cdecl:gsub("^[^%(]*(.*)$", "%1")
         self.prototype[name] = clib[cname]
+        doc.info(clib[cname], cname, cargs)
         if name:match('^__') then
             self.metatable[name] = self.prototype[name]
         end

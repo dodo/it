@@ -1,5 +1,5 @@
-local EventEmitter = require 'events'
 local Process = dofile(_it.libdir .. 'process.lua')
+local EventEmitter = require 'events'
 
 
 process = Process:new()

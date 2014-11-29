@@ -19,6 +19,18 @@ function Process:init()
     self.stdout = io.stdout
     self.stderr = io.stderr
     self.stdin = io.stdin
+    --load funcinfo
+    if #self.argv == 0 then
+        require 'util.funcinfo'
+        require('util.doc')
+            .info(self.cwd,   'process.cwd',   '( [path] )')
+            .info(self.sleep, 'process.sleep', '( milliseconds )')
+            .info(self.exit,  'process.exit',  '( [code=0] )')
+            .info(Process.init,   'process:init',   '( )')
+            .info(Process.cwd,   'process:cwd',   '( [path] )')
+            .info(Process.sleep, 'process:sleep', '( milliseconds )')
+            .info(Process.exit,  'process:exit',  '( [code=0] )')
+    end
 end
 
 function Process:cwd(path)

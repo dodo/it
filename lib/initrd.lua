@@ -1,9 +1,9 @@
+local Process = dofile(_it.libdir .. 'process.lua')
 local io = require 'io'
 local fs = require 'fs'
 local util = require 'util'
 local haz = require('util.table').index
 
-local Process = dofile(_it.libdir .. 'process.lua')
 
 function Process:usage()
     return [[
@@ -15,6 +15,7 @@ Options:
 ]] end
 
 process = Process:new()
+require('util.doc').info(Process.usage, 'process.usage', '( )')
 
 -- -- -- -- -- -- -- --
 
