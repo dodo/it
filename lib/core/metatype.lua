@@ -176,8 +176,9 @@ function Metatype:api(metaname, cfunctions, apifile)
     local clib = debug.getregistry()[metaname].__index
     for _, name in ipairs(cfunctions) do
         local cfunction = clib[name]
+        local _userdata = self.prototype._userdata
         self.prototype[name] = function (self, ...)
-            return cfunction(self._userdata(self), ...)
+            return cfunction(_userdata(self), ...)
         end
         if name:match('^__') then
             self.metatable[name] = self.prototype[name]

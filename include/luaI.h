@@ -58,6 +58,17 @@
       } else lua_remove(ctx->lua, 0 - nresults - 1);\
     }} while (0)
 
+#define luaI_emit(L,ev) \
+    (lua_getfield(L,-1,"emit"),\
+     lua_pushvalue(L,-2),\
+     lua_remove(L,-3),\
+     lua_pushstring(L,ev))
+
+#define luaI_localemit(L,gn,ev) \
+    (lua_getfield(L,-1,gn),\
+     lua_remove(L,-2),\
+     luaI_emit(L,ev))
+
 #define luaI_globalemit(L,gn,ev) \
     (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
 

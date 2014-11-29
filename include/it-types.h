@@ -70,3 +70,28 @@ typedef struct {
 } it_threads;
 
 
+
+typedef struct it_queues it_queues;
+typedef void (*uvI_async_callback) (void *priv, it_queues* queue);
+
+typedef struct {
+    int refc;
+    it_threads *thread;
+    uv_async_t *async;
+    uv_mutex_t *mutex;
+    it_queues  *queue;
+    it_queues  *last;
+    uvI_async_callback on_sync;
+    void* priv;
+} it_asyncs;
+
+struct it_queues {
+    it_queues *next;
+    const char* key;
+    luaI_value **values;
+    int size;
+    int count;
+};
+
+
+#endif /* IT_TYPES_H */

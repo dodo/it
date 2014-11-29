@@ -13,7 +13,8 @@ void default_thread_idle(void* priv) {
         it_closes_thread(thread);
         return;
     }
-    luaI_globalemit(thread->ctx->lua, "thread", "idle");
+    lua_getglobal(thread->ctx->lua, "context");
+    luaI_localemit(thread->ctx->lua, "thread", "idle");
     luaI_pcall_in(thread->ctx, 2, 0);
 }
 

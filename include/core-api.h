@@ -8,6 +8,7 @@
 #include "api/thread.h"
 #include "api/process.h"
 #include "api/window.h"
+#include "api/async.h"
 
 
 #endif /* CORE_API_H */

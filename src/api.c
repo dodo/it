@@ -25,10 +25,17 @@ static const luaL_Reg luaI_reg_scope[] = {
     {NULL, NULL}
 };
 
+#include "api/async.h"
+static const luaL_Reg luaI_reg_async[] = {
+    {"push", it_pushes_async_lua},
+    {NULL, NULL}
+};
+
 
 int register_api(lua_State* L, const char *name) {
     switch (name[0]) {
         case '_'/*it*/:     luaI_newlib(L, name, luaI_reg_it);            break;
+        case 'A'/*sync*/:   luaI_newmetatable(L, name, luaI_reg_async);   break;
         case 'S'/*cope*/:   luaI_newmetatable(L, name, luaI_reg_scope);   break;
         default: luaI_error(L, "unknown metatable %s!", name); break;
     }
