@@ -33,11 +33,24 @@ function exports.surface_from(data, format, width, height, stride)
     return result
 end
 
-function exports.get_data(surface)
+function exports.surface_from_png(filename)
+    local result = {C = cairo.C}
+    result.object = cairo.C.image_surface_create_from_png(filename)
+    result.context = cairo.ctype.context.create(result.object)
+    return result
+end
+
+function exports.get_data(surface, type)
+    type = type or 'void*'
     -- do any pending drawing for the surface
     surface.object:flush()
     surface.object:mark_dirty()
-    return ffi.cast('void*', cairo.C.image_surface_get_data(surface.object))
+    return ffi.cast(type, cairo.C.image_surface_get_data(surface.object))
+end
+
+function exports.get_size(surface)
+    return cairo.C.image_surface_get_width(surface.object),
+           cairo.C.image_surface_get_height(surface.object)
 end
 
 function exports.version()

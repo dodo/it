@@ -31,8 +31,13 @@ Window.type:load('libapi.so', {
                                       int width, int height)]];
     surface_from = [[SDL_Surface* it_surfaces_from_window(it_windows* win,
                                       void* data)]];
-    surface = [[SDL_Surface* it_surfaces_window(it_windows* win)]];
+    surface = [[SDL_Surface* it_surfaces_window(it_windows* win, bool no_rle)]];
+    screen = [[SDL_Surface* it_screens_window(it_windows* win)]];
     blit = [[void it_blits_window(it_windows* win, SDL_Surface* surface)]];
+    update = [[void it_updates_window(it_windows* win)]];
+    lock = [[void it_locks_window_surface(it_windows* win, SDL_Surface* surface)]];
+    unlock = [[void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface)]];
+    close = [[void it_closes_window(it_windows* win)]];
     __gc = [[void it_frees_window(it_windows* win)]];
 })
 
@@ -69,6 +74,17 @@ function Window:open(title, width, height, x, y)
     self.thread:start()
 end
 
+function Window:write_to_png(filename, surface)
+    -- init cairo
+    local screen = surface or self.native:screen()
+    self.native:lock(screen)
+    require('cairo').surface_from(
+        screen.pixels, 'ARGB32',
+        self.width, self.height, self.width * 4
+    ).object:write_to_png(filename)
+    self.native:unlock(screen)
+end
+
 function Window:render(userdata)
     -- userdata should be in native endian
     self.native:blit(self.native:surface_from(userdata))
@@ -76,17 +92,39 @@ end
 
 function Window:surface(draw)
     if not draw then return end
-    local cairo = require 'cairo'
     if not self._surface then
-        self._surface = cairo.surface('ARGB32', self.width, self.height)
-        if self._surface == nil then return end
+        self._surface = {}
+        self._surface.sdl = self.native:surface(true)
+        if self._surface.sdl == nil then self._surface = nil return end
+        self._surface.cairo = require('cairo').surface_from(
+            self._surface.sdl.pixels,'ARGB32',
+            self.width, self.height, self.width * 4
+        )
+        if self._surface.cairo == nil then self._surface = nil return end
     end
-    draw(self._surface)
-    self:render(cairo.get_data(self._surface))
+    if draw(self._surface.cairo) ~= false then
+        self.native:blit(self._surface.sdl)
+    end
+end
+
+function Window:pixels(draw, surface)
+    if not draw then return end
+    local screen = surface or self.native:screen()
+    if screen == nil then return end
+    self.native:lock(screen)
+    local can_blit = draw(screen.pixels)
+    self.native:unlock(screen)
+    if can_blit ~= false then
+        if surface then
+            self.native:blit(screen)
+        else
+            self.native:update()
+        end
+    end
 end
 
 function Window:close()
-    -- TODO
+    self.native:close()
 end
 
 

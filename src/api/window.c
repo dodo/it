@@ -38,12 +38,7 @@ void sdlI_idle(void* priv) {
         if (event.type == SDL_QUIT) break;
     }
     if (event.type == SDL_QUIT || win->thread->closed) {
-        luaI_globalemit(win->thread->ctx->lua, "window", "close");
-        luaI_pcall_in(win->thread->ctx, 2, 0);
-        win->thread->on_free = NULL;
-        sdlI_ref(1); // prevent SDL_Quit
-        sdlI_free(priv);
-        it_closes_thread(win->thread);
+        it_closes_window(win);
         return;
     }
     // call lua …
@@ -79,7 +74,6 @@ void it_creates_window(it_windows* win, const char* title,
     win->renderer = SDL_CreateRenderer(win->window, -1, 0);
     if (!win->renderer)
         sdlI_error("SDL_CreateRenderer: failed to create renderer (%s)");
-    SDL_SetRenderDrawColor(win->renderer, 255, 0, 0, 255);
     SDL_RenderClear(win->renderer);
     SDL_RenderPresent(win->renderer);
     { // cache window size in struct to expose it into lua
@@ -101,10 +95,11 @@ SDL_Surface* it_surfaces_from_window(it_windows* win, void* data) {
         );
     if (!surface)
         sdlI_error("SDL_CreateRGBSurfaceFrom: failed to create rgba surface (%s)");
-    return surface;
+    SDL_SetSurfaceRLE(surface, 0);
+    return surface; // hopefully gets freed by it_blits_window
 }
 
-SDL_Surface* it_surfaces_window(it_windows* win) {
+SDL_Surface* it_surfaces_window(it_windows* win, bool no_rle) {
     if (!win->window) return NULL;
     SDL_Surface* surface = SDL_CreateRGBSurface(
         0, win->width, win->height, 32,
@@ -115,7 +110,16 @@ SDL_Surface* it_surfaces_window(it_windows* win) {
     );
     if (!surface)
         sdlI_error("SDL_CreateRGBSurface: failed to create rgba surface (%s)");
-    return surface;
+    SDL_SetSurfaceRLE(surface, no_rle ? 0 : 1);
+    return surface; // hopefully gets freed by it_blits_window
+}
+
+SDL_Surface* it_screens_window(it_windows* win) {
+    if (!win->window) return NULL;
+    SDL_Surface* screen = SDL_GetWindowSurface(win->window);
+    if (!screen)
+        sdlI_error("SDL_GetWindowSurface: failed to get window surface (%s)");
+    return screen; // hopefully gets freed by it_updates_window or it_blits_window
 }
 
 void it_blits_window(it_windows* win, SDL_Surface* surface) {
@@ -125,9 +129,32 @@ void it_blits_window(it_windows* win, SDL_Surface* surface) {
         sdlI_error("SDL_GetWindowSurface: failed to get window surface (%s)");
     if (SDL_BlitSurface(surface, NULL, screen, NULL)) // blit into screen
         sdlI_error("SDL_BlitSurface: failed to blit rgba surface (%s)");
+    it_updates_window(win);
+}
+
+void it_updates_window(it_windows* win) {
+    if (!win->window) return;
     if (SDL_UpdateWindowSurface(win->window))
         sdlI_error("SDL_UpdateWindowSurface: failed to update window surface (%s)");
-    SDL_FreeSurface(surface);
+}
+
+void it_locks_window_surface(it_windows* win, SDL_Surface* surface) {
+    if (SDL_MUSTLOCK(surface) && SDL_LockSurface(surface))
+        sdlI_error("SDL_LockSurface: failed to lock surface (%s)");
+}
+
+void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface) {
+    if (SDL_MUSTLOCK(surface))
+        SDL_UnlockSurface(surface);
+}
+
+void it_closes_window(it_windows* win) {
+    luaI_globalemit(win->thread->ctx->lua, "window", "close");
+    luaI_pcall_in(win->thread->ctx, 2, 0);
+    win->thread->on_free = NULL;
+    sdlI_ref(1); // prevent SDL_Quit
+    it_frees_window(win);
+    it_closes_thread(win->thread);
 }
 
 void it_frees_window(it_windows* win) {
