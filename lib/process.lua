@@ -10,8 +10,9 @@ Process._type = Metatype:typedef('struct _$', 'it_processes')
 function Process:init()
     self.prototype.init(self)
     _it.boots(self)
-    self.exit = self:bind('exit')
-    self.cwd  = self:bind('cwd')
+    self.sleep = self:bind('sleep')
+    self.exit  = self:bind('exit')
+    self.cwd   = self:bind('cwd')
     self.shutdown = true
     -- stdio
     self.stdnon = nil
@@ -30,6 +31,11 @@ function Process:cwd(path)
         end
     end
     return cwd
+end
+
+ffi.cdef("int poll(struct pollfd *fds, unsigned long nfds, int timeout);")
+function Process:sleep(milliseconds)
+    ffi.C.poll(nil, 0, milliseconds)
 end
 
 function Process:exit(code)
