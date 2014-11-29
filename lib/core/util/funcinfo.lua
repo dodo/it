@@ -499,7 +499,7 @@ local function list( t, _short, _visited )
 	local isTop = not _visited
 	_visited = _visited or { }
 	local result
-	if _short or _visited[t] or (not pcall( next, t )) then
+	if _short or _visited[t] or (not pcall( pairs, t )) then
 		-- no traversal
 		result = (vshow( t, true ))
 		if _short then  return result  end
