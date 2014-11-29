@@ -41,11 +41,11 @@ function Scope:init(pointer)
         self.raw = self.state.lua
         return
     end
-    self.state = self.type:create(nil, _D.process, _D.state)
+    self.state = self.type:create(nil, _D._it_processes_, _D._it_scopes_)
     self.raw = self.state.lua
     -- special case since object gets injected into context instead as global
-    self:define('scope', self.state, function ()
-        context.scope = require('scope'):new(_D.scope)
+    self:define('_it_scopes_', self.state, function ()
+        context.scope = require('scope'):new(_D._it_scopes_)
     end)
 end
 

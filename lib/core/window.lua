@@ -40,7 +40,7 @@ function Window:init(pointer)
         self.native = self.type:ptr(pointer)
         self.raw = self.native.window
         self.thread = context.thread
-        self.thread = (pointer == _D.window) and
+        self.thread = (pointer == _D._it_windows_) and
                 context.thread or Thread:new(self.native.thread)
         self.height = tonumber(self.native.height)
         self.width = tonumber(self.native.width)
@@ -50,8 +50,8 @@ function Window:init(pointer)
     self.thread = Thread:new()
     self.scope = self.thread.scope
     self.native = self.type:create(nil, self.thread.reference)
-    self.scope:define('window', self.native, function ()
-        window = require('window'):new(_D.window)
+    self.scope:define('_it_windows_', self.native, function ()
+        window = require('window'):new(_D._it_windows_)
     end)
 end
 

@@ -35,7 +35,7 @@ function Thread:init(pointer)
     if pointer then
         self.reference = self.type:ptr(pointer)
         self.raw = self.reference.thread
-        self.scope = (pointer == _D.thread) and
+        self.scope = (pointer == _D._it_threads_) and
                 context.scope or Scope:new(self.reference.ctx)
         self.start = nil
         return
@@ -45,8 +45,8 @@ function Thread:init(pointer)
     self.reference = self.type:create(nil, self.scope.state)
     self.raw = self.reference.thread
     -- special case since object gets injected into context instead as global
-    self.scope:define('thread', self.reference, function ()
-        context.thread = require('thread'):new(_D.thread)
+    self.scope:define('_it_threads_', self.reference, function ()
+        context.thread = require('thread'):new(_D._it_threads_)
     end)
 end
 

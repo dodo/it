@@ -59,14 +59,14 @@ void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable) {
 }
 
 it_processes* luaI_getprocess(lua_State* L) {
-    luaI_getdefine(L, "process");
+    luaI_getdefine(L, "_it_processes_");
     it_processes* process = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return process;
 }
 
 it_states* luaI_getstate(lua_State* L) {
-    luaI_getdefine(L, "state");
+    luaI_getdefine(L, "_it_scopes_");
     it_states* state = lua_touserdata(L, -1);
     lua_pop(L, 1);
     return state;
@@ -78,7 +78,7 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
     if (uv_exepath(exec_path, &size))
         uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
-    luaI_setdefine(L, "state");
+    luaI_setdefine(L, "_it_scopes_");
     luaL_loadstring(L,
         // concat arguments to get one string
         "_it.execcmd = ... "
@@ -159,7 +159,7 @@ int luaI_createstate(it_processes* process) {
         return 1;
     }
     lua_pushlightuserdata(ctx->lua, process);
-    luaI_setdefine(ctx->lua, "process");
+    luaI_setdefine(ctx->lua, "_it_processes_");
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "initrd.lua"));
     return 0;
 }

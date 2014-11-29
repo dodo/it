@@ -5,7 +5,7 @@
 #include "api/scope.h"
 
 
-int it_imports_scope_lua(lua_State* L) {
+int it_imports_scope_lua(lua_State* L) { // (ctx_userdata, lua_function)
     it_states* ctx = (it_states*) lua_touserdata(L, 1);
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
@@ -20,7 +20,7 @@ void it_inits_scope(it_states* ctx, it_processes* process, it_states* state) {
     ctx->loop = state->loop;
     if (luaI_newstate(ctx)) return;
     lua_pushlightuserdata(ctx->lua, process);
-    luaI_setdefine(ctx->lua, "process");
+    luaI_setdefine(ctx->lua, "_it_processes_");
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "context.lua"));
 }
 

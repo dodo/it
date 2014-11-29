@@ -53,7 +53,7 @@ end
 function Process:exit(code)
     self._type:load('api', {
     exit = "void it_exits_process(it_processes* process, int exit_code)";
-    }):ptr(_D.process):exit(code or 0)
+    }):ptr(_D._it_processes_):exit(code or 0)
 end
 
 

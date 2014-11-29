@@ -63,7 +63,7 @@ function Encoder:init(filename, pointer, opts)
         self.native = self.type:ptr(pointer)
         self.raw = self.native.encoder
         self.thread = context.thread
-        self.thread = (pointer == _D.encoder) and
+        self.thread = (pointer == _D._it_encodes_) and
                 context.thread or Thread:new(self.native.thread)
         self.format = _table.readonly(self:getformat().raw)
         self.settings = _table.readonly(self.native:getsettings())
@@ -95,8 +95,8 @@ function Encoder:init(filename, pointer, opts)
     end
     self.raw = self.native.encoder
     self.settings = self.native:getsettings()
-    self.scope:define('encoder', self.native, function ()
-        encoder = require('encoder'):new(nil, encoder)
+    self.scope:define('_it_encodes_', self.native, function ()
+        encoder = require('encoder'):new(nil, _D._it_encodes_)
         -- expose userdata as buffers
         encoder:on('userdata', function (raw, len)
             encoder:emit('data', require('buffer'):new(raw, len))
