@@ -9,8 +9,6 @@
 #include "it.h"
 
 
-
-
 static void sigint_cb(uv_signal_t* handle, int signum) {
     uv_stop(handle->loop);
 }

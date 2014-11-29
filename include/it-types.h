@@ -45,4 +45,3 @@ typedef struct {
 } it_threads;
 
 
-#endif /* IT_TYPES_H */
