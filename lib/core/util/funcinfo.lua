@@ -484,6 +484,14 @@ do
 	local h_cd = ansi.bold .. ansi[colors.cdata]
 	show.cdata = function( c, _longForm )
 		local s = tostring( c )
+		if _longForm then
+			local info = funcinfo[c]
+			if info then
+				local arg, name = unpack(info)
+				if name then  s = s..": "..name  end
+				s = s..arg
+			end
+		end
 		return h_cd..s..h0, s
 	end
 end
