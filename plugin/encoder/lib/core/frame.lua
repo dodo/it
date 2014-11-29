@@ -9,6 +9,7 @@ require('cface')(_it.plugin.encoder.libdir .. "schroframe.h")
 
 local Frame = Prototype:fork()
 Frame.type = Metatype:struct("it_frames", {
+    "int refc";
     "SchroFrame *frame";
     "int size";
     "int width";
@@ -16,6 +17,8 @@ Frame.type = Metatype:struct("it_frames", {
 })
 
 Frame.type:load('libencoder.so', {
+    ref = [[int it_refs(it_frames* ref)]];
+    unref = [[int it_unrefs(it_frames* ref)]];
     init = [[void it_inits_frame(it_frames* fr, int width, int height)]];
     ref = [[void it_refs_frame(it_frames* fr, SchroFrame* frame)]];
     create = [[void it_creates_frame(it_frames* fr, SchroFrameFormat format)]];

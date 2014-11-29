@@ -8,6 +8,7 @@
 
 
 typedef struct {
+    int refc;
     it_threads *thread;
     SDL_Window *window;
     SDL_Renderer *renderer;

@@ -7,6 +7,14 @@
 #include "api/it.h"
 
 
+int it_refs(it_refcounts* ref) {
+    return ++ref->refc;
+}
+
+int it_unrefs(it_refcounts* ref) {
+    return --ref->refc;
+}
+
 int it_stdios_lua(lua_State* L) { // (process)
     // stdio
     lua_pushnil(L);

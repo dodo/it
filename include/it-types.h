@@ -16,6 +16,11 @@
 
 
 typedef struct {
+    int refc;
+} it_refcounts;
+
+typedef struct {
+    int refc;
     lua_State *lua;
     uv_loop_t *loop;
     const char *err;
@@ -34,6 +39,7 @@ typedef struct {
 typedef void (*uvI_thread_callback) (void *priv);
 
 typedef struct {
+    int refc;
     it_states *ctx;
     uv_thread_t *thread;
     uv_idle_t *idle;

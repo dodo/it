@@ -56,6 +56,8 @@ void it_calls_scope(it_states* ctx) {
 
 void it_frees_scope(it_states* ctx) {
     if (!ctx) return;
+    // scope always referenced in itself
+    if (ctx->free && it_unrefs((it_refcounts*) ctx) > 1) return;
     if (ctx->free && ctx->lua) {
         lua_State* L = ctx->lua;
         ctx->lua = NULL;

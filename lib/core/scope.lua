@@ -9,6 +9,7 @@ cface.decl("typedef size_t uv_loop_t;")
 
 local Scope = Prototype:fork()
 Scope.type = Metatype:struct("it_states", {
+    "int refc";
     "lua_State *lua";
     "uv_loop_t *loop";
     "const char *err";
@@ -17,6 +18,8 @@ Scope.type = Metatype:struct("it_states", {
 
 Scope.type:api("Scope", {'import'})
 Scope.type:load('libapi.so', {
+    ref = [[int it_refs(it_states* ref)]];
+    unref = [[int it_unrefs(it_states* ref)]];
     init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
     defboolean = [[void it_defines_boolean_scope(it_states* ctx,
                                                const char* name,

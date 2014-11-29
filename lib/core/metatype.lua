@@ -92,14 +92,28 @@ function Metatype:cast(pointer)
     if not pointer then return end
     if not self.name then return self:virt() end
     self:cache()
-    return cface.assert(self.ptype(pointer))
+    return cface.assert(self:ref(self.ptype(pointer)))
     -- already has metatable (i.e. LuaJIT rocks!)
 end
 
 function Metatype:new(...)
     if not self.name then return self:virt() end
     self:cache()
-    return self.ctype(...)
+    return self:ref(self.ctype(...))
+end
+
+function Metatype:ref(native)
+    if self.prototype.ref then
+        self.prototype.ref(ffi.cast('void*', native))
+    end
+    return native
+end
+
+function Metatype:unref(native)
+    if self.prototype.unref then
+        native:unref()
+    end
+    return native
 end
 
 function Metatype:ispointer(native, pointer)

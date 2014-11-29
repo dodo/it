@@ -143,7 +143,8 @@ function Encoder:hook(stage)
     self.stage[stage_name] = scope
     self.native:hook(stage, scope.state)
     scope:define('stage', stage_name)
-    scope:define('encoder', self.native, function ()
+    scope:define('encoder', self.native) -- could have different thread than this scope
+    scope:import(function ()
         encoder = require('encoder'):new(nil, _D.encoder)
         encoder.stage = _D.stage
         -- expose SchroEncoderFrames

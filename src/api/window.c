@@ -132,6 +132,7 @@ void it_blits_window(it_windows* win, SDL_Surface* surface) {
 
 void it_frees_window(it_windows* win) {
     if (!win) return;
+    if (it_unrefs((it_refcounts*) win) > 0) return;
     if (win->window) {
         SDL_Window* window = win->window;
         win->window = NULL;

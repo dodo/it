@@ -11,6 +11,7 @@ ffi.cdef[[
 
 local Thread = require(context and 'events' or 'prototype'):fork()
 Thread.type = Metatype:struct("it_threads", {
+    "int refc";
     "it_states *ctx";
     "uv_thread_t *thread";
     "uv_idle_t *idle";
@@ -22,6 +23,8 @@ Thread.type = Metatype:struct("it_threads", {
 })
 
 Thread.type:load('libapi.so', {
+    ref = [[int it_refs(it_threads* ref)]];
+    unref = [[int it_unrefs(it_threads* ref)]];
     init = [[void it_inits_thread(it_threads* thread, it_states* ctx)]];
     safe = [[void it_safes_thread(it_threads* thread, bool safe)]];
     create = [[void it_creates_thread(it_threads* thread)]];

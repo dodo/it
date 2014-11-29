@@ -19,12 +19,12 @@ void default_thread_idle(void* priv) {
 
 void uvI_thread_idle(uv_idle_t* handle, int status) {
     it_threads* thread = (it_threads*) handle->data;
-    if (!thread->ctx->err) {
-        // call callback …
-        thread->on_idle(thread->priv);
+    if (thread->ctx->err) {
+        it_closes_thread(thread);
         return;
     }
-    it_closes_thread(thread);
+    // call callback …
+    thread->on_idle(thread->priv);
 }
 
 void it_runs_thread(void* priv) {
@@ -84,7 +84,10 @@ void it_closes_thread(it_threads* thread) {
 }
 
 void it_frees_thread(it_threads* thread) {
-    if (!thread || !thread->thread) return;
+    if (!thread) return;
+    // scope always referenced in itself
+    if (it_unrefs((it_refcounts*) thread) > 1) return;
+    if (!thread->thread) return;
     if (!thread->closed) {
         thread->closed = TRUE;
         if (uv_thread_join(thread->thread))

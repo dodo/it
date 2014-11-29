@@ -14,6 +14,7 @@ Surface.type = Metatype:use('SDL2', 'SDL_', 'Surface', 'FreeSurface')
 
 local Window = require(context and 'events' or 'prototype'):fork()
 Window.type = Metatype:struct("it_windows", {
+    "int refc";
     "it_threads *thread";
     "SDL_Window *window";
     "SDL_Renderer *renderer";
@@ -22,6 +23,8 @@ Window.type = Metatype:struct("it_windows", {
 })
 
 Window.type:load('libapi.so', {
+    ref = [[int it_refs(it_windows* ref)]];
+    unref = [[int it_unrefs(it_windows* ref)]];
     init = [[void it_inits_window(it_windows* win, it_threads* thread)]];
     create = [[void it_creates_window(it_windows* win, const char* title,
                                       const int* x, const int* y,
