@@ -495,7 +495,7 @@ local function vshow( v, long )  return show[type( v )]( v, long )  end
 -- list : a better `for k,v in pairs(t) do print(k,v) end` {{{
 
 local tab = "\t"
-function list( t, _short, _visited )
+local function list( t, _short, _visited )
 	local isTop = not _visited
 	_visited = _visited or { }
 	local result
@@ -535,6 +535,7 @@ function list( t, _short, _visited )
 	end
 	return result
 end
+funcinfo.list = list
 funcinfo:add( list, 'list','( val[, shortFormat] )' )
 
 -- }}}
@@ -551,5 +552,7 @@ do -- optional: "better" print {{{
 	funcinfo:add( funcinfo.print, '_funcinfo.print','( ... )' )
 	funcinfo.old_print = print
 end -- }}}
+
+return funcinfo
 
 -- vim: set fdm=marker :
