@@ -1,3 +1,5 @@
+local debug = require 'debug'
+local ansi = require('console').color
 -- lua base file
 -- minimal default setup
 -- plus bells and whistles
@@ -5,54 +7,6 @@
 --   failed attempts:
 --    - `arg` is always nil, `...` always empty (irregardless of `-i` or not)
 --    - cannot use metatabled non-string `_PROMPT`
-
-local WANT_COLOR = true
-
--- load luarocks loader if present
-pcall( require, "luarocks.loader" )
-
--- extend path
-local pathprefix = "./?.lua;./?/init.lua;/Users/schoepl/share/lua/5.2/?.lua;/Users/schoepl/share/lua/5.2/?/init.lua"
-package.path = pathprefix..';'..package.path
-
--- local-only ANSI sequences {{{
-local ansi
-if WANT_COLOR then
-	local csi = '\027['
-	local colors = {
-		[0] = "black", "red", "green", "yellow",
-		      "blue", "magenta", "cyan", "white",
-		      nil, "default",
-	}
-	local fg, bg = { bold = { } }, { }
-	local bold = fg.bold
-	local cf, cfb, cb = csi.."3", csi.."1;3", csi.."4"
-	for c, name in pairs( colors ) do
-		c = tostring( c ).."m"
-		fg[name], bold[name], bg[name] = cf..c, cfb..c, cb..c
-	end
-	ansi = {
-		csi = csi,
-		reset = csi.."0m",
-		bold = csi.."1m",
-		fg = fg, bg = bg,
-	}
-else
-	-- make all empty strings
-	local mempty = { __index = function()  return ""  end }
-	local te = function( k, v )
-		local t = setmetatable( { }, mempty )
-		if k then  t[k] = v  end
-		return t
-	end
-	ansi = te( "fg", te( "bold", te( ) ) )
-	ansi.bg = ansi.fg
-end
--- }}}
-
--- colorful prompt (if color-enabled)
-_PROMPT  = ansi.fg.cyan..'>'..ansi.reset..'  '
-_PROMPT2 = ansi.fg.bold.yellow..'>>'..ansi.reset..' '
 
 -- function extra info {{{
 
@@ -424,7 +378,7 @@ end
 
 local deprecated
 do
-	local deprecated_marker = " "..ansi.fg.bold.yellow..ansi.bg.red.."-DEPRECATED-"
+	local deprecated_marker = " "..ansi.bold..ansi.yellow..ansi.on_red.."-DEPRECATED-"
 	function deprecated( f, name, arg )
 		funcinfo:add( f, name, arg..deprecated_marker )
 	end
@@ -478,27 +432,27 @@ do
 	local format = string.format
 	local h0 = ansi.reset
 
-	local c_nil = ansi.fg.bold.black.."nil"..h0
+	local c_nil = ansi.bold..ansi.black.."nil"..h0
 	show["nil"] = function( )  return c_nil, "nil"  end
 
-	local h_bool = ansi.fg[colors.boolean]
+	local h_bool = ansi[colors.boolean]
 	show.boolean = function( b )
 		b = b and "true" or "false"
 		return h_bool..b..h0, b
 	end
 
-	local h_num = ansi.fg[colors.number]
+	local h_num = ansi[colors.number]
 	show.number = function( n, _longForm )
 		n = tostring( n )
 		return h_num..n..h0, n
 	end
 
-	local h_str = ansi.fg[colors.string]
+	local h_str = ansi[colors.string]
 	show.string = function( s, _longForm )
 		return h_str..s..h0, s
 	end
 
-	local h_fun = ansi.fg[colors["function"]]
+	local h_fun = ansi[colors["function"]]
 	show["function"] = function( f, _longForm )
 		local s = tostring( f )
 		if _longForm then
@@ -509,25 +463,25 @@ do
 		return h_fun..s..h0, s
 	end
 
-	local h_tab = ansi.fg[colors.table]
+	local h_tab = ansi[colors.table]
 	show.table = function( t, _longForm )
 		local s = tostring( t )
 		return h_tab..s..h0, s
 	end
 
-	local h_ud = ansi.fg[colors.userdata]
+	local h_ud = ansi[colors.userdata]
 	show.userdata = function( u, _longForm )
 		local s = tostring( u )
 		return h_ud..s..h0, s
 	end
 
-	local h_thr = ansi.fg[colors.thread]
+	local h_thr = ansi[colors.thread]
 	show.thread = function( t, _longForm )
 		local s = tostring( t )
 		return h_thr..s..h0, s
 	end
 
-	local h_cd = ansi.fg[colors.cdata]
+	local h_cd = ansi[colors.cdata]
 	show.cdata = function( c, _longForm )
 		local s = tostring( c )
 		return h_cd..s..h0, s
