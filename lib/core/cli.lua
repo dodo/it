@@ -33,6 +33,18 @@ function cli.repl()
             process.exit()
         end
     end)
+    -- add help command function
+    help = function (...)
+        if #({...}) == 0 then
+            print "hello world!"
+        elseif #({...}) == 1 then
+            print(require('util.funcinfo').list(...))
+        else
+            require('util.funcinfo').print(...)
+        end
+    end
+    -- globals
+    ffi = require 'ffi'
     -- finally start it …
     process.shutdown = false
     repl:run()
