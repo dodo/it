@@ -83,6 +83,9 @@ void luaI_createdefinetable(lua_State* L);
 void luaI_getdefine(lua_State* L, const char* key);
 void luaI_setdefine(lua_State* L, const char* key);
 
+luaI_value* luaI_getvalue(lua_State* L, int i);
+void luaI_pushvalue(lua_State* L, luaI_value* value);
+
 int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);
 void luaI_close(lua_State* L, const char *global, int code);

@@ -12,6 +12,7 @@
 
 
 extern int it_imports_scope_lua(lua_State* L);
+extern int it_defines_scope_lua(lua_State* L);
 
 extern void it_inits_scope(it_states* ctx, it_processes* process, it_states* state);
 extern void it_defines_cdata_scope(  it_states* ctx, const char* name, void* cdata);

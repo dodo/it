@@ -16,23 +16,12 @@ Scope.type = Metatype:struct("it_states", {
     "bool free";
 })
 
-Scope.type:api("Scope", {'import'})
+Scope.type:api("Scope", {'import', 'define'})
 Scope.type:load('libapi.so', {
     ref = [[int it_refs(it_states* ref)]];
     unref = [[int it_unrefs(it_states* ref)]];
+    defcdata = [[void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata)]];
     init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
-    defboolean = [[void it_defines_boolean_scope(it_states* ctx,
-                                               const char* name,
-                                               int b)]];
-    defcdata  = [[void it_defines_cdata_scope( it_states* ctx,
-                                               const char* name,
-                                               void* cdata)]];
-    defnumber = [[void it_defines_number_scope(it_states* ctx,
-                                               const char* name,
-                                               double number)]];
-    defstring = [[void it_defines_string_scope(it_states* ctx,
-                                               const char* name,
-                                               const char* string)]];
     call = [[void it_calls_scope(it_states* ctx)]];
     __gc = [[void it_frees_scope(it_states* ctx)]];
 })
@@ -59,14 +48,10 @@ function Scope:import(lua_function)
 end
 
 function Scope:define(name, data, import)
-    if type(data) == 'string' then
-        self.state:defstring(name, data)
-    elseif type(data) == 'number' then
-        self.state:defnumber(name, data)
-    elseif type(data) == 'boolean' then
-        self.state:defboolean(name, data)
-    else
+    if type(data) == 'cdata' then
         self.state:defcdata(name, data)
+    else
+        self.state:define(name, data)
     end
     if import then
         self:import(import)

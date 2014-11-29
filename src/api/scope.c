@@ -16,6 +16,17 @@ int it_imports_scope_lua(lua_State* L) { // (ctx_userdata, lua_function)
     return 0;
 }
 
+int it_defines_scope_lua(lua_State* L) { // (ctx_userdata, name, value)
+    it_states*  ctx = (it_states*) lua_touserdata(L, 1);
+    const char* name = lua_tostring(L, 2);
+    luaI_value* value = luaI_getvalue(L, 3);
+    if (!value) return 0;
+    luaI_pushvalue(ctx->lua, value);
+    luaI_setdefine(ctx->lua, name);
+    free(value);
+    return 0;
+}
+
 void it_inits_scope(it_states* ctx, it_processes* process, it_states* state) {
     ctx->loop = state->loop;
     if (luaI_newstate(ctx)) return;
@@ -27,24 +38,6 @@ void it_inits_scope(it_states* ctx, it_processes* process, it_states* state) {
 void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata) {
     if (!ctx) return;
     lua_pushlightuserdata(ctx->lua, cdata);
-    luaI_setdefine(ctx->lua, name);
-}
-
-void it_defines_number_scope(it_states* ctx, const char* name, double number) {
-    if (!ctx) return;
-    lua_pushnumber(ctx->lua, number);
-    luaI_setdefine(ctx->lua, name);
-}
-
-void it_defines_string_scope(it_states* ctx, const char* name, const char* string) {
-    if (!ctx) return;
-    lua_pushstring(ctx->lua, string);
-    luaI_setdefine(ctx->lua, name);
-}
-
-void it_defines_boolean_scope(it_states* ctx, const char* name, int b) {
-    if (!ctx) return;
-    lua_pushboolean(ctx->lua, b);
     luaI_setdefine(ctx->lua, name);
 }
 

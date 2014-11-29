@@ -21,6 +21,7 @@ static const luaL_Reg luaI_reg_it[] = {
 #include "api/scope.h"
 static const luaL_Reg luaI_reg_scope[] = {
     {"import", it_imports_scope_lua},
+    {"define", it_defines_scope_lua},
     {NULL, NULL}
 };
 

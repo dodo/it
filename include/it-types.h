@@ -15,6 +15,25 @@
 #define FALSE 0
 
 
+typedef enum {
+    LUAI_TYPE_NIL = 0,
+    LUAI_TYPE_CDATA,
+    LUAI_TYPE_NUMBER,
+    LUAI_TYPE_STRING,
+    LUAI_TYPE_BOOLEAN,
+    LUAI_TYPE_MAX
+} luaI_types;
+
+typedef struct {
+    luaI_types type;
+    union {
+        void* cdata;
+        double number;
+        const char* string;
+        int boolean;
+    } v;
+} luaI_value;
+
 typedef struct {
     int refc;
 } it_refcounts;

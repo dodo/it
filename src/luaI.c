@@ -125,6 +125,58 @@ void luaI_setdefine(lua_State* L, const char* key) {
     luaI_setglobalfield(L, "_D", key);
 }
 
+luaI_value* luaI_getvalue(lua_State* L, int i) {
+    luaI_value* value = malloc(sizeof(luaI_value));
+    if (!value) return NULL;
+    memset(value, 0, sizeof(luaI_value));
+    switch (lua_type(L, i)) {
+        case LUA_TNUMBER:
+            value->type = LUAI_TYPE_NUMBER;
+            value->v.number = lua_tonumber(L, i);
+            break;
+        case LUA_TBOOLEAN:
+            value->type = LUAI_TYPE_BOOLEAN;
+            value->v.boolean = lua_toboolean(L, i);
+            break;
+        case LUA_TSTRING:
+            value->type = LUAI_TYPE_STRING;
+            value->v.string = lua_tostring(L, i);
+            break;
+        case LUA_TUSERDATA:
+        case LUA_TLIGHTUSERDATA:
+            value->type = LUAI_TYPE_CDATA;
+            value->v.cdata = lua_touserdata(L, i);
+            break;
+        case LUA_TNIL:
+        default:
+            value->type = LUAI_TYPE_NIL;
+            break;
+    }
+    return value;
+}
+
+void luaI_pushvalue(lua_State* L, luaI_value* value) {
+    if (!value) return;
+    switch (value->type) {
+        case LUAI_TYPE_NUMBER:
+            lua_pushnumber(L, value->v.number);
+            break;
+        case LUAI_TYPE_BOOLEAN:
+            lua_pushboolean(L, value->v.boolean);
+            break;
+        case LUAI_TYPE_STRING:
+            lua_pushstring(L, value->v.string);
+            break;
+        case LUAI_TYPE_CDATA:
+            lua_pushlightuserdata(L, value->v.cdata);
+            break;
+        case LUAI_TYPE_NIL:
+        default:
+            lua_pushnil(L);
+            break;
+    }
+}
+
 int luaI_newstate(it_states* ctx) {
     // create lua state
     lua_State* L = luaL_newstate();
