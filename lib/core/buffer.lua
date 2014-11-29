@@ -2,6 +2,11 @@ local ffi = require 'ffi'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 
+ffi.cdef [[
+    void *malloc(size_t size);
+    void free(void *ptr);
+]]
+
 local Buffer = Prototype:fork()
 Buffer.type = Metatype:typedef('void*')
 
