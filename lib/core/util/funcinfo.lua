@@ -421,11 +421,11 @@ local hl
 do
 	local colors = {
 		-- 'complex' data
-		table = "cyan", userdata = "magenta", cdata = "white",
+		table = "blue", userdata = "red", cdata = "yellow",
 		-- 'simple' data
-		boolean = "blue", number = "blue", string = "green",
+		boolean = "green", number = "cyan", string = "red",
 		-- code
-		["function"] = "red", thread = "yellow",
+		["function"] = "magenta", thread = "white",
 	}
 	function hl( x )  return colors[type( x )]  end
 
@@ -475,13 +475,13 @@ do
 		return h_ud..s..h0, s
 	end
 
-	local h_thr = ansi[colors.thread]
+	local h_thr = ansi.bold .. ansi[colors.thread]
 	show.thread = function( t, _longForm )
 		local s = tostring( t )
 		return h_thr..s..h0, s
 	end
 
-	local h_cd = ansi[colors.cdata]
+	local h_cd = ansi.bold .. ansi[colors.cdata]
 	show.cdata = function( c, _longForm )
 		local s = tostring( c )
 		return h_cd..s..h0, s
