@@ -34,3 +34,5 @@ typedef struct _SDL_Surface {
     /** Reference count -- used when freeing surface */
     int refcount;               /**< Read-mostly */
 } SDL_Surface;
+
+void SDL_FreeSurface(SDL_Surface* surface);

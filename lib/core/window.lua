@@ -8,6 +8,8 @@ cface(_it.libdir .. "sdlsurface.h")
 cface.typedef('struct _$', 'SDL_Window')
 cface.typedef('struct _$', 'SDL_Renderer')
 
+local Surface = {}
+Surface.type = Metatype:use('SDL2', 'SDL_', 'Surface', 'FreeSurface')
 
 
 local Window = require(context and 'events' or 'prototype'):fork()
