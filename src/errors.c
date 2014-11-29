@@ -75,6 +75,15 @@ void at_fatal_panic(int signum) {
 int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc) {
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) it_errors("current thread not found!");
+    if (!thread->safe) {// hardcore!
+        lua_call(L, nargs, nresults);
+        return nresults;
+    }
+    signal(SIGILL, &at_fatal_panic);
+    signal(SIGABRT, &at_fatal_panic);
+    signal(SIGFPE, &at_fatal_panic);
+    signal(SIGSEGV, &at_fatal_panic);
+    signal(SIGSYS, &at_fatal_panic);
     int pos = uvI_thread_notch(thread);
     int num = setjmp(thread->jmp[pos]);
     if (num) uvI_thread_unnotch(thread);
@@ -202,11 +211,6 @@ int luaI_stacktrace(lua_State* L) {
 
 int luaI_init_errorhandling(lua_State* L) {
     signal(SIGPIPE, SIG_IGN); // ignore borken pipe
-    signal(SIGILL, &at_fatal_panic);
-    signal(SIGABRT, &at_fatal_panic);
-    signal(SIGFPE, &at_fatal_panic);
-    signal(SIGSEGV, &at_fatal_panic);
-    signal(SIGSYS, &at_fatal_panic);
 
     lua_atpanic(L, at_panic);
     lua_pushcfunction(L, luaI_stacktrace);

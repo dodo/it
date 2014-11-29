@@ -21,6 +21,7 @@ extern void uvI_thread_idle(uv_idle_t* handle, int status);
 extern void it_runs_thread(void* priv);
 extern void it_inits_thread(it_threads* thread, it_states* ctx);
 extern void it_creates_thread(it_threads* thread);
+extern void it_safes_thread(it_threads* thread, bool safe);
 extern void it_closes_thread(it_threads* thread);
 extern void it_frees_thread(it_threads* thread);
 

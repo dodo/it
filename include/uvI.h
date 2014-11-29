@@ -3,6 +3,7 @@
 
 #include <uv.h>
 
+#include "it-types.h"
 #include "it-errors.h"
 
 
@@ -25,6 +26,7 @@ struct uvI_thread_s {
     uvI_thread_t *next;
     int size;
     int count;
+    bool safe;
     jmp_buf jmp[C_STACK_MINSIZE];
 };
 

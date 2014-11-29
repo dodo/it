@@ -40,6 +40,7 @@ uvI_thread_t* uvI_thread_malloc() {
         free(thread);
         return NULL;
     }
+    thread->safe = TRUE;
     thread->size = C_STACK_MINSIZE;
     thread->backtrace->count = 0;
     return thread;

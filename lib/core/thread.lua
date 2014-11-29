@@ -23,6 +23,7 @@ Thread.type = Metatype:struct("it_threads", {
 
 Thread.type:load('libapi.so', {
     init = [[void it_inits_thread(it_threads* thread, it_states* ctx)]];
+    safe = [[void it_safes_thread(it_threads* thread, bool safe)]];
     create = [[void it_creates_thread(it_threads* thread)]];
     close = [[void it_closes_thread(it_threads* thread)]];
     __gc = [[void it_frees_thread(it_threads* thread)]];
@@ -56,6 +57,11 @@ end
 
 function Thread:join()
     -- TODO
+end
+
+function Thread:safe(safe)
+    if safe == nil then safe = true end
+    self.reference:safe(not not safe)
 end
 
 function Thread:close()

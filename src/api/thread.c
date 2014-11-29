@@ -71,6 +71,13 @@ void it_creates_thread(it_threads* thread) {
         it_errors("uv_thread_create: failed to create thread!");
 }
 
+void it_safes_thread(it_threads* thread, bool safe) {
+    if (!thread->thread) return;
+    uvI_thread_t* uvthread = uvI_thread_pool(*(thread->thread));
+    if (!uvthread) return;
+    uvthread->safe = safe;
+}
+
 void it_closes_thread(it_threads* thread) {
     uv_close((uv_handle_t*) thread->idle, NULL);
     uv_stop(thread->ctx->loop);
