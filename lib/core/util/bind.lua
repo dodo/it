@@ -1,4 +1,5 @@
 local _table = require 'util.table'
+local doc = require 'util.doc'
 
 local exports = {}
 
@@ -8,6 +9,7 @@ local function ignore_self(this, self, ...)
     return self == this and {...} or {self, ...}
 end
 exports.ignore_self = ignore_self
+doc.info(ignore_self, 'bind.ignore_self', '( this, self, ... )')
 
 function exports.call(this, handler, ...)
     local args = this and {this, ...} or {...}
@@ -28,5 +30,6 @@ function exports.call(this, handler, ...)
         end
     end
 end
+doc.info(exports.call, 'bind.call', '( this, handler, ... )')
 
 return exports

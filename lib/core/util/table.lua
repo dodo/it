@@ -1,11 +1,14 @@
+local doc = require 'util.doc'
+
 local _table = {}
 
 
 function _table.weak(table)
-    return setmetatable(table, {
+    return setmetatable(table or {}, {
         __mode = 'k',
     })
 end
+doc.info(_table.weak, 'util_table.weak', '( table={} )')
 
 function _table.readonly(table)
     return setmetatable({}, {
@@ -16,14 +19,17 @@ function _table.readonly(table)
         __metatable = false
     })
 end
+doc.info(_table.readonly, 'util_table.readonly', '( [table] )')
 
 function _table.sum(t1, t2)
     return _table.append(_table.copy(t1), t2)
 end
+doc.info(_table.sum, 'util_table.sum', '( table1, table2 )')
 
 function _table.copy(t)
     return {unpack(t)}
 end
+doc.info(_table.copy, 'util_table.copy', '( table )')
 
 function _table.slowcopy(t)
     local r = {}
@@ -32,6 +38,7 @@ function _table.slowcopy(t)
     end
     return r
 end
+doc.info(_table.slowcopy, 'util_table.slowcopy', '( table )')
 
 function _table.append(t1, t2)
     for i=1,#t2 do
@@ -39,6 +46,7 @@ function _table.append(t1, t2)
     end
     return t1
 end
+doc.info(_table.append, 'util_table.append', '( dst_table, src_table )')
 
 function _table.index(t, val)
     for i, v in ipairs(t) do
@@ -48,22 +56,24 @@ function _table.index(t, val)
     end
     return
 end
+doc.info(_table.index, 'util_table.index', '( table, value )')
 
 function _table.deep_set(t, key, val)
     if not key:match('%.') then
         t[key] = val
         return
     end
-    print("------------",t)
+--     print("------------",t)
     local v,k
     for w in key:gmatch('([_%w]+)%.?') do
         v,k = t[w],w
         print(v,k,t)
         if v then t = v else break end
     end
-    print("t[k] = val", t, k, val)
+--     print("t[k] = val", t, k, val)
     t[k] = val
 end
+doc.info(_table.deep_set, 'util_table.deep_set', '( table, key, value )')
 
 function _table.deep_get(t, key)
     local val = t
@@ -74,6 +84,7 @@ function _table.deep_get(t, key)
     if val == t then val = val[key] end
     return val
 end
+doc.info(_table.deep_get, 'util_table.deep_get', '( table, key )')
 
 function _table.format(s, t)
     for m in s:gmatch('{([%w_%.]+)}') do
@@ -81,6 +92,7 @@ function _table.format(s, t)
     end
     return s
 end
+doc.info(_table.format, 'util_table.format', '( string, table )')
 
 
 return _table

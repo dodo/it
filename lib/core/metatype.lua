@@ -20,6 +20,7 @@ function Metatype:fork(proto)
     fork.metatable.__index = fork.prototype
     return fork
 end
+doc.info(Metatype.fork, 'Metatype:fork', '( proto={} )')
 
 function Metatype:typedef(ct, name)
     if name then ct = cface.typedef(ct, name) end
@@ -30,6 +31,7 @@ function Metatype:typedef(ct, name)
     end
     return type
 end
+doc.info(Metatype.typedef, 'Metatype:typedef', '( ct, name=ct )')
 
 function Metatype:struct(name, fields)
     local type = self:fork()
@@ -37,16 +39,19 @@ function Metatype:struct(name, fields)
     cface.struct(name, fields)
     return type
 end
+doc.info(Metatype.struct, 'Metatype:struct', '( name, fields )')
 
 function Metatype:use(clib, prefix, ct, gcname)
     local type = self:fork()
     type:lib(clib, prefix, gcname)
     return ct and type:overload(prefix .. ct) or type:new()
 end
+doc.info(Metatype.use, 'Metatype:use', '( clib|clibname, prefix, ct[, gcname] )')
 
 function Metatype:overload(name)
     return cface.metatype(name, self.metatable)
 end
+doc.info(Metatype.overload, 'type:overload', '( name )')
 
 function Metatype:cache()
     if not self.ctype then
@@ -57,6 +62,7 @@ function Metatype:cache()
     end
     return self
 end
+doc.info(Metatype.cache, 'type:cache', '(  )')
 
 function Metatype:initialize(instance, ...)
     util.xpcall(function (...) if instance.init then instance:init(...) end end,
@@ -70,14 +76,17 @@ function Metatype:initialize(instance, ...)
         end, ...)
     return instance
 end
+doc.info(Metatype.initialize, 'type:initialize', '( instance, ... )')
 
 function Metatype:virt(...)
     return self:initialize(setmetatable({}, self.metatable), ...)
 end
+doc.info(Metatype.virt, 'type:virt', '( ... )')
 
 function Metatype:create(pointer, ...)
     return self:initialize(self:ptr(pointer) or self:new(), ...)
 end
+doc.info(Metatype.create, 'type:create', '( nil|pointer, ... )')
 
 function Metatype:ptr(address)
     if not address then return end
@@ -87,6 +96,7 @@ function Metatype:ptr(address)
         error("can't cast given pointer address of type " .. type(address))
     end
 end
+doc.info(Metatype.ptr, 'type:ptr', '( address )')
 
 function Metatype:cast(pointer)
     if not pointer then return end
@@ -95,12 +105,14 @@ function Metatype:cast(pointer)
     return cface.assert(self:ref(self.ptype(pointer)))
     -- already has metatable (i.e. LuaJIT rocks!)
 end
+doc.info(Metatype.cast, 'type:cast', '( pointer )')
 
 function Metatype:new(...)
     if not self.name then return self:virt() end
     self:cache()
     return self:ref(self.ctype(...))
 end
+doc.info(Metatype.new, 'type:new', '( ... )')
 
 function Metatype:ref(native)
     if self.prototype.ref then
@@ -108,6 +120,7 @@ function Metatype:ref(native)
     end
     return native
 end
+doc.info(Metatype.ref, 'type:ref', '( native )')
 
 function Metatype:unref(native)
     if self.prototype.unref then
@@ -115,10 +128,12 @@ function Metatype:unref(native)
     end
     return native
 end
+doc.info(Metatype.unref, 'type:unref', '( native )')
 
 function Metatype:ispointer(native, pointer)
     return native == self:cast(pointer)
 end
+doc.info(Metatype.ispointer, 'type:ispointer', '( native, pointer )')
 
 function Metatype:load(clib, cfunctions)
     local cname, cargs
@@ -135,6 +150,7 @@ function Metatype:load(clib, cfunctions)
     end
     return self
 end
+doc.info(Metatype.load, 'type:load', '( clib|clibname, cfunctions )')
 
 function Metatype:lib(clib, prefix, gcname)
     clib = cface.register(clib)
@@ -148,6 +164,7 @@ function Metatype:lib(clib, prefix, gcname)
     end
     return self
 end
+doc.info(Metatype.lib, 'type:lib', '( clib|clibname, prefix=""[, gcname] )')
 
 local _define
 local function lua_pushlightuserdata(name, pointer)
@@ -185,6 +202,7 @@ function Metatype:api(metaname, cfunctions, apifile)
         end
     end
 end
+doc.info(Metatype.api, 'type:api', '( metaname, cfunctions, apifile="libapi.so" )')
 
 
 return Metatype

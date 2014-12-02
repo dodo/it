@@ -3,6 +3,7 @@
 -- Author: Peter Cawley (lua@corsix.org)
 local ffi = require "ffi"
 local bit = require "bit"
+local doc = require 'util.doc'
 local reflect = {}
 
 -- Relevant minimal definitions from lj_ctype.h
@@ -291,6 +292,10 @@ local function siblings(refct)
 
   return sib_iter, nil, refct
 end
+doc.info(siblings,
+        '(struct|func|enum):siblings'..
+        '|struct:members|func:arguments|enum:values',
+        '( refct )')
 
 metatables.struct.__index.siblings = siblings
 metatables.struct.__index.members = siblings
@@ -316,17 +321,22 @@ local function find_sibling(refct, name)
     end
   end
 end
+doc.info(find_sibling,
+        'struct:member|func:argument|enum:value',
+        '( refct, name )')
 
 metatables.struct.__index.member = find_sibling
 metatables.func.__index.argument = find_sibling
 metatables.enum.__index.value = find_sibling
 
-function reflect.typeof(x) -- refct = reflect.typeof(ct)
-  return refct_from_id(tonumber(ffi.typeof(x)))
+function reflect.typeof(cdata) -- refct = reflect.typeof(ct)
+  return refct_from_id(tonumber(ffi.typeof(cdata)))
 end
+doc.info(reflect.typeof, 'reflect.typeof', '( cdata )')
 
-function reflect.getmetatable(x) -- mt = reflect.getmetatable(ct)
-  return miscmap[-tonumber(ffi.typeof(x))]
+function reflect.getmetatable(cdata) -- mt = reflect.getmetatable(ct)
+  return miscmap[-tonumber(ffi.typeof(cdata))]
 end
+doc.info(reflect.getmetatable, 'reflect.getmetatable', '( cdata )')
 
 return reflect

@@ -13,6 +13,24 @@ local function push(typ, f, name, args)
     end
 end
 
+function doc.info(f, name, args)
+    push('info',  f, name, args)
+    return doc
+end
+doc.info(doc.info, 'doc.info', '( function, name, args )')
+
+function doc.todo(f, name, args)
+    push('todo',  f, name, args)
+    return doc
+end
+doc.info(doc.todo, 'doc.todo', '( function, name, args )')
+
+function doc.deprecated(f, name, args)
+    push('deprecated',  f, name, args)
+    return doc
+end
+doc.info(doc.deprecated, 'doc.deprecated', '( function, name, args )')
+
 function doc.init()
     local funcinfo = debug.getregistry()._funcinfo
     if funcinfo then
@@ -24,24 +42,11 @@ function doc.init()
     end
     cache = nil
 end
+doc.info(doc.init, 'doc.init', '(  )')
 
 function doc.rm()
     cache = nil
 end
-
-function doc.info(f, name, args)
-    push('info',  f, name, args)
-    return doc
-end
-
-function doc.todo(f, name, args)
-    push('todo',  f, name, args)
-    return doc
-end
-
-function doc.deprecated(f, name, args)
-    push('deprecated',  f, name, args)
-    return doc
-end
+doc.info(doc.rm, 'doc.rm', '(  )')
 
 return doc

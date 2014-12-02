@@ -1,4 +1,5 @@
 local io = require 'io'
+local doc = require 'util.doc'
 
 local cli = {}
 
@@ -49,6 +50,7 @@ function cli.repl()
     process.shutdown = false
     repl:run()
 end
+doc.info(cli.repl, 'cli.repl', '(  )')
 
 
 return cli

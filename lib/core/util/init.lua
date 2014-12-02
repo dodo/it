@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local doc = require 'util.doc'
 
 local util = {}
 
@@ -18,10 +19,12 @@ function util.xpcall(f, errhandler, ...)
     if result[1] then error(result[1]) end
     -- else error ingored
 end
+doc.info(util.xpcall, 'util.xpcall', '( function, errhandler=_TRACEBACK, ... )')
 
 function util.pcall(f, ...)
     return util.xpcall(f, _TRACEBACK, ...)
 end
+doc.info(util.pcall, 'util.pcall', '( function, ... )')
 
 function util.dump(t)
     local color = require('console').color
@@ -43,6 +46,7 @@ function util.dump(t)
     end, t) or ""
     return color.bold .. color.red .. " -- \n" .. color.reset .. s
 end
+doc.info(util.dump, 'util.dump', '( table )')
 
 
 return util
