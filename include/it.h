@@ -11,7 +11,7 @@
 
 
 #define IT_NAMES "muSchro0m it"
-#define IT_VERSIONS "0.0.1"
+#define IT_VERSIONS "alpha"
 
 
 #endif /* IT_H */
