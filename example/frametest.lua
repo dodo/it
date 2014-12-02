@@ -11,7 +11,7 @@ local height = 240
 
 
 print "first frame ---------------------------"
-a = Frame:new(width, height, 'argb')
+a = Frame:new(width, height, 'ARGB')
 print "get context ---------------------------"
 local cr = a:surface().context
 print "draw samples ---------------------------"

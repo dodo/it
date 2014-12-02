@@ -21,9 +21,9 @@ Frame.type:load('libencoder.so', {
     ref = [[int it_refs(it_frames* ref)]];
     unref = [[int it_unrefs(it_frames* ref)]];
     init = [[void it_inits_frame(it_frames* fr, int width, int height)]];
-    ref = [[void it_refs_frame(it_frames* fr, SchroFrame* frame)]];
     create = [[void it_creates_frame(it_frames* fr, SchroFrameFormat format)]];
     convert = [[void it_converts_frame(it_frames* src, it_frames* dst)]];
+    reference = [[void it_refs_frame(it_frames* fr, SchroFrame* frame)]];
     reverse_order = [[void it_reverses_order_frame(it_frames* fr)]];
     __gc = [[void it_frees_frame(it_frames* fr)]];
 })
@@ -41,7 +41,7 @@ doc.info(Frame.init,
 
 function Frame:create(pointer)
     if pointer then
-        self.native:ref(pointer)
+        self.native:reference(pointer)
     else
         self.native:create(_ffi.convert_enum('format', self.format,
             "SchroFrameFormat", "SCHRO_FRAME_FORMAT_"))
