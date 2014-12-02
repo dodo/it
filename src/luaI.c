@@ -73,10 +73,11 @@ it_states* luaI_getstate(lua_State* L) {
 }
 
 int luaI_setstate(lua_State* L, it_states* ctx) {
+    int err;
     size_t size = 2*PATH_MAX;
     char exec_path[2*PATH_MAX];
-    if (uv_exepath(exec_path, &size))
-        uvI_lua_error(L, ctx->loop, "%s uv_exepath: %s");
+    if ((err = uv_exepath(exec_path, &size)))
+        uvI_lua_error(L, ctx->loop, err, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
     luaI_setdefine(L, "_it_scopes_");
     luaL_loadstring(L,

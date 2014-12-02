@@ -24,7 +24,11 @@ void default_async_callback(void* priv, it_queues* queue) {
     luaI_pcall_in(async->thread->ctx, nargs, 0);
 }
 
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 void uvI_async_call(uv_async_t* handle, int status) {
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+void uvI_async_call(uv_async_t* handle) {
+#endif
     it_asyncs* async = (it_asyncs*) handle->data;
     // clear queue …
     uv_mutex_lock(async->mutex);

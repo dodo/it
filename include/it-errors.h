@@ -31,15 +31,30 @@
          it_errors(msg" (%s)", ##__VA_ARGS__, uv_dlerror(lib)); \
     }
 
-#define uvI_error(loop, msg) { \
-        uv_err_t err = uv_last_error(loop); \
-        it_errors(msg, uv_err_name(err), uv_strerror(err)); \
-    }
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 
-#define uvI_lua_error(L, loop, msg) { \
-        uv_err_t err = uv_last_error(loop); \
-        luaI_error(L, msg, uv_err_name(err), uv_strerror(err)); \
-    }
+    #define uvI_error(loop, err, msg) { \
+            uv_err_t err = uv_last_error(loop); \
+            it_errors(msg, uv_err_name(err), uv_strerror(err)); \
+        }
+
+    #define uvI_lua_error(L, loop, err, msg) { \
+            uv_err_t err = uv_last_error(loop); \
+            luaI_error(L, msg, uv_err_name(err), uv_strerror(err)); \
+        }
+
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+
+    #define uvI_error(loop, err, msg) { \
+            it_errors(msg, uv_err_name(err), uv_strerror(err)); \
+        }
+
+    #define uvI_lua_error(L, loop, err, msg) \
+        do{ if (loop && !uv_loop_close(loop)) \
+            free(loop); \
+        } while (0)
+
+#endif
 
 #define sdlI_error(msg) { \
         it_errors(msg, SDL_GetError()); \

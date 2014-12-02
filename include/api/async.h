@@ -14,7 +14,11 @@
 
 
 extern void default_async_callback(void* priv, it_queues* queue);
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 extern void uvI_async_call(uv_async_t* handle, int status);
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+extern void uvI_async_call(uv_async_t* handle);
+#endif
 
 extern void it_inits_async(it_asyncs* async);
 

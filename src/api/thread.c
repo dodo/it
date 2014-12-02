@@ -18,7 +18,11 @@ void default_thread_idle(void* priv) {
     luaI_pcall_in(thread->ctx, 2, 0);
 }
 
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 void uvI_thread_idle(uv_idle_t* handle, int status) {
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+void uvI_thread_idle(uv_idle_t* handle) {
+#endif
     it_threads* thread = (it_threads*) handle->data;
     if (thread->ctx->err) {
         it_closes_thread(thread);
@@ -30,7 +34,16 @@ void uvI_thread_idle(uv_idle_t* handle, int status) {
 
 void it_runs_thread(void* priv) {
     it_threads* thread = (it_threads*) priv;
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
     thread->ctx->loop = uv_loop_new(); // switch context loop to thread loop
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+    int err;
+    thread->ctx->loop = malloc(sizeof(uv_loop_t));
+    if (!thread->ctx->loop)
+        it_errors("failed to create loop!");
+    if ((err = uv_loop_init(thread->ctx->loop)))
+        uvI_error(thread->ctx->loop, err, "%s uv_loop_init: %s");
+#endif
     uv_idle_t idle;
     thread->idle = &idle;
     uv_idle_init(thread->ctx->loop, thread->idle);
@@ -97,6 +110,10 @@ void it_frees_thread(it_threads* thread) {
     uvI_thread_free(uvI_thread_pool(*(thread->thread)));
     thread->thread = NULL;
     thread->ctx->free = TRUE; // now we can
+    if (thread->ctx->loop) {
+        uvI_loop_delete(thread->ctx->loop);
+        thread->ctx->loop = NULL;
+    }
     it_frees_scope(thread->ctx);
     thread->ctx = NULL;
     // call callback …

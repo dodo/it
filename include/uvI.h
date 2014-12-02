@@ -12,6 +12,19 @@
         uvI_dlerror(lib, "uv_dlsym: failed to sym "name); \
     } while (0)
 
+#if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
+
+    #define uvI_loop_delete(loop) \
+        (uv_loop_delete(loop))
+
+#elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
+
+    #define uvI_loop_delete(loop) \
+        do{ if (loop && !uv_loop_close(loop)) \
+            free(loop); \
+        } while (0)
+
+#endif
 
 typedef struct {
     int count;
