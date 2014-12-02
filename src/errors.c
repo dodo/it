@@ -16,15 +16,15 @@
 
 
 
-static bool panic = FALSE;
+static bool panic_attack = FALSE;
 
 
 int at_panic(lua_State* L) {
-    if (panic) {
+    if (panic_attack) {
         printerr("FATAL PANIC %s\n", lua_tostring(L, -1));
         return 0;
     }
-    panic = TRUE;
+    panic_attack = TRUE;
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) abort();
     // first things first
@@ -35,7 +35,7 @@ int at_panic(lua_State* L) {
         lua_pop(L, 1);
         luaI_stacktrace(L);
         printerr("internal error during boot: %s\n", lua_tostring(L,-1));
-        panic = FALSE;
+        panic_attack = FALSE;
         return 0;
     }
     lua_getfield( L, -1, "emit");
@@ -46,7 +46,7 @@ int at_panic(lua_State* L) {
     luaI_pcall(L, 3, 0);
     luaI_stacktrace(L);
     printerr("PANIC@%s\n", lua_tostring(L, -1));
-    panic = FALSE;
+    panic_attack = FALSE;
     return 0;
 }
 

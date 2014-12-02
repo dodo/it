@@ -8,7 +8,7 @@
 #define stdnon  (FILE*) -1
 
 #ifndef __cplusplus
-  typedef enum { false, true } bool;
+    #include <stdbool.h>
 #endif
 
 #define TRUE 1
