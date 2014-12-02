@@ -2,6 +2,7 @@ local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 -- local lgi = require 'lgi' -- lazy ↓
 
 require('cface')(_it.plugin.encoder.libdir .. "schroframe.h")
@@ -34,6 +35,9 @@ function Frame:init(width, height, format, pointer)
     self.width, self.height = width, height
     self:create(pointer)
 end
+doc.info(Frame.init,
+        'frame:init',
+        '( width, height, format="ARGB"[, pointer] )')
 
 function Frame:create(pointer)
     if pointer then
@@ -45,6 +49,8 @@ function Frame:create(pointer)
     self.raw = self.native.frame
     return self.raw
 end
+doc.info(Frame.create, 'frame:create', '( [pointer] )')
+
 function Frame:new_convert(format) -- format or frame
     if not format then return self end
     if Frame:isinstance(format) then
@@ -55,6 +61,7 @@ function Frame:new_convert(format) -- format or frame
     frame:create(frame.native.frame)
     return frame
 end
+doc.info(Frame.new_convert, 'frame:new_convert', '( format|frame )')
 
 function Frame:convert(format) -- format or frame
     if format and Frame:isinstance(format) then
@@ -73,6 +80,7 @@ function Frame:convert(format) -- format or frame
         return self
     end
 end
+doc.info(Frame.convert, 'frame:convert', '( format|frame )')
 
 function Frame:data()
     local data = {}
@@ -83,6 +91,7 @@ function Frame:data()
     end
     return unpack(data)
 end
+doc.info(Frame.data, 'frame:data', '(  )')
 
 function Frame:buffer()
     local buffers = {}
@@ -97,6 +106,7 @@ function Frame:buffer()
     end
     return unpack(buffers)
 end
+doc.info(Frame.buffer, 'frame:buffer', '(  )')
 
 
 function Frame:surface()
@@ -109,6 +119,7 @@ function Frame:surface()
         self.raw.components[0].stride)
     return self._surface
 end
+doc.info(Frame.surface, 'frame:surface', '(  )')
 
 function Frame:fix_endian()
     --- from cairo docs:
@@ -117,6 +128,7 @@ function Frame:fix_endian()
         self.native:reverse_order()
     end
 end
+doc.info(Frame.fix_endian, 'frame:fix_endian', '(  )')
 
 function Frame:render()
     if self.rendered then return self.native end
@@ -130,6 +142,7 @@ function Frame:render()
     end
     return self.native
 end
+doc.info(Frame.render, 'frame:render', '(  )')
 
 function Frame:write_to_png(filename)
     -- init cairo
@@ -139,6 +152,7 @@ function Frame:write_to_png(filename)
     -- io
     return self._surface.object:write_to_png(filename)
 end
+doc.info(Frame.write_to_png, 'frame:write_to_png', '( filename )')
 
 function Frame:validate()
     local cairo = require 'cairo'
@@ -154,5 +168,6 @@ function Frame:validate()
     end
     return true
 end
+doc.info(Frame.validate, 'frame:validate', '(  )')
 
 return Frame

@@ -6,6 +6,7 @@ local Scope = require 'scope'
 local Thread = require 'thread'
 local _table = require 'util.table'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 local debug_level
 
 cface(_it.plugin.encoder.libdir .. "schrovideoformat.h")
@@ -112,6 +113,9 @@ function Encoder:init(filename, pointer, opts)
         end)
     end)
 end
+doc.info(Encoder.init,
+        'encoder:init',
+        '( filename=process.stdout[, pointer], opts={} )')
 
 function Encoder:start()
     -- turn on errors at least
@@ -133,6 +137,7 @@ function Encoder:start()
     end
     self.thread:start() -- at last
 end
+doc.info(Encoder.start, 'encoder:start', '(  )')
 
 local STAGE_ENUM = {
     typ="SchroEncoderFrameStateEnum", prefix="SCHRO_ENCODER_FRAME_STAGE_"}
@@ -155,6 +160,7 @@ function Encoder:hook(stage)
     end)
     return scope
 end
+doc.info(Encoder.hook, 'encoder:hook', '( stage )')
 
 function Encoder:push(frame)
     if self.native and frame and frame.render then
@@ -163,6 +169,7 @@ function Encoder:push(frame)
     end
     return 0
 end
+doc.info(Encoder.push, 'encoder:push', '( frame )')
 
 function Encoder:getformat()
     local pointer = self.native:getformat()
@@ -171,6 +178,7 @@ function Encoder:getformat()
         pointer = pointer,
     }
 end
+doc.info(Encoder.getformat, 'encoder:getformat', '(  )')
 
 
 function Encoder.debug(level)
@@ -180,5 +188,6 @@ function Encoder.debug(level)
     ) or 0
     debug.getregistry().Encoder.__index.debug(debug_level)
 end
+doc.info(Encoder.debug, 'Encoder.debug', '( level=0 )')
 
 return Encoder

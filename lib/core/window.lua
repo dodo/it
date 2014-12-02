@@ -3,6 +3,7 @@ local util = require 'util'
 local cface = require 'cface'
 local Thread = require 'thread'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 
 cface(_it.libdir .. "sdlsurface.h")
 cface.typedef('struct _$', 'SDL_Window')
@@ -62,6 +63,7 @@ function Window:init(pointer)
         window = require('window'):new(_D._it_windows_)
     end)
 end
+doc.info(Window.init, 'window:init', '( [pointer] )')
 
 function Window:open(title, width, height, x, y)
     self.open = nil
@@ -73,6 +75,9 @@ function Window:open(title, width, height, x, y)
     self.raw = self.native.window
     self.thread:start()
 end
+doc.info(Window.open,
+        'window:open',
+        '( titpe, width=200, height=200[, x[, y]] )')
 
 function Window:write_to_png(filename, surface)
     -- init cairo
@@ -84,11 +89,15 @@ function Window:write_to_png(filename, surface)
     ).object:write_to_png(filename)
     self.native:unlock(screen)
 end
+doc.info(Window.write_to_png,
+        'window:write_to_png',
+        '( filename[, surface=window.native:screen()] )')
 
 function Window:render(userdata)
     -- userdata should be in native endian
     self.native:blit(self.native:surface_from(userdata))
 end
+doc.info(Window.render, 'window:render', '( userdata )')
 
 function Window:surface(draw)
     if not draw then return end
@@ -106,6 +115,7 @@ function Window:surface(draw)
         self.native:blit(self._surface.sdl)
     end
 end
+doc.info(Window.surface, 'window:surface', '( draw_function )')
 
 function Window:pixels(draw, surface)
     if not draw then return end
@@ -122,10 +132,14 @@ function Window:pixels(draw, surface)
         end
     end
 end
+doc.info(Window.pixels,
+        'window:pixels',
+        '( draw_function[, surface=window.native:screen()] )')
 
 function Window:close()
     self.native:close()
 end
+doc.info(Window.close, 'window:close', '(  )')
 
 
 return Window

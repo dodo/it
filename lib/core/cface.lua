@@ -1,6 +1,7 @@
 local fs = require 'fs'
 local ffi = require 'ffi'
 local util = require 'util'
+local doc = require 'util.doc'
 
 local cface = {metatype = require('util._ffi').metatype}
 
@@ -21,6 +22,7 @@ function cface.register(clib, apifile)
     end
     return clib
 end
+doc.info(cface.register, 'cface.register', '( clib[, apifile] )')
 
 function cface.interface(filename)
     local header = fs.read(filename)
@@ -49,6 +51,7 @@ function cface.interface(filename)
     cface.declaration(header)
     return true
 end
+doc.info(cface.interface, 'cface.interface', '( filename )')
 
 _CFACE_ERROR_SIZE = 10
 function cface.declaration(cdecl, ...)
@@ -80,6 +83,7 @@ function cface.declaration(cdecl, ...)
     end, cdecl, ...)
 end
 cface.decl = cface.declaration -- alias
+doc.info(cface.decl, 'cface.declaration', '( cdecl[, ...] )')
 
 function cface.typedef(ct, name)
     if ct:find('%$') then
@@ -88,6 +92,7 @@ function cface.typedef(ct, name)
     cface.declaration(string.format("typedef %s %s;", ct, name))
     return ct
 end
+doc.info(cface.typedef, 'cface.typedef', '( ct[, name] )')
 
 function cface.struct(name, fields)
     local header = ""
@@ -96,10 +101,12 @@ function cface.struct(name, fields)
     end
     cface.typedef(string.format("struct _%s {%s}", name, header), name)
 end
+doc.info(cface.struct, 'cface.struct', '( name, fields )')
 
 function cface.struct_from(name, filename)
     -- TODO load only on struct from filename (maybe recursive?)
 end
+doc.todo(cface.struct_from, 'cface.struct_from', '( name, filename )')
 
  -- TODO move following code into util._ffi :
 
@@ -110,6 +117,7 @@ function cface.optint(number)
         return cface.int(number)
     end
 end
+doc.info(cface.optint, 'cface.optint', '( [number] )')
 
 function cface.assert(NIL)
     if NIL == nil then
@@ -117,6 +125,7 @@ function cface.assert(NIL)
     end
     return NIL
 end
+doc.info(cface.assert, 'cface.assert', '( [NIL] )')
 
 cface.struct("it_strings", {
     "const char *data";
@@ -125,6 +134,7 @@ cface.struct("it_strings", {
 function cface.string(cstring)
     return ffi.string(cstring.data, cstring.length)
 end
+doc.info(cface.string, 'cface.string', '( cstring )')
 
 
 return setmetatable(cface, { __call = function (mt,...)

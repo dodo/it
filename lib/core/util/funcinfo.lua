@@ -19,6 +19,9 @@ function funcinfo:add( f, name, args )
 	-- (fun with functions that hop around between versions/implementations)
 	if f then  funcinfo[f] = { args, name }  end
 end
+function funcinfo.info( f, name, args )
+	funcinfo:add( f, name, args )
+end
 
 debug.getregistry()._funcinfo = funcinfo
 
@@ -382,10 +385,24 @@ do
 	function deprecated( f, name, arg )
 		funcinfo:add( f, name, arg..deprecated_marker )
 	end
+	funcinfo.deprecated = deprecated
 end
 
 deprecated( module, 'module','( modname[, ...] )' )
 deprecated( package.seeall, 'package.seeall','( module )' )
+
+-- }}}
+
+-- todo {{{
+
+local todo
+do
+	local todo_marker = " "..ansi.bold..ansi.yellow..ansi.on_blue.."-TODO-"
+	function todo( f, name, arg )
+		funcinfo:add( f, name, arg..todo_marker )
+	end
+	funcinfo.todo = todo
+end
 
 -- }}}
 

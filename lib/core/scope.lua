@@ -2,6 +2,7 @@ local ffi = require 'ffi'
 local cface = require 'cface'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 
 cface.decl("typedef size_t lua_State;")
 cface.decl("typedef size_t uv_loop_t;")
@@ -40,12 +41,14 @@ function Scope:init(pointer)
         context.scope = require('scope'):new(_D._it_scopes_)
     end)
 end
+doc.info(Scope.init, 'scope:init', '( [pointer] )')
 
 function Scope:import(lua_function)
     self.state:import(lua_function)
     if self.state.err == nil then return end
     error(ffi.string(self.state.err))
 end
+doc.info(Scope.import, 'scope:import', '( lua_function )')
 
 function Scope:define(name, data, import)
     if type(data) == 'cdata' then
@@ -57,11 +60,13 @@ function Scope:define(name, data, import)
         self:import(import)
     end
 end
+doc.info(Scope.define, 'scope:define', '( name, data[, import] )')
 
 function Scope:run()
     self.state:call()
     if self.state.err == nil then return end
     error(ffi.string(self.state.err))
 end
+doc.info(Scope.run, 'scope:run', '(  )')
 
 return Scope

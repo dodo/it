@@ -1,4 +1,5 @@
 local Prototype = require 'prototype'
+local doc = require 'util.doc'
 
 local function merge(o, i) -- inplace
     local hidden = {}
@@ -39,5 +40,6 @@ local Features = Prototype:fork()
 function Features:compose(protos)
     return Prototype:fork(merge({super={}}, protos))
 end
+doc.info(Features.compose, 'Features:compose', '( {...} )')
 
 return Features

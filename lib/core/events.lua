@@ -1,10 +1,12 @@
 local Prototype = require 'prototype'
+local doc = require 'util.doc'
 
 local EventEmitter = Prototype:fork()
 
 function EventEmitter:init()
     self._events = {}
 end
+doc.info(EventEmitter.init, 'events:init', '(  )')
 
 function EventEmitter:on(event, listener)
     self:emit('newListener', event, listener)
@@ -18,6 +20,7 @@ function EventEmitter:on(event, listener)
     end
     return self
 end
+doc.info(EventEmitter.on, 'events:on', '( event, listener )')
 
 function EventEmitter:emit(event, ...)
     if event == "error" and self._events and not self._events.error then
@@ -36,6 +39,7 @@ function EventEmitter:emit(event, ...)
     end
     return true
 end
+doc.info(EventEmitter.emit, 'events:emit', '( event[, ...] )')
 
 function EventEmitter:listeners(event)
     local handler = self._events[event]
@@ -45,6 +49,7 @@ function EventEmitter:listeners(event)
         return handler -- already a list
     end
 end
+doc.info(EventEmitter.listeners, 'events:listeners', '( event )')
 
 function EventEmitter:removeAllListeners(event)
     if event then
@@ -54,5 +59,6 @@ function EventEmitter:removeAllListeners(event)
     end
     return self
 end
+doc.info(EventEmitter.removeAllListeners, 'events:removeAllListeners', '( [ event ] )')
 
 return EventEmitter

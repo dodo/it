@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local Thread = require 'thread'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 
 ffi.cdef[[
     typedef size_t it_queues;
@@ -51,6 +52,7 @@ function Async:init(thread, pointer)
         context.async = require('async'):new(nil, _D._it_asyncs_)
     end)
 end
+doc.info(Async.init, 'async:init', '( thread|nil[, pointer] )')
 
 function Async:send(event, ...)
     local queue = self.native:newqueue()
@@ -64,5 +66,6 @@ function Async:send(event, ...)
     end
     self.native:send(event, queue)
 end
+doc.info(Async.send, 'async:send', '( event[, ...] )')
 
 return Async

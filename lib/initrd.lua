@@ -3,6 +3,7 @@ local io = require 'io'
 local fs = require 'fs'
 local util = require 'util'
 local haz = require('util.table').index
+local doc = require 'util.doc'
 
 
 function Process:usage()
@@ -15,7 +16,7 @@ Options:
 ]] end
 
 process = Process:new()
-require('util.doc').info(Process.usage, 'process.usage', '( )')
+doc.info(Process.usage, 'process.usage', '( )')
 
 -- -- -- -- -- -- -- --
 
@@ -61,13 +62,16 @@ if haz(process.argv, "--debug") then
 end
 
 
+
 if #process.argv == 0 then
+    doc.init()
     require('cli').repl()
 else
     if not fs.exists(process.argv[1]) then
         print "script file does not exist."
         return process.exit(1)
     end
+    doc.rm()
     util.pcall(dofile, process.argv[1])
     -- TODO test if something happened
     if process.shutdown then

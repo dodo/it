@@ -1,4 +1,5 @@
 local io = require 'io'
+local doc = require 'util.doc'
 
 local fs = {}
 
@@ -9,6 +10,7 @@ function fs.exists(filename)
     file:close()
     return true
 end
+doc.info(fs.exists, 'fs.exists', '( filename )')
 
 function fs.read(filename)
     local file = io.open(filename, 'r')
@@ -17,6 +19,7 @@ function fs.read(filename)
     file:close()
     return content
 end
+doc.info(fs.read, 'fs.read', '( filename )')
 
 function fs.line(filename, from, to)
     local file = io.open(filename, 'r')
@@ -40,6 +43,7 @@ function fs.line(filename, from, to)
     file:close()
     return table.concat(content, "\n"):gsub("%s*(.*)%s*", "%1")
 end
+doc.info(fs.line, 'fs.line', '( filename, at|from[, to ] )')
 
 
 return fs

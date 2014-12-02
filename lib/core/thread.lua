@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local Scope = require 'scope'
 local Metatype = require 'metatype'
+local doc = require 'util.doc'
 
 ffi.cdef[[
     typedef size_t uv_thread_t;
@@ -52,25 +53,30 @@ function Thread:init(pointer)
         context.thread = require('thread'):new(_D._it_threads_)
     end)
 end
+doc.info(Thread.init, 'thread:init', '( [pointer] )')
 
 function Thread:start()
     process.shutdown = false -- prevent process from shutting down
     self.reference:create()
 end
+doc.info(Thread.start, 'thread:start', '(  )')
 
 function Thread:join()
     -- TODO
 end
+doc.todo(Thread.join, 'thread:join', '(  )')
 
 function Thread:safe(safe)
     if safe == nil then safe = true end
     self.reference:safe(not not safe)
 end
+doc.info(Thread.safe, 'thread:safe', '( nil|true|false )')
 
 function Thread:close()
     self.reference:close()
     self.reference = nil
 end
+doc.info(Thread.close, 'thread:close', '(  )')
 
 
 return Thread

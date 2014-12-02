@@ -1,4 +1,5 @@
 local reflect = require 'reflect'
+local doc = require 'util.doc'
 
 local inspect = {}
 
@@ -9,6 +10,7 @@ function inspect.value(refct, cdata)
     end
     return cdata[refct.name]
 end
+doc.info(inspect.value, 'inspect.value', '( refct, cdata )')
 
 function inspect.typeofelement(cdata)
     local refct = reflect.typeof(cdata)
@@ -17,6 +19,7 @@ function inspect.typeofelement(cdata)
     end
     return refct
 end
+doc.info(inspect.typeofelement, 'inspect.typeofelement', '( cdata )')
 
 function inspect.pairs(cdata)
     if not cdata then return end
@@ -29,6 +32,7 @@ function inspect.pairs(cdata)
         end
     end
 end
+doc.info(inspect.pairs, 'inspect.pairs', '( cdata )')
 
 function inspect.ipairs(cdata)
     if not cdata then return end
@@ -43,6 +47,7 @@ function inspect.ipairs(cdata)
         end
     end
 end
+doc.info(inspect.ipairs, 'inspect.ipairs', '( cdata )')
 
 
 return inspect
