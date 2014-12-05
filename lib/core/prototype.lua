@@ -33,6 +33,6 @@ function Prototype:isinstance(instance)
     -- FIXME make it recursive (check parent prototypes too)
     return instance and instance.prototype == self -- prototype
 end
-doc.todo(Prototype.bind, 'proto:isinstance', '( instance )')
+doc.todo(Prototype.isinstance, 'proto:isinstance', '( instance )')
 
 return Prototype
