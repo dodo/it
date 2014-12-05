@@ -43,7 +43,7 @@ int at_panic(lua_State* L) {
     lua_remove(   L, -3);
     lua_pushstring(L, "panic");
     lua_pushvalue(L, -4);
-    luaI_pcall(L, 3, 0);
+    luaI_pcall(L, 3, 0, TRUE/*safe*/);
     luaI_stacktrace(L);
     printerr("PANIC@%s\n", lua_tostring(L, -1));
     panic_attack = FALSE;
@@ -72,7 +72,11 @@ void at_fatal_panic(int signum) {
 }
 
 // TODO FIXME use siglongjump to block all signals during exception, to prevent recursion
-int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc) {
+int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe) {
+    if (!safe) {// hardcore!
+        lua_call(L, nargs, nresults);
+        return nresults;
+    }
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) it_errors("current thread not found!");
     if (!thread->safe) {// hardcore!

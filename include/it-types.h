@@ -43,6 +43,7 @@ typedef struct {
     lua_State *lua;
     uv_loop_t *loop;
     const char *err;
+    bool safe;
     bool free;
 } it_states;
 

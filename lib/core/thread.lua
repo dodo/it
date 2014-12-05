@@ -69,8 +69,9 @@ doc.todo(Thread.join, 'thread:join', '(  )')
 function Thread:safe(safe)
     if safe == nil then safe = true end
     self.reference:safe(not not safe)
+    self.scope:safe(not not safe)
 end
-doc.info(Thread.safe, 'thread:safe', '( nil|true|false )')
+doc.info(Thread.safe, 'thread:safe', '( nil=true|true|false )')
 
 function Thread:close()
     self.reference:close()

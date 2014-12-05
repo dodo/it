@@ -184,6 +184,7 @@ int luaI_newstate(it_states* ctx) {
         it_prints_error("failed to allocate lua state!");
         return 1;
     }
+    ctx->safe = TRUE;
     ctx->free = TRUE;
     ctx->lua = L;
     // enable JIT
@@ -222,7 +223,7 @@ void luaI_close(lua_State* L, const char *global, int code) {
     lua_pushvalue(L, -2);
     lua_pushstring(L, "exit");
     if (code > -1) lua_pushinteger(L, code);
-    luaI_pcall(L, (code == -1) ? 2 : 3, 0);
+    luaI_pcall(L, (code == -1) ? 2 : 3, 0, TRUE/*safe*/);
     // we are done now:
     lua_close(L);
 }

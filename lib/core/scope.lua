@@ -14,6 +14,7 @@ Scope.type = Metatype:struct("it_states", {
     "lua_State *lua";
     "uv_loop_t *loop";
     "const char *err";
+    "bool safe";
     "bool free";
 })
 
@@ -61,6 +62,12 @@ function Scope:define(name, data, import)
     end
 end
 doc.info(Scope.define, 'scope:define', '( name, data[, import] )')
+
+function Scope:safe(safe)
+    if safe == nil then safe = true end
+    self.state.safe = not not safe
+end
+doc.info(Scope.safe, 'scope:safe', '( nil=true|true|false )')
 
 function Scope:run()
     self.state:call()

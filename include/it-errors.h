@@ -67,7 +67,7 @@
 
 extern int at_panic(lua_State* L);
 extern void at_fatal_panic(int signum);
-extern int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc);
+extern int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe);
 
 extern int luaI_stacktrace(lua_State* L);
 extern int luaI_init_errorhandling(lua_State* L);

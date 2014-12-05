@@ -7,6 +7,7 @@ window.async = Async:new(window.thread)
 
 
 window.scope:import(function ()
+    context.thread:safe(false)
     local Async = require 'async'
     local Thread = require 'thread'
     local COUNT = {x=4,y=4}
@@ -18,7 +19,7 @@ window.scope:import(function ()
 
 
 function threaded()
-    context.thread:safe()
+    context.thread:safe(false)
     local x = 0
     local api = context.async
     local id, width, height = _D.id, _D.width, _D.height

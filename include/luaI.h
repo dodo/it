@@ -39,10 +39,10 @@
 #define luaI_setglobalfield(L,gn,fn) \
     (lua_getglobal(L,gn), lua_insert(L,-2), lua_setfield(L,-2,fn), lua_pop(L,1))
 
-#define luaI_pcall(L,nargs,nresults) \
+#define luaI_pcall(L,nargs,nresults,safe) \
     do{lua_getglobal(L, "_TRACEBACK"); \
       lua_insert(L,0 - nargs - 2); \
-      if (luaI_xpcall(L,nargs,nresults,0 - nargs - 2)) { \
+      if (luaI_xpcall(L,nargs,nresults,0 - nargs - 2, safe)) { \
         lua_error(L); \
       } \
       lua_remove(L, 0 - nresults - 1);\
@@ -52,7 +52,7 @@
     do{if (!ctx->err) { \
       lua_getglobal(ctx->lua, "_TRACEBACK"); \
       lua_insert(ctx->lua,0 - nargs - 2); \
-      if (luaI_xpcall(ctx->lua,nargs,nresults,0 - nargs - 2)) { \
+      if (luaI_xpcall(ctx->lua,nargs,nresults,0 - nargs - 2, ctx->safe)) { \
         ctx->err = lua_tostring(ctx->lua, -1); \
         lua_pop(ctx->lua, 2); \
       } else lua_remove(ctx->lua, 0 - nresults - 1);\
