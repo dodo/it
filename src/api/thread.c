@@ -38,7 +38,7 @@ void it_runs_thread(void* priv) {
     thread->ctx->loop = uv_loop_new(); // switch context loop to thread loop
 #elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
     int err;
-    thread->ctx->loop = malloc(sizeof(uv_loop_t));
+    thread->ctx->loop = (uv_loop_t*) malloc(sizeof(uv_loop_t));
     if (!thread->ctx->loop)
         it_errors("failed to create loop!");
     if ((err = uv_loop_init(thread->ctx->loop)))

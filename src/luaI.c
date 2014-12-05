@@ -127,9 +127,8 @@ void luaI_setdefine(lua_State* L, const char* key) {
 }
 
 luaI_value* luaI_getvalue(lua_State* L, int i) {
-    luaI_value* value = malloc(sizeof(luaI_value));
+    luaI_value* value = (luaI_value*) calloc(1, sizeof(luaI_value));
     if (!value) return NULL;
-    memset(value, 0, sizeof(luaI_value));
     switch (lua_type(L, i)) {
         case LUA_TNUMBER:
             value->type = LUAI_TYPE_NUMBER;

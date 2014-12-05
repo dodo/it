@@ -13,7 +13,7 @@ static uvI_thread_t* pool;
 
 
 uv_lib_t* uvI_dlopen(const char* filename) {
-    uv_lib_t* lib = malloc(sizeof(uv_lib_t));
+    uv_lib_t* lib = (uv_lib_t*) malloc(sizeof(uv_lib_t));
     if (!lib) it_errors("malloc(sizeof(uv_lib_t)): failed to create");
     if (uv_dlopen(filename, lib))
         uvI_dlerror(lib, "uv_dlopen: failed to open %s", filename);
@@ -32,10 +32,9 @@ void uvI_init() {
 }
 
 uvI_thread_t* uvI_thread_malloc() {
-    uvI_thread_t* thread = malloc(sizeof(uvI_thread_t));
+    uvI_thread_t* thread = (uvI_thread_t*) calloc(1, sizeof(uvI_thread_t));
     if (!thread) return NULL;
-    memset(thread, 0, sizeof(uvI_thread_t));
-    thread->backtrace = malloc(sizeof(uvI_stacktrace_t));
+    thread->backtrace = (uvI_stacktrace_t*) malloc(sizeof(uvI_stacktrace_t));
     if (!thread->backtrace) {
         free(thread);
         return NULL;

@@ -44,9 +44,9 @@ void uvI_async_call(uv_async_t* handle) {
 }
 
 void it_inits_async(it_asyncs* async) {
-    uv_async_t* uvasync = malloc(sizeof(uv_async_t));
+    uv_async_t* uvasync = (uv_async_t*) malloc(sizeof(uv_async_t));
     if (!uvasync) return;
-    uv_mutex_t* uvmutex = malloc(sizeof(uv_mutex_t));
+    uv_mutex_t* uvmutex = (uv_mutex_t*) malloc(sizeof(uv_mutex_t));
     if (!uvmutex) return;
     async->async = uvasync;
     async->mutex = uvmutex;
@@ -60,9 +60,8 @@ void it_inits_async(it_asyncs* async) {
 
 it_queues* it_queues_async(it_asyncs* async) {
     if (!async) return NULL; // async as arg to cascade NULL pointer
-    it_queues* queue = malloc(sizeof(it_queues));
+    it_queues* queue = (it_queues*) calloc(1, sizeof(it_queues));
     if (!queue) return NULL;
-    memset(queue, 0, sizeof(it_queues));
     return queue;
 }
 
@@ -86,7 +85,7 @@ int it_pushes_async_lua(lua_State* L) { // (queue_userdata, value)
 
 void it_pushes_cdata_async(it_queues* queue, void* cdata) {
     if (!queue) return;
-    luaI_value* value = malloc(sizeof(luaI_value));
+    luaI_value* value = (luaI_value*) malloc(sizeof(luaI_value));
     if (!value) return;
     value->type = LUAI_TYPE_CDATA;
     value->v.cdata = cdata;
