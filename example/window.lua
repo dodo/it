@@ -17,11 +17,11 @@ window = require('window'):new()
 
 
 if process.argv[#process.argv]:match('.png$') then
-    local cairo = require 'cairo'
+    local cairo = require 'lib.cairo'
     png = cairo.surface_from_png(process.argv[#process.argv])
     width, height = cairo.get_size(png)
     window.scope:define('png', png.object, function ()
-        require('cairo')
+        require('lib.cairo')
         png = require('ffi').cast('cairo_surface_t*', _D.png)
     end)
 end

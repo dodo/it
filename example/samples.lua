@@ -1,5 +1,5 @@
 local util = require 'util'
-local cairo = require 'cairo'
+local cairo = require 'lib.cairo'
 
 local samples = {}
 

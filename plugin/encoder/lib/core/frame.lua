@@ -113,7 +113,7 @@ function Frame:surface()
     self.rendered = false
     if self._surface then return self._surface end
 --     self:validate()
-    self._surface = require('cairo').surface_from(
+    self._surface = require('lib.cairo').surface_from(
         self.raw.components[0].data, 'ARGB32',
         self.width, self.height,
         self.raw.components[0].stride)
@@ -155,7 +155,7 @@ end
 doc.info(Frame.write_to_png, 'frame:write_to_png', '( filename )')
 
 function Frame:validate()
-    local cairo = require 'cairo'
+    local cairo = require 'lib.cairo'
     local surface_stride = cairo.C.format_stride_for_width('ARGB32', self.width)
     local frame_stride = self.raw.components[0].stride +
                          self.raw.components[1].stride +

@@ -395,7 +395,7 @@ print(width .. "x" .. height, "("..(width*height)..")")
 ffi.fill(surface.pixels, width * height)
 COUNT.i = COUNT.x * COUNT.y
 
-local image = require('cairo').surface_from(surface.pixels, 'ARGB32', width, height, width * 4)
+local image = require('lib.cairo').surface_from(surface.pixels, 'ARGB32', width, height, width * 4)
 
 if ffi.abi 'le' then
     ffi.cdef [[typedef struct pixel { union u { uint32_t i; struct bgra {uint8_t b,g,r,a;} c; } u; } pixel;]]
@@ -437,7 +437,7 @@ threads = {} do
         if png then
             thread.scope:define('png', png.surface.object, function ()
                 local ffi = require 'ffi'
-                local cairo = require 'cairo'
+                local cairo = require 'lib.cairo'
                 png = {surface = {object = ffi.cast('cairo_surface_t*', _D.png)}}
                 png.data = cairo.get_data(png.surface, 'uint32_t*')
                 local width, height = cairo.get_size(png.surface)
@@ -574,12 +574,12 @@ local width, height = size, size
 
 
 if process.argv[#process.argv]:match('.png$') then
-    local cairo = require 'cairo'
+    local cairo = require 'lib.cairo'
     png = {filename = process.argv[#process.argv]}
     png.surface = cairo.surface_from_png(png.filename)
     window.scope:define('png', png.surface.object, function ()
         local ffi = require 'ffi'
-        local cairo = require 'cairo'
+        local cairo = require 'lib.cairo'
         png = {surface = {object = ffi.cast('cairo_surface_t*', _D.png)}}
         png.data = cairo.get_data(png.surface, 'uint32_t*')
         local width, height = cairo.get_size(png.surface)

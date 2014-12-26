@@ -30,7 +30,7 @@ if haz(process.argv, "-v") or haz(process.argv, "--version") then
     local versions = _it.versions()
     print(versions.it)
     versions.it = nil
-    versions.cairo = require('cairo').version()
+    versions.cairo = require('lib.cairo').version()
     for lib,version in pairs(versions) do
         if lib == 'lua' then
             version = version .. " (running with " .. _VERSION .. ")"

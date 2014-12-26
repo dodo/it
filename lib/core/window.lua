@@ -83,7 +83,7 @@ function Window:write_to_png(filename, surface)
     -- init cairo
     local screen = surface or self.native:screen()
     self.native:lock(screen)
-    require('cairo').surface_from(
+    require('lib.cairo').surface_from(
         screen.pixels, 'ARGB32',
         self.width, self.height, self.width * 4
     ).object:write_to_png(filename)
@@ -105,7 +105,7 @@ function Window:surface(draw)
         self._surface = {}
         self._surface.sdl = self.native:surface(true)
         if self._surface.sdl == nil then self._surface = nil return end
-        self._surface.cairo = require('cairo').surface_from(
+        self._surface.cairo = require('lib.cairo').surface_from(
             self._surface.sdl.pixels,'ARGB32',
             self.width, self.height, self.width * 4
         )

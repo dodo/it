@@ -23,7 +23,7 @@ function threaded()
     local x = 0
     local api = context.async
     local id, width, height = _D.id, _D.width, _D.height
-    local surface = require('cairo').surface('ARGB32', width, height)
+    local surface = require('lib.cairo').surface('ARGB32', width, height)
     math.randomseed(os.time() + id)
     print(id, width .. "x" .. height)
     api:on('render', function ()
