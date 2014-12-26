@@ -111,6 +111,7 @@ doc.info(Metatype.cast, 'type:cast', '( pointer )')
 function Metatype:new(...)
     if not self.name then return self:virt() end
     self:cache()
+--     return self:ref(_ffi.new(self.name, ...))
     return self:ref(self.ctype(...))
 end
 doc.info(Metatype.new, 'type:new', '( ... )')

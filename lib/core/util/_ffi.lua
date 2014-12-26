@@ -3,6 +3,9 @@ local doc = require 'util.doc'
 
 local exports = {}
 
+ffi.cdef[[
+    void *calloc(size_t nmemb, size_t size);
+]]
 
 local function update(interface, values, opts)
     local changed = false
@@ -54,5 +57,18 @@ function exports.metatype(name, metatable)
     return ffi.metatype(name, metatable)
 end
 doc.info(exports.metatype, 'util_ffi.metatype', '( name, metatable={} )')
+
+function exports.new(ct, ...)
+    local name, nelem, init = ct, 1, {...}
+    if name:match('%[%?%]$') then
+        name = name:match('^(.-)%[')
+        nelem = init[1]
+        table.remove(init, 1)
+    end
+    local cdata = ffi.cast(name..'*', ffi.C.calloc(nelem, ffi.sizeof(name)))
+    assert(cdata ~= nil, "out of memory")
+    return cdata
+end
+doc.info(exports.new, 'util_ffi.new', '( ct[,nelem] [,init...] )')
 
 return exports
