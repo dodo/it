@@ -27,7 +27,7 @@ function Prototype:bind(name, ...)
         require('util.bind').call(self, self[name], ...)
     return self[name .. "*"]
 end
-doc.info(Prototype.bind, 'self:bind', '( name[, ...] )')
+doc.info(Prototype.bind, 'instance:bind', '( name[, ...] )')
 
 function Prototype:isinstance(instance)
     -- FIXME make it recursive (check parent prototypes too)

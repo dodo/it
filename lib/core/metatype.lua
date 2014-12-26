@@ -5,6 +5,7 @@ local cface = require 'cface'
 local Prototype = require 'prototype'
 local doc = require 'util.doc'
 
+
 local Metatype = Prototype:fork()
 Metatype.bind = nil
 
