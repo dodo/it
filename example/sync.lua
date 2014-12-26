@@ -10,12 +10,12 @@ window.scope:import(function ()
     context.thread:safe(false)
     local Async = require 'async'
     local Thread = require 'thread'
-    local COUNT = {x=4,y=4}
+    local COUNT = {x=8,y=8}
     local width, height = window.width, window.height
     local w, h = math.floor(width/(COUNT.x)), math.floor(height/(COUNT.y))
     window.async = context.async
     print(width .. "x" .. height)
-    COUNT.i = COUNT.x * COUNT.y;
+    COUNT.i = COUNT.x * COUNT.y
 
 
 function threaded()
@@ -33,17 +33,22 @@ function threaded()
         require('./samples').arc(surface.context, width/2,height/2, x)
         surface.object:flush()
         surface.object:mark_dirty()
---         process:sleep(math.random(20))
+        process:sleep(math.random(520) + 500)
         backport:send('result', id, surface.object)
 --         x = (x+0.1 - 1) % 100 + 1
         x = x % (width/2) + 1
     end)
+    context:on('exit', function ()
+        print("close thread", id)
+        context.thread:close()
+    end)
+-- require('util.luastate').dump_stats(io.stderr)
     backport:send('ready', id)
 end
 
 
     tasks = {}
-    context.async:on('result', function (id, surface)
+    window.async:on('result', function (id, surface)
 --         io.write('result ' .. id .. '\r') io.flush()
         window:surface(function (image)
             -- TODO FIXME make faster with pixman
@@ -58,7 +63,7 @@ end
 
 
     threads = {}
-    context.async:on('ready', function (id)
+    window.async:on('ready', function (id)
         print("start render", id)
         threads[id].async:send('render')
     end)
@@ -90,3 +95,4 @@ end)
 
 window:open("sync", width, height)
 
+-- require('util.luastate').dump_stats(io.stderr)
