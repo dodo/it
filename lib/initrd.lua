@@ -31,6 +31,7 @@ if haz(process.argv, "-v") or haz(process.argv, "--version") then
     print(versions.it)
     versions.it = nil
     versions.cairo = require('lib.cairo').version()
+    versions.pixman = require('lib.pixman').version()
     for lib,version in pairs(versions) do
         if lib == 'lua' then
             version = version .. " (running with " .. _VERSION .. ")"
