@@ -175,7 +175,7 @@ local function lua_pushlightuserdata(name, pointer)
                                              void* cdata)]];
         }):virt().define
     end
-    _define(ffi.cast('void*', _D._it_scopes_), name, ffi.cast('void*', pointer))
+    _define(_D._it_scopes_, name, ffi.cast('void*', pointer))
 end
 function Metatype:api(metaname, cfunctions, apifile)
     cface.register(metaname, apifile or 'libapi.so')

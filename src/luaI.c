@@ -115,7 +115,11 @@ void luaI_createdefinetable(lua_State* L) {
     lua_getglobal(L, "_D");
     lua_setfield(L, -2, "__index");
     lua_setmetatable(L, -2);
-    lua_pop(L, 1);
+    // store reference to _D in package.loaded
+    luaI_getglobalfield(L, "package", "loaded");
+    lua_getglobal(L, "_D");
+    lua_setfield(L, -2, "_D");
+    lua_pop(L, 2);
 }
 
 void luaI_getdefine(lua_State* L, const char* key) {
