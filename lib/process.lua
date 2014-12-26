@@ -31,6 +31,10 @@ function Process:init()
             .info(Process.sleep, 'process:sleep', '( milliseconds )')
             .info(Process.exit,  'process:exit',  '( [code=0] )')
     end
+    -- load api
+    self.native = self._type:load('api', {
+        exit = "void it_exits_process(it_processes* process, int exit_code)";
+    }):ptr(_D._it_processes_)
 end
 
 function Process:cwd(path)
@@ -51,9 +55,7 @@ function Process:sleep(milliseconds)
 end
 
 function Process:exit(code)
-    self._type:load('api', {
-    exit = "void it_exits_process(it_processes* process, int exit_code)";
-    }):ptr(_D._it_processes_):exit(code or 0)
+    self.native:exit(code or 0)
 end
 
 
