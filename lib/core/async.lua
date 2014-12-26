@@ -67,5 +67,6 @@ function Async:send(event, ...)
     self.native:send(event, queue)
 end
 doc.info(Async.send, 'async:send', '( event[, ...] )')
+jit.off(Async.send)
 
 return Async

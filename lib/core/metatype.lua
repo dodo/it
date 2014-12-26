@@ -161,6 +161,7 @@ function Metatype:lib(clib, prefix, gcname)
     self.metatable.__index = function (_, key)
         return clib[prefix .. key]
     end
+    jit.off(self.metatable.__index)
     if gcname then
         self.metatable.__gc = clib[prefix .. gcname]
     end
@@ -191,6 +192,7 @@ function Metatype:api(metaname, cfunctions, apifile)
             data[pointer] = userdata -- … and it's cached
             return userdata
         end
+        jit.off(self.prototype._userdata)
     end
     local clib = debug.getregistry()[metaname].__index
     for _, name in ipairs(cfunctions) do

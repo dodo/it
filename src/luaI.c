@@ -41,6 +41,8 @@ int luaI_copyfunction(lua_State* L, lua_State* src) {
     if (luaL_loadbuffer(L, s, sz, name)) {
         return lua_error(L);
     }
+    // disable JIT for this function because it's allready bytecode
+    luaJIT_setmode(L, -1, LUAJIT_MODE_FUNC | LUAJIT_MODE_OFF);
     lua_pop(src, 2); // dumped string + function
     return 0;
 }

@@ -1,3 +1,5 @@
+local jit = require 'jit'
+
 local doc = {}
 local cache = {}
 
@@ -12,6 +14,7 @@ local function push(typ, f, name, args)
         end
     end
 end
+jit.off(push)
 
 function doc.info(f, name, args)
     push('info',  f, name, args)
@@ -48,5 +51,15 @@ function doc.rm()
     cache = nil
 end
 doc.info(doc.rm, 'doc.rm', '(  )')
+
+
+do
+    for key,value in pairs(doc) do
+        if type(value) == 'function' then
+            jit.off(value)
+        end
+    end
+end
+
 
 return doc
