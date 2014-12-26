@@ -38,6 +38,9 @@ function Scope:init(pointer)
     end
     self.state = self.type:create(nil, _D._it_processes_, _D._it_scopes_)
     self.raw = self.state.lua
+    if process.debugmode then
+        self:import(function () process.debug() end)
+    end
     -- special case since object gets injected into context instead as global
     self:define('_it_scopes_', self.state, function ()
         context.scope = require('scope'):new(_D._it_scopes_)

@@ -58,5 +58,11 @@ function Process:exit(code)
     self.native:exit(code or 0)
 end
 
+function Process.debug()
+    process.debugmode = true
+    require('jit.v').start()
+    require('jit.dump').start()
+end
+
 
 return Process
