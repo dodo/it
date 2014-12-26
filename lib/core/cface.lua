@@ -45,7 +45,7 @@ function cface.interface(filename)
     end
     -- replace used defines
     for key,value in pairs(define) do
-        header = header:gsub(key, value)
+        header = header:gsub('(' .. key .. ')([^%w_])', value .. '%2')
     end
     -- now use that …
     cface.declaration(header)
