@@ -9,10 +9,11 @@ local cairo = exports
 
 cface(_it.libdir .. "cairo.h")
 
-exports.C = Metatype:fork():lib('cairo', 'cairo_'):new()
+exports.LIB = 'cairo'
+exports.C = Metatype:fork():lib(cairo.LIB, 'cairo_'):new()
 exports.ctype = {
-    context = Metatype:use('cairo', 'cairo_','t'        , 'destroy'),
-    surface = Metatype:use('cairo', 'cairo_surface_','t', 'destroy'),
+    context = Metatype:use(cairo.LIB, 'cairo_','t'        , 'destroy'),
+    surface = Metatype:use(cairo.LIB, 'cairo_surface_','t', 'destroy'),
 }
 
 
