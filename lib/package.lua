@@ -23,16 +23,6 @@ for _,name in pairs({dofile(_it.libdir .. 'plugins.lua')}) do
     end
 end
 
--- load luarocks loader if present
-pcall(require, "luarocks.loader")
--- copy loaders table to prevent luarocks from using api_loader
-do local loaders = {}
-    for k,v in pairs(package.loaders) do
-        loaders[k] = v
-    end
-    package.loaders = loaders
-end
-
 --create api loader
 local function api_loader(name)
     local path, err = package.searchpath(name, package.apipath)
@@ -60,6 +50,24 @@ local function local_loader(name)
     return loadfile(path .. name)
 end
 
--- add new loaders
-table.insert(package.loaders, 1, local_loader)
-table.insert(package.loaders, 2, api_loader)
+-- add new loaders via environment
+function package.env(mode)
+    if mode == 'vanilla' then
+        -- copy loaders table to prevent luarocks from using api_loader
+        local loaders = {}
+        for k,v in pairs(package.vanilla_loaders) do
+            loaders[k] = v
+        end
+        package.loaders = loaders
+    elseif mode == 'it' then
+        package.env('vanilla') -- remove any previously defined custom loaders
+        table.insert(package.loaders, 1, local_loader)
+        table.insert(package.loaders, 2, api_loader)
+    end
+end
+
+-- load luarocks loader if present
+pcall(require, "luarocks.loader")
+-- default
+package.vanilla_loaders = package.loaders
+package.env('it')
