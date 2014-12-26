@@ -22,6 +22,7 @@ Scope.type:api("Scope", {'import', 'define'})
 Scope.type:load('libapi.so', {
     ref = [[int it_refs(it_states* ref)]];
     unref = [[int it_unrefs(it_states* ref)]];
+    collectgarbage = [[void it_collectsgarbage_scope(it_states* ctx)]];
     defcdata = [[void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata)]];
     init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
     call = [[void it_calls_scope(it_states* ctx)]];

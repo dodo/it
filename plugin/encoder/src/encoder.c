@@ -39,7 +39,7 @@ void schroI_encoder_wait(void* priv) {
                     it_errors("no schro_encoder_push_frame happened!");
 //                     it_prints_error("no schro_encoder_push_frame happened!");
                 // free all unused frames and other stuff
-                luaI_gc(enc->thread->ctx->lua);
+                it_collectsgarbage_scope(enc->thread->ctx);
             }
             break;
         case SCHRO_STATE_END_OF_STREAM:
@@ -117,9 +117,8 @@ void schroI_run_stage(SchroEncoderFrame* frame) {
     // FIXME this runs in an unregistered thread (not known to our thread pool in uvI.c)
     luaI_pcall_in(ctx, 3, 0);
     uvI_thread_free(thread);
-    if (ctx->err) return;
     // free all unused frames and other stuff
-    luaI_gc(ctx->lua);
+    it_collectsgarbage_scope(ctx);
 }
 
 void schroI_encoder_start(void* priv) {

@@ -24,7 +24,6 @@ void sdlI_free(void* priv) {
 
 void sdlI_idle(void* priv) {
     it_windows* win = (it_windows*) priv;
-    bool need_gc = FALSE;
     SDL_Event event;
     if (win->thread->ctx->err) return;
     while (!win->thread->closed && SDL_PollEvent(&event)) {
@@ -44,10 +43,7 @@ void sdlI_idle(void* priv) {
     // call lua …
     luaI_globalemit(win->thread->ctx->lua, "window", "need render");
     luaI_pcall_in(win->thread->ctx, 2, 0);
-    // free all unused data and other stuff
-    if (need_gc && !win->thread->ctx->err)
-        if (lua_gc(win->thread->ctx->lua, LUA_GCCOLLECT, 0))
-        luaL_error(win->thread->ctx->lua, "internal error: lua_gc failed");
+//     it_collectsgarbage_scope(win->thread->ctx);
 //     SDL_Delay(2); // FIXME
 }
 

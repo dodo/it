@@ -16,6 +16,7 @@ void default_thread_idle(void* priv) {
     lua_getglobal(thread->ctx->lua, "context");
     luaI_localemit(thread->ctx->lua, "thread", "idle");
     luaI_pcall_in(thread->ctx, 2, 0);
+//     it_collectsgarbage_scope(thread->ctx);
 }
 
 #if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10

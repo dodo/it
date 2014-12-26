@@ -45,6 +45,13 @@ void it_calls_scope(it_states* ctx) {
     if (!ctx) return;
     luaI_getglobalfield(ctx->lua, "context", "run");
     luaI_pcall_in(ctx, 0, 0);
+    it_collectsgarbage_scope(ctx);
+}
+
+void it_collectsgarbage_scope(it_states* ctx) {
+    if (!ctx) return;
+    // free all unused data and other stuff
+    if (!ctx->err) luaI_gc(ctx->lua);
 }
 
 void it_frees_scope(it_states* ctx) {

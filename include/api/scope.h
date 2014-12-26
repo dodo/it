@@ -20,6 +20,7 @@ extern void it_defines_number_scope( it_states* ctx, const char* name, double nu
 extern void it_defines_string_scope( it_states* ctx, const char* name, const char* string);
 extern void it_defines_boolean_scope(it_states* ctx, const char* name, int b);
 extern void it_calls_scope(it_states* ctx);
+extern void it_collectsgarbage_scope(it_states* ctx);
 extern void it_frees_scope(it_states* ctx);
 
 
