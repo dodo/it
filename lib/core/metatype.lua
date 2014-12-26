@@ -159,7 +159,11 @@ function Metatype:lib(clib, prefix, gcname)
     prefix = prefix or ""
     self.prototype = clib
     self.metatable.__index = function (_, key)
-        return clib[prefix .. key]
+        if key == 'prototype' then
+            return clib
+        else
+            return clib[prefix .. key]
+        end
     end
     jit.off(self.metatable.__index)
     if gcname then
