@@ -7,10 +7,15 @@ window.async = Async:new(window.thread)
 
 
 window.scope:import(function ()
-    context.thread:safe(false)
+--     context.thread:safe(false)
+    math.randomseed(os.time() - 1)
+
+--     local COUNT = {x=4,y=4}
+    local COUNT = {x=2,y=2}
+
+
     local Async = require 'async'
     local Thread = require 'thread'
-    local COUNT = {x=8,y=8}
     local width, height = window.width, window.height
     local w, h = math.floor(width/(COUNT.x)), math.floor(height/(COUNT.y))
     window.async = context.async
@@ -19,12 +24,13 @@ window.scope:import(function ()
 
 
 function threaded()
-    context.thread:safe(false)
+--     context.thread:safe(false)
+    math.randomseed(os.time() + id)
+
     local x = 0
     local api = context.async
     local id, width, height = _D.id, _D.width, _D.height
     local surface = require('lib.cairo').surface('ARGB32', width, height)
-    math.randomseed(os.time() + id)
     print(id, width .. "x" .. height)
     api:on('render', function ()
         surface.context:set_source_rgb(math.random(),math.random(),math.random())
@@ -43,6 +49,50 @@ function threaded()
         context.thread:close()
     end)
 -- require('util.luastate').dump_stats(io.stderr)
+    backport:send('ready', id)
+end
+
+
+function torched()
+--     context.thread:safe(false)
+    local cairo = require 'lib.cairo'
+    local api = context.async
+    local id, width, height = _D.id, _D.width, _D.height
+    math.randomseed(os.time() + id)
+    print(id, width .. "x" .. height)
+    ----------------------------------------------------------------------------
+    package.env('vanilla')
+    require 'torch'
+    require 'camera'
+    local surface, data, frame, pixels
+    local cam = image.Camera{} -- /dev/video0
+    local pixels = torch.DoubleTensor(4, cam.height, cam.width)
+--     local pixels = torch.DoubleTensor(cam.width, cam.height, 4)
+--     pixels[4] = 1
+--     pixels[{ {},{}, 4 }] = 1
+--     pixels[{ {},{}, 1 }] = 1
+    api:on('render', function ()
+--         pixels = torch.DoubleTensor(4, cam.height, cam.width)
+--         pixels:zero()
+--         pixels[4]:fill(0)
+        frame = cam:forward()
+--         pixels[1] = frame
+        pixels[{ {1,3} }] = frame
+--         pixels[{1,3}] = frame
+--         print(frame:size())
+        data = image.scale(pixels, width, height)
+        data.image.saturate(data)
+        data = data:mul(255):byte():data()
+        -- TODO need to add alpha channel + scale it up
+        surface = cairo.surface_from(data, 'RGB24', width, height, width * 4)
+        process:sleep(100) -- should be ~10fps
+        backport:send('result', id, surface.object)
+    end)
+    context:on('exit', function ()
+        print("close thread", id)
+        cam:stop()
+        context.thread:close()
+    end)
     backport:send('ready', id)
 end
 
@@ -82,7 +132,12 @@ end
         thread.scope:define('height', h)
         thread.scope:define('width',  w)
         thread.scope:define('id',     i)
-        thread.scope:import(threaded)
+        if torched and (math.random(9) == 1 or i == COUNT.i) then
+            thread.scope:import(torched)
+            torched = nil
+        else
+            thread.scope:import(threaded)
+        end
         table.insert(threads, thread)
         thread:start()
         coords.x = coords.x + w

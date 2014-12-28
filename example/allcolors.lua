@@ -1,6 +1,7 @@
 
--- local size = 200
-local size = 768
+local size = 200
+local size = 400
+-- local size = 768
 -- local size = 512*2
 -- local size = 4096
 
@@ -30,7 +31,7 @@ math.randomseed(os.time() + _D.id)
 local ffi = require 'ffi'
 local util = require 'util'
 local _ffi = require 'util._ffi'
-local constrain = require('util.misc').constrain
+local clamp = require('util.misc').clamp
 local api = context.async
 local pixels = ffi.cast('uint32_t*', ffi.cast('void*', _D.pixels))
 local id, w, h, width, height = _D.id, _D.w, _D.h, _D.width, _D.height
@@ -266,9 +267,9 @@ function iterate()
         avgcol.u.c.r = round(math.floor(r * n))
         avgcol.u.c.g = round(math.floor(g * n))
         avgcol.u.c.b = round(math.floor(b * n))
---         avgcol.u.c.r = constrain(math.floor(r * n), 0, 255)
---         avgcol.u.c.g = constrain(math.floor(g * n), 0, 255)
---         avgcol.u.c.b = constrain(math.floor(b * n), 0, 255)
+--         avgcol.u.c.r = clamp(math.floor(r * n), 0, 255)
+--         avgcol.u.c.g = clamp(math.floor(g * n), 0, 255)
+--         avgcol.u.c.b = clamp(math.floor(b * n), 0, 255)
 --         print(d,'-',avgcol.u.c.r,avgcol.u.c.g,avgcol.u.c.b,'-',r,g,b,'-',avgcol.u.i)
 
         local a, i = avgcol
