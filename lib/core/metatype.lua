@@ -44,6 +44,7 @@ doc.info(Metatype.struct, 'Metatype:struct', '( name, fields )')
 
 function Metatype:use(clib, prefix, ct, gcname)
     local type = self:fork()
+    prefix = prefix or ""
     type:lib(clib, prefix, gcname)
     return ct and type:overload(prefix .. ct) or type:new()
 end
@@ -155,19 +156,29 @@ end
 doc.info(Metatype.load, 'type:load', '( clib|clibname, cfunctions )')
 
 function Metatype:lib(clib, prefix, gcname)
+    local that = self
     clib = cface.register(clib)
     prefix = prefix or ""
+    self.prefix = prefix
     self.prototype = clib
     self.metatable.__index = function (_, key)
-        if key == 'prototype' then
+        if key == 'metatype' then
+            return that
+        elseif key == 'prototype' then
             return clib
         else
-            return clib[prefix .. key]
+            return clib[that.prefix .. key]
         end
     end
     jit.off(self.metatable.__index)
     if gcname then
-        self.metatable.__gc = clib[prefix .. gcname]
+        if prefix ~= "" then
+            self.metatable.__gc = clib[prefix .. gcname]
+        else
+            self.metatable.__gc = function (...)
+                return clib[that.prefix .. gcname](...)
+            end
+        end
     end
     return self
 end
