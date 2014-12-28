@@ -8,9 +8,6 @@
 #include "luaI.h"
 
 
-extern int it_refs(it_refcounts* ref);
-extern int it_unrefs(it_refcounts* ref);
-
 extern int it_stdios_lua(lua_State* L);
 extern int it_boots_lua(lua_State* L);
 extern int it_loads_lua(lua_State* L);

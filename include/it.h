@@ -14,4 +14,8 @@
 #define IT_VERSIONS "alpha"
 
 
+extern int it_refs(it_refcounts* ref);
+extern int it_unrefs(it_refcounts* ref);
+
+
 #endif /* IT_H */
