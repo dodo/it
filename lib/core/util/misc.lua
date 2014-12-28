@@ -8,7 +8,7 @@ function exports.ininterval(v, min, max)
 end
 doc.info(exports.ininterval, 'util_misc.ininterval', '( value, min, max )')
 
-function exports.constrain(v, min, max)
+function exports.clamp(v, min, max)
     if     v < min then
            v = min
     elseif v > max then
@@ -16,7 +16,7 @@ function exports.constrain(v, min, max)
     end
     return v
 end
-doc.info(exports.constrain, 'util_misc.constrain', '( value, min, max )')
+doc.info(exports.clamp, 'util_misc.clamp', '( value, min, max )')
 
 function exports.lerp(p, a, b)
     return (b - a) * p + a
