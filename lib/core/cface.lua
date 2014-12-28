@@ -49,7 +49,7 @@ function cface.interface(filename)
     end
     -- now use that …
     cface.declaration(header)
-    return true
+    return true, header, define
 end
 doc.info(cface.interface, 'cface.interface', '( filename )')
 
