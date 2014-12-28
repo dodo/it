@@ -51,7 +51,7 @@ void it_reverses_order_frame(it_frames* fr) {
 }
 
 void it_frees_frame(it_frames* fr) {
-    if (!fr->frame) return;
+    if (!fr || !fr->frame) return;
     if (it_unrefs((it_refcounts*) fr) > 0) return;
     SchroFrame* frame = fr->frame;
     fr->frame = NULL;
