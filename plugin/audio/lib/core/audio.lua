@@ -33,15 +33,15 @@ Audio.LIB = 'libopenal'
 Audio.C = Metatype:fork():lib(Audio.LIB, 'al'):new()
 Audio.Buffer = require('./buffer') -- dont use core.buffer here
 Audio.Buffer.Audio = Audio -- prevent circular dependency
-Audio.ctype = {
-    device = Metatype:use(Audio.LIB, nil, 'ALCdevice', 'CloseDevice'),
-    context = Metatype:use(Audio.LIB, nil, 'ALCcontext', 'DestroyContext'),
-}
-do local   type
-    for _, type in pairs(Audio.ctype) do
-        type.metatype.prefix = 'alc'
-    end
-end
+-- Audio.ctype = {
+-- --     device = Metatype:use(Audio.LIB, nil, 'ALCdevice', 'CloseDevice'),
+-- --     context = Metatype:use(Audio.LIB, nil, 'ALCcontext', 'DestroyContext'),
+-- }
+-- do local   type
+--     for _, type in pairs(Audio.ctype) do
+--         type.metatype.prefix = 'alc'
+--     end
+-- end
 
 
 function Audio:init(devicename, opts)
