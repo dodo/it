@@ -34,15 +34,21 @@ all: api plugins it
 
 standalone: api it
 
+plugins: audio encoder
+
 api: libapi.so
 	echo -n "return nil" > lib/plugins.lua
 	echo -n '$$ORIGIN' >  $(IT_RPATHS)
 
-plugins: api lib/plugins.lua
+audio: api lib/plugins.lua
+	make -C plugin/audio \
+		&& echo -n ",'audio'" >> lib/plugins.lua \
+		&& echo -n ':$$ORIGIN/plugin/audio' >> $(IT_RPATHS)
+
+encoder: api lib/plugins.lua
 	make -C plugin/encoder \
 		&& echo -n ",'encoder'" >> lib/plugins.lua \
 		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS)
-
 
 libapi.so:  $(IT_SRC_API)
 	gcc $(IT_WARNS) -shared -o $@ -fPIC $(IT_SRC_API) \
