@@ -41,6 +41,6 @@ libencoder.so: src/api.c \
 		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
 
 clean:
-	rm -f include/orc0.h src/orc0.c lib/encoder.so
+	rm -f include/orc0.h src/orc0.c libencoder.so
 
 .PHONY: all
