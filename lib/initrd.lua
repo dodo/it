@@ -62,20 +62,22 @@ if haz(process.argv, "--debug") then
 end
 
 
-
-if #process.argv == 0 then
-    doc.init()
-    require('cli').repl()
-else
-    if not fs.exists(process.argv[1]) then
-        print "script file does not exist."
-        return process.exit(1)
+return function () -- called when finally initialized
+    if #process.argv == 0 then
+        doc.init()
+        require('cli').repl()
+    else
+        if not fs.exists(process.argv[1]) then
+            print "script file does not exist."
+            return process.exit(1)
+        end
+        doc.rm()
+        local result = util.pcall(dofile, process.argv[1])
+        -- TODO test if something happened
+        if type(result) ~= 'function' and process.shutdown then
+            process.exit() -- normally
+        end
+        process.shutdown = false
+        return result
     end
-    doc.rm()
-    util.pcall(dofile, process.argv[1])
-    -- TODO test if something happened
-    if process.shutdown then
-        process.exit() -- normally
-    end
-    process.shutdown = false
 end

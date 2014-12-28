@@ -215,12 +215,13 @@ int luaI_createstate(it_processes* process) {
     uvI_init();
     it_states* ctx = process->ctx;
     if (luaI_newstate(ctx)) {
-        return 1;
+        return 0;
     }
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setdefine(ctx->lua, "_it_processes_");
+    // initrd returns a function to be called when everything is initialized
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "initrd.lua"));
-    return 0;
+    return 1;
 }
 
 void luaI_close(lua_State* L, const char *global, int code) {
