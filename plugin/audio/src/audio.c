@@ -27,13 +27,21 @@ void it_inits_audio(it_audios* audio,
         audio->sources = (ALuint*) calloc(nsource, sizeof(ALuint));
         if (!audio->sources) return;
         alGenSources(nsource, audio->sources);
-    }
-    audio->nsource = nsource;
+        audio->nsource = nsource;
+    } else audio->nsource = 0;
 }
 
 void it_frees_audio(it_audios* audio) {
     if (!audio) return;
     if (it_unrefs((it_refcounts*) audio) > 0) return;
+    if (audio->nsource > 0) {
+        int nsource = audio->nsource;
+        ALuint *sources = audio->sources;
+        audio->sources = NULL;
+        audio->nsource = 0;
+        // might take a while …
+        alDeleteSources(nsource, sources);
+    }
     if (audio->ctx) {
         ALCcontext* ctx = audio->ctx;
         audio->ctx = NULL;
@@ -45,9 +53,5 @@ void it_frees_audio(it_audios* audio) {
         audio->dev = NULL;
         // might take a while …
         alcCloseDevice(dev);
-    }
-    if (audio->nsource > 0) {
-        audio->nsource = 0;
-        free(audio->sources);
     }
 }

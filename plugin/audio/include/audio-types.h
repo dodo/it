@@ -12,7 +12,9 @@ typedef struct {
     ALCdevice *dev;
     ALCcontext *ctx;
     ALuint *sources;
+    ALuint *buffers;
     int nsource;
+    int nbuffer;
 } it_audios;
 
 
