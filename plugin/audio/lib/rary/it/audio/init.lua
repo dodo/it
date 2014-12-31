@@ -31,7 +31,7 @@ Audio.type:load('libaudio.so', {
 
 Audio.LIB = 'libopenal'
 Audio.C = Metatype:fork():lib(Audio.LIB, 'al'):new()
-Audio.Buffer = require('./buffer') -- dont use core.buffer here
+Audio.Buffer = require('audio.buffer')
 Audio.Buffer.Audio = Audio -- prevent circular dependency
 -- Audio.ctype = {
 -- --     device = Metatype:use(Audio.LIB, nil, 'ALCdevice', 'CloseDevice'),

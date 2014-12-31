@@ -1,13 +1,13 @@
 local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
 local cface = require 'cface'
-local Frame = require 'frame'
 local Scope = require 'scope'
 local Thread = require 'thread'
 local _table = require 'util.table'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 local debug_level
+local Frame = require 'encoder.frame'
 
 cface(_it.plugin.encoder.libdir .. "schrovideoformat.h")
 cface(_it.plugin.encoder.libdir .. "schroencoder.h")
@@ -104,7 +104,7 @@ function Encoder:init(filename, pointer, opts)
         end)
         -- expose SchroFrames as objects
         encoder:on('need frame', function ()
-            local frame = require('frame'):new(
+            local frame = require('encoder.frame'):new(
                 encoder.format.width,
                 encoder.format.height,
                 encoder.frame_format

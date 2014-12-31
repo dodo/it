@@ -1,5 +1,5 @@
 local ffi = require 'ffi'
-local Frame = require 'frame'
+local Frame = require 'encoder.frame'
 -- local Encoder = require 'encoder'
 
 local width = 352
