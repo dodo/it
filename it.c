@@ -26,6 +26,10 @@ static void init_cb(uv_idle_t* handle) {
         luaI_pcall(L, 0, 0, TRUE);
     } else { // finalize initialization …
         initialized = TRUE;
+        if (lua_isnil(L, -1)) {
+            uv_idle_stop(handle);
+            return;
+        }
         // if function returned when called for the first time, call it all the time
         luaI_pcall(L, 0, 1, TRUE);
         // if function was returned we declare it as loop
