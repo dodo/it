@@ -52,11 +52,18 @@ end
 
 -- this uses at least 40mb!!! FIXME
 local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
-    -- try to namespace all modules within it/lib/rary/
-    local apiname = name and 'it.' .. name or name
-    local success, mod = pcall(package.vanilla_require, apiname)
-    if success then return mod end
-    return package.vanilla_require(name)
+    if not name or not name:match('^%w') then
+        return package.vanilla_require(name)
+    else
+        local success, mod, api
+        -- try to namespace all modules within it/lib/rary/
+        local apiname = name and 'it.' .. name or name
+        success, api = pcall(package.vanilla_require, apiname)
+        if success then return api end
+        success, mod = pcall(package.vanilla_require, name)
+        if not success then error(api or mod) --[[error]] end
+        return mod
+    end
 end
 
 -- add new loaders via environment
