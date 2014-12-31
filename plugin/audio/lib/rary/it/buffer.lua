@@ -35,18 +35,16 @@ doc.info(Buffer.init,
         'albuf:init',
         '( [num_buffers=1][, data], opts={ format="MONO16", frequency=44100 } )')
 
-function Buffer:data(i, data)
-    if not data then
-        i, data = nil, i
+function Buffer:data(i, data, length)
+    if type(i) ~= 'number' then
+        i, data, length = nil, i, data
     end
     local format = Buffer.Audio.define["AL_FORMAT_" .. self.format]
     if format and data and self.number > 0 then
+        length = length or ffi.sizeof(data)
         Buffer.Audio.C.BufferData(
-            self.id[i or 0],
-            tonumber(format),
-            data,
-            ffi.sizeof(data),
-            self.frequency
+            self.id[i or 0], tonumber(format),
+            data, length, self.frequency
         )
     end
 end
