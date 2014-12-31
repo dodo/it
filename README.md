@@ -10,6 +10,7 @@ C Deps: (apt-get install *-dev)
     * liborc
     * libsdl2
     * libcairo
+    * libopenal
 
 Lua Deps: (luarocks install *)
     * linenoise
