@@ -58,15 +58,15 @@ return function () -- called when finally initialized
         end
         doc.rm()
         local result
-        if debugger then
+        if process.debugger then
             io.stdout:setvbuf("no") -- disable print buffering
             -- inject debugger loading code into script file …
             -- … to set entry point to the script
             -- but postbone debugging until running the actual loop
-            -- FIXME this breaks sheebangs
-            local chunk = "if process.debugger and not process.initialized then"
-                .. " require('mobdebug').start() require('mobdebug').off() "
-                .. " end; " .. fs.read(process.argv[1])
+            local chunk = fs.read(process.argv[1]) .. "\n"
+                .. " if process.debugger and not process.initialized then"
+                .. "     require('mobdebug').start() require('mobdebug').off()"
+                .. " end"
             local code = util.pcall(loadstring, chunk, process.argv[1])
             result = util.pcall(code)
         else
