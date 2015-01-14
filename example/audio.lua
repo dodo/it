@@ -2,7 +2,7 @@ local ffi = require 'ffi'
 local Audio = require 'audio'
 local clamp = require('util.misc').clamp
 
-function setup()
+function process.load()
 --if process.debugger then require('mobdebug').start() require('mobdebug').off() end
 
 math.randomseed(os.time())
@@ -40,9 +40,6 @@ sinusoidal(440)
     audio:push(buffer)
     audio:play()
 -- end
-
---process.debugger('start')
-if process.debugger then require('mobdebug').start() end
 end
 
 function sinusoidal(f)
@@ -65,18 +62,18 @@ function havefun(f)
     end
 end
 
-if not process.initialized then setup() end
+function process.setup()
+    print "start loop …"
+    freq = 400
+    generate_my_data = sinusoidal
+    --generate_my_data = cosinusoidal
+    --generate_my_data = havefun
+    n, val = n or 0
+    progress = progress or 0
+    time = os.clock()
+end
 
-print "start loop …"
-freq = 400
-generate_my_data = sinusoidal
---generate_my_data = cosinusoidal
---generate_my_data = havefun
-n, val = n or 0
-progress = progress or 0
-time = os.clock()
-
-function loop()
+function process.loop()
     val = audio:source('buffers processed')
     if val > 0 then
             audio:pop(buffer)
@@ -106,8 +103,4 @@ function loop()
     end
 --     process.sleep(1)
 --     collectgarbage()
-end
-
-return function (...)
-    loop(...)
 end
