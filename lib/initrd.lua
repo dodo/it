@@ -65,7 +65,7 @@ return function () -- called when finally initialized
             -- but postbone debugging until running the actual loop
             -- FIXME this breaks sheebangs
             local chunk = "if process.debugger and not process.initialized then"
-                .. "require('mobdebug').start() require('mobdebug').off() "
+                .. " require('mobdebug').start() require('mobdebug').off() "
                 .. " end; " .. fs.read(process.argv[1])
             local code = util.pcall(loadstring, chunk, process.argv[1])
             result = util.pcall(code)
