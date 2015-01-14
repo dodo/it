@@ -13,6 +13,7 @@ function Process:init()
     self.sleep = self:bind('sleep')
     self.exit  = self:bind('exit')
     self.cwd   = self:bind('cwd')
+    self.initialized = false
     self.shutdown = true
     -- stdio
     self.stdnon = nil
