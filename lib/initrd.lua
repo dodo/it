@@ -47,7 +47,7 @@ if haz(process.argv, "--mobdebug") then
     process.debugger = true
 end
 
-return function () -- called when finally initialized
+return function --[[boot]]() -- called when finally initialized
     if #process.argv == 0 then
         doc.init()
         require('cli').repl()
@@ -72,8 +72,21 @@ return function () -- called when finally initialized
         else
             result = util.pcall(dofile, process.argv[1])
         end
-        process.initialized = true
         -- TODO test if something happened
+        if type(process.load) == 'function' then
+            -- called only at the beginning of the process
+            process.load() -- run this only once!
+        end
+        process.initialized = true
+        if type(process.setup) == 'function' then
+            -- called at the beginning of the session
+            -- (could be called at a reload again)
+            process.setup() -- run this at the beginning
+        end
+        -- allow to set process.loop as global main loop
+        if type(result) ~= 'function' then
+            result = process.loop or result
+        end
         if type(result) ~= 'function' and process.shutdown then
             process.exit() -- normally
             return result

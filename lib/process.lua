@@ -15,6 +15,10 @@ function Process:init()
     self.cwd   = self:bind('cwd')
     self.initialized = false
     self.shutdown = true
+    -- reserve these for user callbacks
+    self.load  = nil
+    self.setup = nil
+    self.loop  = nil
     -- stdio
     self.stdnon = nil
     self.stdout = io.stdout
