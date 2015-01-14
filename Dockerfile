@@ -12,6 +12,9 @@ RUN pacman -S  --noconfirm \
 RUN luarocks-5.1 install luarepl \
  && luarocks-5.1 install linenoise
 
+# audio plugin
+RUN pacman -S --noconfirm openal
+
 USER dev
 ENV HOME /home/dev
 WORKDIR  /home/dev
