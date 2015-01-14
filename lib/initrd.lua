@@ -27,28 +27,7 @@ end
 
 
 if haz(process.argv, "-v") or haz(process.argv, "--version") then
-    local versions = _it.versions()
-    print(versions.it)
-    versions.it = nil
-    versions.cairo = require('lib.cairo').version()
-    versions.pixman = require('lib.pixman').version()
-    for lib,version in pairs(versions) do
-        if lib == 'lua' then
-            version = version .. " (running with " .. _VERSION .. ")"
-        end
-        print(" • " .. version)
-    end
-    for _,name in pairs({dofile(_it.libdir .. 'plugins.lua')}) do
-        if name and _it.plugin[name] then
-            local versions = _it.versions(_it.plugin[name].apifile)
-            print(string.format("[%s]", versions.name))
-            versions.name = nil
-            for lib,version in pairs(versions) do
-                print(" • " .. version)
-            end
-        end
-    end
-    print(require('util.table').format("running on {os} {arch}",require('jit')))
+    dofile(_it.libdir .. 'version.lua')
     return process.exit()
 end
 
