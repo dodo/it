@@ -28,17 +28,27 @@ local function pprint(text)
 end
 
 -- print library versions
+local format = require('util.table').format
 local versions = _it.versions()
 pprint(versions.it)
 versions.it = nil
+
+-- load lua versions
 versions.cairo = require('lib.cairo').version()
 versions.pixman = require('lib.pixman').version()
+if pcall(require, 'mobdebug') then
+    versions.mobdebug = format("{_NAME} {_VERSION}", require('mobdebug'))
+end
+
+-- print all versions
 for lib,version in pairs(versions) do
     if lib == 'lua' then
         version = version .. " (running with " .. _VERSION .. ")"
     end
     pprint(" • " .. version)
 end
+
+-- print all plugin versions
 for _,name in pairs({dofile(_it.libdir .. 'plugins.lua')}) do
     if name and _it.plugin[name] then
         local versions = _it.versions(_it.plugin[name].apifile)
@@ -49,7 +59,9 @@ for _,name in pairs({dofile(_it.libdir .. 'plugins.lua')}) do
         end
     end
 end
-pprint(require('util.table').format("running on {os} {arch}",require('jit')))
+
+-- print os info
+pprint(format("running on {os} {arch}",require('jit')))
 
 -- print whole logo
 while lines < #logo do
