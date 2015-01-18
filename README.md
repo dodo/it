@@ -3,23 +3,23 @@ muSchro0m it
 
 
 C Deps: (apt-get install *-dev)
-    * libuv
-    * luajit
-    * liboggz
-    * liborc
-    * libsdl2
-    * libcairo
-    - *optional*:
-    * libopenal
-    * libschrödinger (patched)
+ * libuv
+ * luajit
+ * liboggz
+ * liborc
+ * libsdl2
+ * libcairo
+ - *optional*:
+ * libopenal
+ * libschrödinger (patched)
 
 Lua Deps: (luarocks install *)
-    * linenoise
-    * lua-term
-    * luarepl
-    - *optional*:
-    * [mobdebug](https://github.com/pkulchenko/MobDebug)
-    * [torch7](/http://torch.ch)
+ * linenoise
+ * lua-term
+ * luarepl
+ - *optional*:
+ * [mobdebug](https://github.com/pkulchenko/MobDebug)
+ * [torch7](/http://torch.ch)
 
 
 ```bash
