@@ -1,12 +1,5 @@
 local debug = require 'debug'
 local ansi = require('console').color
--- lua base file
--- minimal default setup
--- plus bells and whistles
--- TODO: find a way to detect if Lua runs interactively or not
---   failed attempts:
---    - `arg` is always nil, `...` always empty (irregardless of `-i` or not)
---    - cannot use metatabled non-string `_PROMPT`
 
 -- function extra info {{{
 
