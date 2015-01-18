@@ -3,7 +3,6 @@ local Audio = require 'audio'
 local clamp = require('util.misc').clamp
 
 function process.load()
---if process.debugger then require('mobdebug').start() require('mobdebug').off() end
 
 math.randomseed(os.time())
 
@@ -12,22 +11,31 @@ process:on('exit', function (code)
 end)
 
 
-SPF = 3 -- milliseconds per frame
+SPF = 2 -- milliseconds per frame
 BUFFER_SIZE = 440*SPF
-NUM_BUFFERS = 5
+--NUM_BUFFERS = 5
 
 
-mydata = ffi.new("int16_t[?]", BUFFER_SIZE)
+mydata = {}
+for i = 1,1 do
+    mydata[i] = ffi.new("int16_t[?]", BUFFER_SIZE*i)
+end
+print('number of data:', #mydata)
 
 
 print "init audio"
 audio = Audio:new()
-buffer = Audio.Buffer:new()
+buffers = {}
+for i = 1,#mydata do
+    buffers[i] = Audio.Buffer:new()
+end
 -- print(require('util').dump(buffer))
 
 
 print "Generate sinusoidal test signal"
-sinusoidal(440)
+for i = 1,#mydata do
+    sinusoidal(i, 440)
+end
 
 
 -- do print "short test …"
@@ -37,37 +45,41 @@ sinusoidal(440)
 --     end
 --     buffer:data(mydata)
 --     audio:push(buf)
-    audio:push(buffer)
+    for i,data in ipairs(mydata) do
+--        buffers[i]:data(data)
+        audio:push(buffers[i])
+    end
     audio:play()
 -- end
+
 end
 
-function sinusoidal(f)
-    local m = 2*math.pi/buffer.frequency*f
-    for i=0 , BUFFER_SIZE-1 do
-        mydata[i] = clamp((2^15 - 1)*math.sin(m*i), -32768, 32767)
+function sinusoidal(n,f)
+    local m = 2*math.pi/buffers[n].frequency*f
+    for i=0 , BUFFER_SIZE*n-1 do
+        mydata[n][i] = clamp((2^15 - 1)*math.sin(m*i), -32768, 32767)
     end
 end
-function cosinusoidal(f)
-    local m = 2*math.pi/buffer.frequency*f
-    for i=0 , BUFFER_SIZE-1 do
-        mydata[i] = clamp((2^15 - 1)*math.cos(m*i), -32768, 32767)
+function cosinusoidal(n,f)
+    local m = 2*math.pi/buffers[n].frequency*f
+    for i=0 , BUFFER_SIZE*n-1 do
+        mydata[n][i] = clamp((2^15 - 1)*math.cos(m*i), -32768, 32767)
     end
 end
 
-function havefun(f)
-    local m = 2*math.pi/buffer.frequency*f
-    for i=0 , BUFFER_SIZE-1 do
-        mydata[i] = clamp((2^15 - 1)*math.tan(m*i), -32768, 32767)
+function havefun(n,f)
+    local m = 2*math.pi/buffers[n].frequency*f
+    for i=0 , BUFFER_SIZE*n-1 do
+        mydata[n][i] = clamp((2^15 - 1)*math.tan(m*i), -32768, 32767)
     end
 end
 
 function process.setup()
     print "start loop …"
-    freq = 400
+    freq = 440
     generate_my_data = sinusoidal
     --generate_my_data = cosinusoidal
-    --generate_my_data = havefun
+--    generate_my_data = havefun
     n, val = n or 0
     progress = progress or 0
     time = os.clock()
@@ -75,19 +87,22 @@ end
 
 function process.loop()
     val = audio:source('buffers processed')
+--    print('loop', val)
     if val > 0 then
-            audio:pop(buffer)
 
         --freq = freq * math.abs(math.sin(n)*2) + 0.5
 --         freq = freq * (math.random() + math.abs(math.sin(n)))
 --         print(freq)
 
-        generate_my_data(freq)
+            for i,data in ipairs(mydata) do
+                audio:pop(buffers[i])
+                generate_my_data(i,freq)
 --         for i=val , 1 , -1 do
-            buffer:data(mydata)
-            audio:push(buffer)
+                buffers[i]:data(data)
+                audio:push(buffers[i])
+                progress = progress + BUFFER_SIZE*i / buffers[i].frequency
+            end
 
-            progress = progress + BUFFER_SIZE / buffer.frequency
             io.write(string.format("  played %f seconds @time %f [%f]       \r",
                                    progress, os.clock() - time, freq))
             io.flush()
