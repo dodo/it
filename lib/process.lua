@@ -16,6 +16,7 @@ function Process:init()
     self.initialized = false
     self.shutdown = true
     -- reserve these for user callbacks
+    self.main  = nil -- c event loop callback
     self.load  = nil
     self.setup = nil
     self.loop  = nil

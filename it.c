@@ -22,7 +22,7 @@ static void init_cb(uv_idle_t* handle) {
 #endif
     lua_State* L = (lua_State*) handle->data;
     if (initialized) { // loop …
-        luaI_getglobalfield(L, "process", "loop");
+        luaI_getglobalfield(L, "process", "main");
         luaI_pcall(L, 0, 0, TRUE);
     } else { // finalize initialization …
         initialized = TRUE;
@@ -34,10 +34,13 @@ static void init_cb(uv_idle_t* handle) {
         luaI_pcall(L, 0, 1, TRUE);
         // if function was returned we declare it as loop
         if(lua_isfunction(L, -1)) {
-            luaI_setglobalfield(L, "process", "loop");
-        } else {
+            luaI_setglobalfield(L, "process", "main");
+        }
+        luaI_getglobalfield(L, "process", "main");
+        if (lua_isnil(L, -1)) {
             uv_idle_stop(handle);
         }
+        lua_pop(L, 1);
     }
 }
 
