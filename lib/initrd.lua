@@ -95,24 +95,20 @@ return function --[[boot]]() -- called when finally initialized
             end)
         end
         -- allow to set process.loop as global main loop
-        if type(result) ~= 'function' then
-            result = process.loop or result
-        end
-        if type(result) ~= 'function' and process.shutdown then
+        process.loop = process.loop or result
+        if type(process.loop) ~= 'function' and process.shutdown then
             process.exit() -- normally
             return result
         end
         process.shutdown = false
-        if type(result) == 'function' then
-            if process.debugger then
-                -- auto enable debugger just around the loop
-                return function (...)
-                    require('mobdebug').on()
-                    result(...) -- loop
-                    require('mobdebug').off()
-                end
+        if type(process.loop) == 'function' and process.debugger then
+            -- auto enable debugger just around the loop
+            return function (...)
+                require('mobdebug').on()
+                process.loop(...)
+                require('mobdebug').off()
             end
         end
-        return result
+        return process.loop
     end
 end
