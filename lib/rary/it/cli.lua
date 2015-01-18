@@ -27,7 +27,11 @@ function cli.repl()
         end
 
         function around:compilechunk(compile, chunk)
-            return compile(self, chunk:gsub('^%s*=', 'return '))
+            chunk = chunk:gsub('^%s*=', 'return ')
+            if not chunk:match('^%s*return') and not chunk:match('=') then
+                chunk = "return " .. chunk
+            end
+            return compile(self, chunk)
         end
 
         function after:shutdown()
