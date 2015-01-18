@@ -44,6 +44,7 @@ if haz(process.argv, "--mobdebug") then
     local color = require('console').color
     print(color.bold .. "[remote debug mode]" .. color.reset)
     table.remove(process.argv, haz(process.argv, "--mobdebug"))
+    require('mobdebug').scratch = process.reload
     process.debugger = true
 end
 
@@ -82,6 +83,11 @@ return function --[[boot]]() -- called when finally initialized
             -- called at the beginning of the session
             -- (could be called at a reload again)
             process.setup() -- run this at the beginning
+            -- and run this every time the process reloads (eg when debugger execs)
+            process:on('reload', function ()
+                -- setup might change between reloads
+                process.setup()
+            end)
         end
         -- allow to set process.loop as global main loop
         if type(result) ~= 'function' then
