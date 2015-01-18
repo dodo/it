@@ -18,7 +18,9 @@ Lua Deps: (luarocks install *)
     * lua-term
     * luarepl
     - *optional*:
-    * mobdebug
+    * [mobdebug](https://github.com/pkulchenko/MobDebug)
+    * [torch7](/http://torch.ch)
+
 
 ```bash
 cd it
