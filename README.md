@@ -5,21 +5,26 @@ muSchro0m it
 C Deps: (apt-get install *-dev)
     * libuv
     * luajit
-    * libschrödinger
     * liboggz
     * liborc
     * libsdl2
     * libcairo
+    - *optional*:
     * libopenal
+    * libschrödinger (patched)
 
 Lua Deps: (luarocks install *)
     * linenoise
     * lua-term
     * luarepl
+    - *optional*:
+    * mobdebug
 
 ```bash
 cd it
 docker build -t devit .
 docker run -v `pwd`:/home/dev -u dev -it devit bash
 make standalone
+# or with openal
+make audio standalone
 ```
