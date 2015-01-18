@@ -11,7 +11,7 @@
 
 
 #define IT_NAMES "muSchro0m it"
-#define IT_VERSIONS "alpha"
+#define IT_VERSIONS "beta"
 
 
 extern int it_refs(it_refcounts* ref);
