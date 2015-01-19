@@ -23,5 +23,10 @@ function exports.lerp(p, a, b)
 end
 doc.info(exports.lerp, 'util_misc.lerp', '( percentage, min, max )')
 
+function exports.round(val, decimal)
+  local exp = decimal and 10^decimal or 1
+  return math.ceil(val * exp - 0.5) / exp
+end
+doc.info(exports.round, 'util_misc.round', '( value, decimal=1 )')
 
 return exports
