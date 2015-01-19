@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local Audio = require 'audio'
 local clamp = require('util.misc').clamp
+local Fps = require 'util.fps'
 
 function process.load()
 
@@ -24,6 +25,7 @@ print('number of data:', #mydata)
 
 
 print "init audio"
+fps = Fps:new()
 audio = Audio:new()
 buffers = {}
 for i = 1,#mydata do
@@ -76,16 +78,33 @@ end
 
 function process.setup()
     print "start loop …"
-    freq = 440
+    freqs = {
+        53*40,
+     --   54*16,
+        47*158,--*math.random(),
+        197*90,
+        208*20,
+        85*48,
+        120*12,
+        134*25,
+        134*22,
+     --   134*36,
+        134*30,
+    --    134*43,
+        134*11,
+        134*5,
+    }
+--    freq = 581
     generate_my_data = sinusoidal
     --generate_my_data = cosinusoidal
 --    generate_my_data = havefun
-    n, val = n or 0
+    n, freqn, val = n or 0, freqn or 1
     progress = progress or 0
     time = os.clock()
 end
 
 function process.loop()
+    fps:update()
     val = audio:source('buffers processed')
 --    print('loop', val)
     if val > 0 then
@@ -93,7 +112,7 @@ function process.loop()
         --freq = freq * math.abs(math.sin(n)*2) + 0.5
 --         freq = freq * (math.random() + math.abs(math.sin(n)))
 --         print(freq)
-
+            local freq = freqs[freqn]
             for i,data in ipairs(mydata) do
                 audio:pop(buffers[i])
                 generate_my_data(i,freq)
@@ -102,9 +121,13 @@ function process.loop()
                 audio:push(buffers[i])
                 progress = progress + BUFFER_SIZE*i / buffers[i].frequency
             end
+        freqn = freqn + 1
+        if freqn > #freqs then
+            freqn = 1
+        end
 
-            io.write(string.format("  played %f seconds @time %f [%f]       \r",
-                                   progress, os.clock() - time, freq))
+            io.write(string.format("  [%f fps]  played %f seconds @time %f [%f]       \r",
+                                   fps.value, progress, os.clock() - time, freq))
             io.flush()
 --         end
         if audio:source('source state') ~= 0x1012--[[AL_PLAYING]] then -- FIXME
@@ -116,6 +139,7 @@ function process.loop()
     if n > math.pi * 2 then
         n = 0
     end
+--    process:sleep(100) -- should be ~10fps
 --     process.sleep(1)
 --     collectgarbage()
 end

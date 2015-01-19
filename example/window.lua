@@ -28,9 +28,14 @@ end
 
 
 window.scope:import(function ()
+        local fps = require('util.fps'):new()
+        fps:on('update', function ()
+            print(string.format('%f fps     \r', fps.value))
+        end)
 --     print("window" .. require('util').dump(window))
     local x = 0
     window:on('need render', function ()
+            fps:update()
 --         window.native:blit(window.native:surface())
         window:surface(function (cairo)
             local cr = cairo.context
