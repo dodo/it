@@ -1,37 +1,21 @@
-local ffi = require 'ffi'
+local cdef = require 'cdef'
 local Scope = require 'scope'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-ffi.cdef[[
-    typedef size_t uv_thread_t;
-    typedef size_t uv_idle_t;
-    typedef void (*uvI_thread_callback) (void *priv);
-]]
-
 
 local Thread = require(context and 'events' or 'prototype'):fork()
-Thread.type = Metatype:struct("it_threads", {
-    "int refc";
-    "it_states *ctx";
-    "uv_thread_t *thread";
-    "uv_idle_t *idle";
-    "uvI_thread_callback on_init";
-    "uvI_thread_callback on_idle";
-    "uvI_thread_callback on_free";
-    "bool closed";
-    "void *priv";
-})
+Thread.type = Metatype:struct("it_threads", cdef)
 
 Thread.type:load('libapi.so', {
-    ref = [[int it_refs(it_threads* ref)]];
-    unref = [[int it_unrefs(it_threads* ref)]];
-    init = [[void it_inits_thread(it_threads* thread, it_states* ctx)]];
-    safe = [[void it_safes_thread(it_threads* thread, bool safe)]];
-    create = [[void it_creates_thread(it_threads* thread)]];
-    close = [[void it_closes_thread(it_threads* thread)]];
-    __gc = [[void it_frees_thread(it_threads* thread)]];
-})
+    ref = 'it_refs',
+    unref = 'it_unrefs',
+    init = 'it_inits_thread',
+    safe = 'it_safes_thread',
+    create = 'it_creates_thread',
+    close = 'it_closes_thread',
+    __gc = 'it_frees_thread',
+}, cdef)
 
 
 function Thread:init(pointer)

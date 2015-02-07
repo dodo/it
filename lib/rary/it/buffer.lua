@@ -1,12 +1,13 @@
 local ffi = require 'ffi'
+local cdef = require 'cdef'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-ffi.cdef [[
-    void *malloc(size_t size);
-    void free(void *ptr);
-]]
+cdef({
+    functions = {'malloc', 'free'},
+    verbose = process.verbose,
+})
 
 local Buffer = Prototype:fork()
 Buffer.type = Metatype:typedef('void*')

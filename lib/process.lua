@@ -1,5 +1,6 @@
 local io = require 'io'
 local ffi = require 'ffi'
+local cdef = require 'cdef'
 local EventEmitter = require 'events'
 local Metatype = require 'metatype'
 
@@ -16,6 +17,10 @@ function Process:init()
     self.cwd   = self:bind('cwd')
     self.initialized = false
     self.shutdown = true
+    -- reserve these as command line flags
+    self.debugmode = nil
+    self.debugger = nil
+    self.verbose = nil
     -- reserve these for user callbacks
     self.main  = nil -- c event loop callback
     self.load  = nil

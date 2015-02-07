@@ -7,7 +7,7 @@
 #include "it-types.h"
 
 
-typedef struct {
+typedef struct _it_audios {
     int refc;
     ALCdevice *dev;
     ALCcontext *ctx;

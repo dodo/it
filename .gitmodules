@@ -1,0 +1,3 @@
+[submodule "vendor/cdefdb"]
+	path = vendor/cdefdb
+	url = https://github.com/dodo/lj-cdefdb.git

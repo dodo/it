@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
+local cdef = require 'cdef'
 local cface = require 'cface'
 local Scope = require 'scope'
 local Thread = require 'thread'
@@ -9,42 +10,27 @@ local doc = require 'util.doc'
 local debug_level
 local Frame = require 'encoder.frame'
 
-cface(_it.plugin.encoder.libdir .. "schrovideoformat.h")
-cface(_it.plugin.encoder.libdir .. "schroencoder.h")
-cface.typedef('struct _$', 'OGGZ')
+cdef({
+    typedefs = 'SchroEncoder*',
+    verbose  = process.verbose,
+})
 cface.metatype('SchroEncoder')
 cface.metatype('SchroEncoderFrame')
 cface.metatype('SchroVideoFormat')
 
 
 local Encoder = require(context and 'events' or 'prototype'):fork()
-Encoder.type = Metatype:struct("it_encodes", {
-    "it_threads *thread";
-    "it_states *hooks[SCHRO_ENCODER_FRAME_STAGE_LAST]";
-    "SchroEncoder *encoder";
-    "OGGZ *container";
-    "int64_t granulepos";
-    "int64_t packetno";
-    "bool eos_pulled";
-    "bool started";
-    "long serialno";
-    "int frames";
-    "int length";
-    "unsigned char *buffer";
-})
+Encoder.type = Metatype:struct("it_encodes", cdef)
 
 
 Encoder.type:api('Encoder',
     {'start', 'debug', 'getsettings', 'getformat', 'setformat'},
     _it.plugin.encoder.apifile)
 Encoder.type:load('libencoder.so', {
-    init = [[void it_inits_encoder(it_encodes* enc, it_threads* thread,
-                                   SchroVideoFormatEnum format)]];
-    hook = [[void it_hooks_stage_encoder(it_encodes* enc,
-                                         SchroEncoderFrameStateEnum stage,
-                                         it_states* ctx)]];
-    push = [[int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr)]];
-})
+    init = 'it_inits_encoder',
+    hook = 'it_hooks_stage_encoder',
+    push = 'it_pushes_frame_encoder',
+}, cdef)
 
 
 local SCHRO = {prefix="SCHRO_", enums={

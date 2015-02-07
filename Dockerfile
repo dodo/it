@@ -5,7 +5,7 @@ RUN useradd -m -g users -G wheel -s /bin/bash dev
 
 RUN pacman -Sy --noconfirm
 RUN pacman -S  --noconfirm \
-    tar pkg-config make gcc \
+    tar pkg-config make gcc clang \
     luajit libuv cairo sdl2 \
     luarocks5.1 libnoise
 

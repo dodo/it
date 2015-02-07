@@ -15,7 +15,7 @@
 #define FALSE 0
 
 
-typedef enum {
+typedef enum _luaI_types {
     LUAI_TYPE_NIL = 0,
     LUAI_TYPE_CDATA,
     LUAI_TYPE_NUMBER,
@@ -24,7 +24,7 @@ typedef enum {
     LUAI_TYPE_MAX
 } luaI_types;
 
-typedef struct {
+typedef struct _luaI_value {
     luaI_types type;
     union {
         void* cdata;
@@ -34,11 +34,11 @@ typedef struct {
     } v;
 } luaI_value;
 
-typedef struct {
+typedef struct _it_refcounts {
     int refc;
 } it_refcounts;
 
-typedef struct {
+typedef struct _it_states {
     int refc;
     lua_State *lua;
     uv_loop_t *loop;
@@ -48,7 +48,7 @@ typedef struct {
 } it_states;
 
 
-typedef struct {
+typedef struct _it_processes {
     it_states *ctx;
     uv_signal_t *sigint;
     int argc; char **argv;
@@ -58,7 +58,7 @@ typedef struct {
 
 typedef void (*uvI_thread_callback) (void *priv);
 
-typedef struct {
+typedef struct _it_threads {
     int refc;
     it_states *ctx;
     uv_thread_t *thread;
@@ -72,10 +72,10 @@ typedef struct {
 
 
 
-typedef struct it_queues it_queues;
+typedef struct _it_queues it_queues;
 typedef void (*uvI_async_callback) (void *priv, it_queues* queue);
 
-typedef struct {
+typedef struct _it_asyncs {
     int refc;
     it_threads *thread;
     uv_async_t *async;
@@ -86,7 +86,7 @@ typedef struct {
     void* priv;
 } it_asyncs;
 
-struct it_queues {
+struct _it_queues {
     it_queues *next;
     const char* key;
     luaI_value **values;

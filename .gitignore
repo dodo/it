@@ -1,2 +1,6 @@
 libapi.so
 lib/plugins.lua
+ccflags
+cdefdb.c
+cdefdb.so
+combined-cdefs.c

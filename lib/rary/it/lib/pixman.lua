@@ -1,4 +1,5 @@
- local ffi = require 'ffi'
+local ffi = require 'ffi'
+local cdef = require 'cdef'
 local util = require 'util'
 local cface = require 'cface'
 local Metatype = require 'metatype'
@@ -7,7 +8,12 @@ local doc = require 'util.doc'
 local exports = {}
 local pixman = exports
 
-cface(_it.libdir .. "pixman.h")
+cdef({
+    structs   = 'pixman_*',
+    typedefs  = 'pixman_*',
+    functions = 'pixman_*',
+    verbose   = process.verbose,
+})
 
 exports.LIB = 'pixman-1'
 exports.C = Metatype:fork():lib(pixman.LIB, 'pixman_'):new()

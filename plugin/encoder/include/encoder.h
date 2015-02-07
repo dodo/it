@@ -29,7 +29,11 @@ extern void schroI_encoder_start(void* priv);
 extern void schroI_encoder_free(void* priv);
 
 extern void it_inits_encoder(it_encodes* enc, it_threads* thread, SchroVideoFormatEnum format);
+
 extern int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr);
+extern void it_hooks_stage_encoder(it_encodes* enc,
+                                   SchroEncoderFrameStateEnum stage,
+                                   it_states* ctx);
 
 extern int it_starts_encoder_lua(lua_State* L);
 extern int it_debugs_encoder_lua(lua_State* L);

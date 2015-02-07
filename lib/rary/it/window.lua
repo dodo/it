@@ -1,46 +1,41 @@
-local ffi = require 'ffi'
 local util = require 'util'
+local cdef = require 'cdef'
 local cface = require 'cface'
 local Thread = require 'thread'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-cface(_it.libdir .. "sdlsurface.h")
-cface.typedef('struct _$', 'SDL_Window')
-cface.typedef('struct _$', 'SDL_Renderer')
+cdef({
+    structs   = 'SDL_*',
+    constants = 'SDL_*',
+--     typedefs  = 'SDL_*',
+    functions = 'SDL_*',
+    verbose   = process.verbose,
+})
 
 local Surface = {}
 Surface.type = Metatype:use('SDL2', 'SDL_', 'Surface', 'FreeSurface')
 
 
 local Window = require(context and 'events' or 'prototype'):fork()
-Window.type = Metatype:struct("it_windows", {
-    "int refc";
-    "it_threads *thread";
-    "SDL_Window *window";
-    "SDL_Renderer *renderer";
-    "int width";
-    "int height";
-})
+Window.type = Metatype:struct("it_windows", cdef)
+Window.Surface = Surface
 
 Window.type:load('libapi.so', {
-    ref = [[int it_refs(it_windows* ref)]];
-    unref = [[int it_unrefs(it_windows* ref)]];
-    init = [[void it_inits_window(it_windows* win, it_threads* thread)]];
-    create = [[void it_creates_window(it_windows* win, const char* title,
-                                      const int* x, const int* y,
-                                      int width, int height)]];
-    surface_from = [[SDL_Surface* it_surfaces_from_window(it_windows* win,
-                                      void* data)]];
-    surface = [[SDL_Surface* it_surfaces_window(it_windows* win, bool no_rle)]];
-    screen = [[SDL_Surface* it_screens_window(it_windows* win)]];
-    blit = [[void it_blits_window(it_windows* win, SDL_Surface* surface)]];
-    update = [[void it_updates_window(it_windows* win)]];
-    lock = [[void it_locks_window_surface(it_windows* win, SDL_Surface* surface)]];
-    unlock = [[void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface)]];
-    close = [[void it_closes_window(it_windows* win)]];
-    __gc = [[void it_frees_window(it_windows* win)]];
-})
+    ref = 'it_refs',
+    unref = 'it_unrefs',
+    init = 'it_inits_window',
+    create = 'it_creates_window',
+    surface_from = 'it_surfaces_from_window',
+    surface = 'it_surfaces_window',
+    screen = 'it_screens_window',
+    blit = 'it_blits_window',
+    update = 'it_updates_window',
+    lock = 'it_locks_window_surface',
+    unlock = 'it_unlocks_window_surface',
+    close = 'it_closes_window',
+    __gc = 'it_frees_window',
+}, cdef)
 
 
 function Window:init(pointer)

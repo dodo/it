@@ -26,10 +26,11 @@
 
 #endif
 
-typedef struct {
+typedef struct uvI_stacktrace_s uvI_stacktrace_t;
+struct uvI_stacktrace_s {
     int count;
     void *addrs[BACK_TRACE_SIZE];
-} uvI_stacktrace_t;
+};
 
 
 typedef struct uvI_thread_s uvI_thread_t;

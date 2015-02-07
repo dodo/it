@@ -7,7 +7,7 @@
 #include <SDL.h>
 
 
-typedef struct {
+typedef struct _it_windows {
     int refc;
     it_threads *thread;
     SDL_Window *window;

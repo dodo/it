@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local cdef = require 'cdef'
 local util = require 'util'
 local cface = require 'cface'
 local Metatype = require 'metatype'
@@ -7,7 +8,12 @@ local doc = require 'util.doc'
 local exports = {}
 local cairo = exports
 
-cface(_it.libdir .. "cairo.h")
+cdef({
+    structs   = 'cairo_*',
+    typedefs  = 'cairo_*',
+    functions = 'cairo_*',
+    verbose   = process.verbose,
+})
 
 exports.LIB = 'cairo'
 exports.C = Metatype:fork():lib(cairo.LIB, 'cairo_'):new()

@@ -3,6 +3,8 @@ muSchro0m it
 
 
 C Deps: (apt-get install *-dev)
+ * clang (no dev needed)
+ * libclang
  * libuv
  * luajit
  * liboggz
@@ -23,6 +25,7 @@ Lua Deps: (luarocks install *)
 
 
 ```bash
+git clone --recursive https://github.com/dodo/it
 cd it
 docker build -t devit .
 docker run -v `pwd`:/home/dev -u dev -it devit bash

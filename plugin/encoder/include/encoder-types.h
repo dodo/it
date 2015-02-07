@@ -8,7 +8,7 @@
 #include "it-types.h"
 
 
-typedef struct {
+typedef struct _it_encodes {
     it_threads *thread;
     it_states *hooks[SCHRO_ENCODER_FRAME_STAGE_LAST];
     SchroEncoder *encoder;
@@ -23,7 +23,7 @@ typedef struct {
     unsigned char *buffer;
 } it_encodes;
 
-typedef struct {
+typedef struct _it_frames {
     int refc;
     SchroFrame *frame;
     int size;

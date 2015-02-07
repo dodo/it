@@ -13,10 +13,18 @@ IT_SRC_API = src/api.c \
 
 
 IT_DEPENDS = \
-	$(shell pkg-config --cflags --libs libuv) \
-	$(shell pkg-config --cflags --libs luajit) \
-	$(shell pkg-config --cflags --libs sdl2)
+	$(shell pkg-config --cflags libuv) \
+	$(shell pkg-config --cflags luajit) \
+	$(shell pkg-config --cflags sdl2)
 
+IT_LINKS = \
+	$(shell pkg-config --libs libuv) \
+	$(shell pkg-config --libs luajit) \
+	$(shell pkg-config --libs sdl2)
+
+IT_LAZY_LIBS = \
+	$(shell pkg-config --cflags cairo) \
+	$(shell pkg-config --cflags pixman-1)
 
 IT_INCLUDES = -I./include
 IT_WARNS = -Wall
@@ -39,22 +47,31 @@ plugins: audio encoder
 api: libapi.so
 	echo -n "return nil" > lib/plugins.lua
 	echo -n '$$ORIGIN' >  $(IT_RPATHS)
+	echo -n '$(IT_INCLUDES) $(IT_DEPENDS) $(IT_LAZY_LIBS)' > ccflags
+	cat lib/cdefs.c > combined-cdefs.c
 
 audio: api lib/plugins.lua
 	make -C plugin/audio \
 		&& echo -n ",'audio'" >> lib/plugins.lua \
-		&& echo -n ':$$ORIGIN/plugin/audio' >> $(IT_RPATHS)
+		&& echo -n ':$$ORIGIN/plugin/audio' >> $(IT_RPATHS) \
+		&& cat plugin/audio/lib/cdefs.c >> combined-cdefs.c \
+		&& cat plugin/audio/ccflags >> ccflags
 
 encoder: api lib/plugins.lua
 	make -C plugin/encoder \
 		&& echo -n ",'encoder'" >> lib/plugins.lua \
-		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS)
+		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS) \
+		&& cat plugin/encoder/lib/cdefs.c >> combined-cdefs.c \
+		&& cat plugin/encoder/ccflags >> ccflags
+
+cdefdb.so: $(IT_SRC_API) combined-cdefs.c
+	./vendor/cdefdb/gen-cdefdb combined-cdefs.c $(shell cat ccflags)
 
 libapi.so:  $(IT_SRC_API)
 	gcc $(IT_WARNS) -shared -o $@ -fPIC $(IT_SRC_API) \
-		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) \
+		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_LINKS)
 
-it: api $(IT_SRC_BIN)
+it: api cdefdb.so $(IT_SRC_BIN)
 	gcc $(IT_WARNS) -o $@ $(IT_SRC_BIN) $(IT_INCLUDES) $(DEBUG) \
 		-L. -lapi \
 		$(shell pkg-config --cflags --libs libuv) \
@@ -63,7 +80,8 @@ it: api $(IT_SRC_BIN)
 
 
 clean:
-	rm -f .rpath libapi.so lib/plugins.lua it
+	rm -f .rpath combined-cdefs.c cdefdb.c cdefdb.so libapi.so ccflags lib/plugins.lua it
 	make -C plugin/encoder clean
+	make -C plugin/audio clean
 
 .PHONY: all

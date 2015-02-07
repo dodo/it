@@ -1,33 +1,23 @@
 local ffi = require 'ffi'
-local cface = require 'cface'
+local cdef = require 'cdef'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-cface.decl("typedef size_t lua_State;")
-cface.decl("typedef size_t uv_loop_t;")
-
 
 local Scope = Prototype:fork()
-Scope.type = Metatype:struct("it_states", {
-    "int refc";
-    "lua_State *lua";
-    "uv_loop_t *loop";
-    "const char *err";
-    "bool safe";
-    "bool free";
-})
+Scope.type = Metatype:struct("it_states", cdef)
 
 Scope.type:api("Scope", {'import', 'define'})
 Scope.type:load('libapi.so', {
-    ref = [[int it_refs(it_states* ref)]];
-    unref = [[int it_unrefs(it_states* ref)]];
-    collectgarbage = [[void it_collectsgarbage_scope(it_states* ctx)]];
-    defcdata = [[void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata)]];
-    init = [[void it_inits_scope(it_states* ctx, it_processes* process, it_states* state)]];
-    call = [[void it_calls_scope(it_states* ctx)]];
-    __gc = [[void it_frees_scope(it_states* ctx)]];
-})
+    ref = 'it_refs',
+    unref = 'it_unrefs',
+    collectgarbage = 'it_collectsgarbage_scope',
+    defcdata = 'it_defines_cdata_scope',
+    init = 'it_inits_scope',
+    call = 'it_calls_scope',
+    __gc = 'it_frees_scope',
+}, cdef)
 
 
 function Scope:init(pointer)

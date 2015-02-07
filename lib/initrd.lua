@@ -11,6 +11,9 @@ function Process:usage()
 Usage: it [options] scripts.lua [arguments]
 
 Options:
+  --debug           enable debug mode (jit.v,jit.dump)
+  --mobdebug        enable remote debug mod (mobdebug)
+  --verbose         increase verbosity
   -v --version      print versions
   -h --help         magic flag
 ]] end
@@ -29,6 +32,11 @@ end
 if haz(process.argv, "-v") or haz(process.argv, "--version") then
     dofile(_it.libdir .. 'version.lua')
     return process.exit()
+end
+
+if haz(process.argv, "--verbose") then
+    table.remove(process.argv, haz(process.argv, "--verbose"))
+    process.verbose = true
 end
 
 if haz(process.argv, "--debug") then

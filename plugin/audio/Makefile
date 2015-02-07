@@ -1,11 +1,17 @@
 
 IT_DIR = ../..
 
-# FIXME
+IT_SRC_API = src/api.c \
+	src/audio.c
+
 IT_DEPENDS = \
+	$(shell pkg-config --cflags luajit) \
+	$(shell pkg-config --cflags openal)
+
+IT_LINKS = \
 	-L$(IT_DIR) -lapi \
-	$(shell pkg-config --cflags --libs luajit) \
-	$(shell pkg-config --cflags --libs openal)
+	$(shell pkg-config --libs luajit) \
+	$(shell pkg-config --libs openal)
 
 IT_FLAGS = \
 	-D PKG_OPENAL_VERSION='"$(shell pkg-config --modversion openal)"'
@@ -18,14 +24,16 @@ IT_WARNS = -Wall
 DEBUG = -O2
 
 
-all: libaudio.so
+all: libaudio.so ccflags
 
-libaudio.so: src/api.c \
-	src/audio.c
+ccflags:
+	echo -n ' -I./plugin/audio/include $(IT_DEPENDS)' > ccflags
+
+libaudio.so: $(IT_SRC_API)
 	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ \
-		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_FLAGS)
+		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_LINKS) $(IT_FLAGS)
 
 clean:
-	rm -f libaudio.so
+	rm -f ccflags libaudio.so
 
 .PHONY: all

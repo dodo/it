@@ -23,8 +23,14 @@ function Metatype:fork(proto)
 end
 doc.info(Metatype.fork, 'Metatype:fork', '( proto={} )')
 
-function Metatype:typedef(ct, name)
-    if name then ct = cface.typedef(ct, name) end
+function Metatype:typedef(ct, name, db)
+    if name then
+        if db then
+            db({ typedefs = name, verbose = process.verbose })
+        else
+            ct = cface.typedef(ct, name)
+        end
+    end
     local type = self:fork()
     type.name = name or ct
     if ct:match('^%s*void%s*%*%s*$') then
@@ -32,15 +38,25 @@ function Metatype:typedef(ct, name)
     end
     return type
 end
-doc.info(Metatype.typedef, 'Metatype:typedef', '( ct, name=ct )')
+doc.info(Metatype.typedef, 'Metatype:typedef', '( ct, name=ct[, db] )')
 
 function Metatype:struct(name, fields)
-    local type = self:fork()
-    type.name = name
-    cface.struct(name, fields)
-    return type
+    local struct = self:fork()
+    struct.name = name
+    if type(fields) == 'function' or getmetatable(fields).__call then --is it callable?
+        local db = fields
+        fields = nil
+        db({
+            typedefs = name,
+            structs = '_' .. name,
+            verbose = process.verbose
+        })
+    else
+        cface.struct(name, fields)
+    end
+    return struct
 end
-doc.info(Metatype.struct, 'Metatype:struct', '( name, fields )')
+doc.info(Metatype.struct, 'Metatype:struct', '( name, fields|db )')
 
 function Metatype:use(clib, prefix, ct, gcname)
     local type = self:fork()
@@ -138,13 +154,25 @@ function Metatype:ispointer(native, pointer)
 end
 doc.info(Metatype.ispointer, 'type:ispointer', '( native, pointer )')
 
-function Metatype:load(clib, cfunctions)
+function Metatype:load(clib, cfunctions, db)
     local cname, cargs
     clib = cface.register(clib)
     for name, cdecl in pairs(cfunctions or {}) do
-        cface.declaration(cdecl .. ";")
-        cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
-        cargs = cdecl:gsub("^[^%(]*(.*)$", "%1")
+        if db then
+            cname = cdecl
+            db({ functions = cname, verbose = process.verbose })
+            local next = db({ functions = cname, find = true })
+            local statement = next() -- hopefully the first one is the right one
+            if statement then
+                cargs = statement.extent:gsub("^[^%(]*(.*)$", "%1")
+            else
+                cargs = "(...)" -- unknown
+            end
+        else
+            cface.declaration(cdecl .. ";")
+            cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
+            cargs = cdecl:gsub("^[^%(]*(.*)$", "%1")
+        end
         self.prototype[name] = clib[cname]
         doc.info(clib[cname], cname, cargs)
         if name:match('^__') then
@@ -153,7 +181,7 @@ function Metatype:load(clib, cfunctions)
     end
     return self
 end
-doc.info(Metatype.load, 'type:load', '( clib|clibname, cfunctions )')
+doc.info(Metatype.load, 'type:load', '( clib|clibname, cfunctions[, db] )')
 
 function Metatype:lib(clib, prefix, gcname)
     local that = self

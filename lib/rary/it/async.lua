@@ -1,38 +1,22 @@
-local ffi = require 'ffi'
+local cdef = require 'cdef'
 local Thread = require 'thread'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-ffi.cdef[[
-    typedef size_t it_queues;
-    typedef size_t uv_async_t;
-    typedef size_t uv_mutex_t;
-    typedef void (*uvI_async_callback) (void *priv, it_queues* queue);
-]]
-
 
 local Async = require('events'):fork()
-Async.type = Metatype:struct("it_asyncs", {
-    "int refc";
-    "it_threads *thread";
-    "uv_async_t *async";
-    "uv_mutex_t *mutex";
-    "it_queues  *queue";
-    "it_queues  *last";
-    "uvI_async_callback on_sync";
-    "void* priv";
-})
+Async.type = Metatype:struct("it_asyncs", cdef)
 
 Async.type:api("Async", {'push'})
 Async.type:load('libapi.so', {
-    ref = [[int it_refs(it_asyncs* ref)]];
-    unref = [[int it_unrefs(it_asyncs* ref)]];
-    init = [[void it_inits_async(it_asyncs* async)]];
-    newqueue = [[it_queues* it_queues_async(it_asyncs* async)]];
-    pushcdata = [[void it_pushes_cdata_async(it_queues* queue, void* cdata)]];
-    send = [[void it_sends_async(it_asyncs* async, const char* key, it_queues* queue)]];
-    __gc = [[void it_frees_async(it_asyncs* async)]];
-})
+    ref = 'it_refs',
+    unref = 'it_unrefs',
+    init = 'it_inits_async',
+    newqueue = 'it_queues_async',
+    pushcdata = 'it_pushes_cdata_async',
+    send = 'it_sends_async',
+    __gc = 'it_frees_async',
+}, cdef)
 
 
 function Async:init(thread, pointer)

@@ -1,4 +1,5 @@
 local ffi = require 'ffi'
+local cdef = require 'cdef'
 local cface = require 'cface'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
@@ -6,27 +7,28 @@ local doc = require 'util.doc'
 
 local Audio = require('events'):fork()
 
-do local header, define
-    _, header, define = cface(_it.plugin.audio.libdir .. "openal.h")
-    Audio.define = define
+
+cdef({
+    constants = 'AL*',
+    typedefs  = 'AL*',
+    functions = 'al*',
+    verbose   = process.verbose,
+})
+
+Audio.define = {}
+for stmt in cdef({ find=true, constants='AL*' }) do
+    if stmt.kind == 'MacroDefinition' then
+        Audio.define[stmt.name] = tonumber(stmt.extent)
+    end
 end
 
 
-Audio.type = Metatype:struct("it_audios", {
-    "int refc";
-    "ALCdevice *device";
-    "ALCcontext *context";
-    "ALuint *sources";
-    "int nsource";
-})
+Audio.type = Metatype:struct("it_audios", cdef)
 
 Audio.type:load('libaudio.so', {
-    init = [[void it_inits_audio(it_audios* audio,
-                                 const ALCchar *devicename,
-                                 const ALCint* attrlist,
-                                 int nsource)]];
-    __gc = [[void it_frees_audio(it_audios* audio)]];
-})
+    init = 'it_inits_audio',
+    __gc = 'it_frees_audio',
+}, cdef)
 
 
 Audio.LIB = 'libopenal'
@@ -68,7 +70,7 @@ function Audio:source(i, state)
         local value = ffi.new("ALint[?]", 1)
         local src = self.native.sources[i or 0]
         state = string.upper(state):gsub('%s', '_')
-        state = tonumber(Audio.define["AL_" .. state])
+        state = Audio.define["AL_" .. state]
         Audio.C.GetSourcei(src, state, value)
         return value[0]
     end
