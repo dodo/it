@@ -26,7 +26,7 @@ end
 --create api loader
 local function api_loader(name)
     local path, err = package.searchpath(name, package.apipath)
-    if not path then return err end
+    if not path then return string.format('%s\n', err or '') end
     return loadfile(path)
 end
 
