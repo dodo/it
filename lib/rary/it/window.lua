@@ -72,7 +72,7 @@ function Window:open(title, width, height, x, y)
 end
 doc.info(Window.open,
         'window:open',
-        '( titpe, width=200, height=200[, x[, y]] )')
+        '( title, width=200, height=200[, x[, y]] )')
 
 function Window:write_to_png(filename, surface)
     -- init cairo
