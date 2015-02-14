@@ -48,8 +48,18 @@ function cli.repl()
             require('util.funcinfo').print(...)
         end
     end
+    doc.info(help, 'help', '( tables... )')
+    -- expose pretty_print
+    pprint = function (...)
+        local results = {...}
+        results.n = #results
+        repl:displayresults(results)
+    end
+    doc.info(pprint, 'pprint', '( ... )')
     -- globals
     ffi = require 'ffi'
+    cdef = require 'cdef'
+    dump = require('util').dump
     -- finally start it …
     process.shutdown = false
     repl:run()
