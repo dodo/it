@@ -1,6 +1,5 @@
 local io = require 'io'
 local ffi = require 'ffi'
-local cdef = require 'cdef'
 local EventEmitter = require 'events'
 local Metatype = require 'metatype'
 
