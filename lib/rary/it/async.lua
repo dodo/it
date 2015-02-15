@@ -41,7 +41,6 @@ doc.info(Async.init, 'async:init', '( thread|nil[, pointer] )')
 function Async:send(event, ...)
     local queue = self.native:newqueue()
     for _, value in ipairs({...}) do
-        -- TODO copy functions
         if type(value) == "cdata" then
             self.native.pushcdata(queue, value)
         else

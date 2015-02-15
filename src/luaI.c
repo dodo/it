@@ -30,7 +30,7 @@ static int buf_writer(lua_State* L, const void* b, size_t n, void* B) {
   return 0;
 }
 int luaI_copyfunction(lua_State* L, lua_State* src) {
-    char const* name = NULL;
+    char const* name = NULL; // TODO
     size_t sz;
     luaL_Buffer b;
     luaL_buffinit(src, &b);
@@ -45,6 +45,44 @@ int luaI_copyfunction(lua_State* L, lua_State* src) {
     luaJIT_setmode(L, -1, LUAJIT_MODE_FUNC | LUAJIT_MODE_OFF);
     lua_pop(src, 2); // dumped string + function
     return 0;
+}
+
+luaI_function* luaI_tofunction(lua_State* L, int index) {
+    luaI_function* func = (luaI_function*) calloc(1, sizeof(luaI_function));
+    if (!func) return NULL;
+    int stack = 0;
+    if (index != -1) {
+        lua_pushvalue(L, index);
+        stack++;
+    }
+    { // start dumping function …
+        size_t sz;
+        luaL_Buffer b;
+        luaL_buffinit(L, &b);
+        if (lua_dump(L, buf_writer, &b)) {
+            luaL_error(L, "internal error: function dump failed");
+            free(func);
+            return NULL;
+        }
+        luaL_pushresult(&b);
+        func->name = NULL; // TODO
+        func->dump = lua_tolstring(L, -1, &sz);
+        func->size = sz;
+    }
+    lua_pop(L, stack); // dumped string + maybe function
+    return func;
+}
+
+int luaI_pushfunction(lua_State* L, luaI_function* func) {
+    if (!func) return 0;
+    if (luaL_loadbuffer(L, func->dump, func->size, func->name)) {
+        return lua_error(L);
+    }
+    // disable JIT for this function because it's allready bytecode
+    luaJIT_setmode(L, -1, LUAJIT_MODE_FUNC | LUAJIT_MODE_OFF);
+    // hopefully i remember to set all references to NULL after this call
+    free(func);
+    return 1;
 }
 
 int luaI_dofile(lua_State* L, const char *filename) {
@@ -153,6 +191,10 @@ luaI_value* luaI_getvalue(lua_State* L, int i) {
             value->type = LUAI_TYPE_CDATA;
             value->v.cdata = lua_touserdata(L, i);
             break;
+        case LUA_TFUNCTION:
+            value->type = LUAI_TYPE_FUNCTION;
+            value->v.function = luaI_tofunction(L, i);
+            break;
         case LUA_TNIL:
         default:
             value->type = LUAI_TYPE_NIL;
@@ -176,6 +218,9 @@ void luaI_pushvalue(lua_State* L, luaI_value* value) {
         case LUAI_TYPE_CDATA:
             lua_pushlightuserdata(L, value->v.cdata);
             break;
+        case LUA_TFUNCTION:
+            luaI_pushfunction(L, value->v.function);
+            value->v.function = NULL;
         case LUAI_TYPE_NIL:
         default:
             lua_pushnil(L);
