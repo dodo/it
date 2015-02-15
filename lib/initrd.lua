@@ -7,16 +7,24 @@ local doc = require 'util.doc'
 
 
 function Process:usage()
-    return [[
+    local usage = [[
 Usage: it [options] scripts.lua [arguments]
 
 Options:
   --debug           enable debug mode (jit.v,jit.dump)
+]]
+    if pcall(require, 'mobdebug') then
+        usage = usage .. [[
   --mobdebug        enable remote debug mod (mobdebug)
+]]
+    end
+    usage = usage .. [[
   --verbose         increase verbosity
   -v --version      print versions
   -h --help         magic flag
-]] end
+]]
+    return usage
+end
 
 process = Process:new()
 doc.info(Process.usage, 'process.usage', '( )')
@@ -49,16 +57,18 @@ if haz(process.argv, "--debug") then
 end
 
 if haz(process.argv, "--mobdebug") then
-    local color = require('console').color
-    print(color.bold .. "[remote debug mode]" .. color.reset)
     table.remove(process.argv, haz(process.argv, "--mobdebug"))
-    require('mobdebug').scratch = process.reload
-    process.debugger = true
-    -- turn jit off based on Mike Pall's comment in this discussion:
-    -- http://www.freelists.org/post/luajit/Debug-hooks-and-JIT,2
-    -- "You need to turn it off at the start if you plan to receive
-    -- reliable hook calls at any later point in time."
-    jit.off()
+    if pcall(require, 'mobdebug') then
+        local color = require('console').color
+        print(color.bold .. "[remote debug mode]" .. color.reset)
+        require('mobdebug').scratch = process.reload
+        process.debugger = true
+        -- turn jit off based on Mike Pall's comment in this discussion:
+        -- http://www.freelists.org/post/luajit/Debug-hooks-and-JIT,2
+        -- "You need to turn it off at the start if you plan to receive
+        -- reliable hook calls at any later point in time."
+        jit.off()
+    end
 end
 
 return function --[[boot]]() -- called when finally initialized
