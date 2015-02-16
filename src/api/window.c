@@ -147,10 +147,11 @@ void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface) {
 }
 
 void it_closes_window(it_windows* win) {
-    luaI_globalemit(win->thread->ctx->lua, "window", "close");
-    luaI_pcall_in(win->thread->ctx, 2, 0);
-    win->thread->on_free = NULL;
-//     sdlI_ref(1); // prevent SDL_Quit
+    if (win->thread->on_free) {
+        win->thread->on_free = NULL;
+        luaI_globalemit(win->thread->ctx->lua, "window", "close");
+        luaI_pcall_in(win->thread->ctx, 2, 0);
+    }
     it_frees_window(win);
     it_closes_thread(win->thread);
 }
