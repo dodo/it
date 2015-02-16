@@ -15,7 +15,9 @@ local function update(interface, values, opts)
             if opts.enums and opts.enums[key] then
                 value = (opts.prefix            or "") ..
                         (opts.enums[key].prefix or "") ..
-                        value
+                        value ..
+                        (opts.enums[key].suffix or "") ..
+                        (opts.suffix            or "")
                 value = ffi.new(opts.enums[key].typ, value)
             end
         end
@@ -27,9 +29,9 @@ end
 exports.update = update
 doc.info(update, 'util_ffi.update', '( interface, values, opts )')
 
-function exports.convert_enum(key, value, typ, prefix)
+function exports.convert_enum(key, value, typ, prefix, suffix)
     return update({}, {[key]=value}, {
-        enums={[key]={typ=typ, prefix=prefix}}
+        enums={[key]={typ=typ, prefix=prefix, suffix=suffix}}
     })[key]
 end
 doc.info(exports.convert_enum,
