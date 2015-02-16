@@ -102,7 +102,9 @@ void it_safes_thread(it_threads* thread, bool safe) {
 
 void it_closes_thread(it_threads* thread) {
     if (thread->idle) {
-        uv_close((uv_handle_t*) thread->idle, NULL);
+        uv_idle_t* idle = thread->idle;
+        thread->idle = NULL;
+        uv_close((uv_handle_t*) idle, NULL);
     }
     if (thread->ctx && thread->ctx->loop) {
         uv_stop(thread->ctx->loop);
