@@ -42,6 +42,7 @@ function Scope:import(lua_function)
     self.state:import(lua_function)
     if self.state.err == nil then return end
     error(ffi.string(self.state.err))
+    return self
 end
 doc.info(Scope.import, 'scope:import', '( lua_function )')
 
@@ -54,12 +55,14 @@ function Scope:define(name, data, import)
     if import then
         self:import(import)
     end
+    return self
 end
 doc.info(Scope.define, 'scope:define', '( name, data[, import] )')
 
 function Scope:safe(safe)
     if safe == nil then safe = true end
     self.state.safe = not not safe
+    return self
 end
 doc.info(Scope.safe, 'scope:safe', '( nil=true|true|false )')
 
@@ -67,6 +70,7 @@ function Scope:run()
     self.state:call()
     if self.state.err == nil then return end
     error(ffi.string(self.state.err))
+    return self
 end
 doc.info(Scope.run, 'scope:run', '(  )')
 
