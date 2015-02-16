@@ -6,6 +6,8 @@
 #include "api/thread.h"
 #include "api/scope.h"
 
+#include <poll.h>
+
 
 void default_thread_idle(void* priv) {
     it_threads* thread = (it_threads*) priv;
@@ -15,8 +17,13 @@ void default_thread_idle(void* priv) {
     }
     lua_getglobal(thread->ctx->lua, "context");
     luaI_localemit(thread->ctx->lua, "thread", "idle");
-    luaI_pcall_in(thread->ctx, 2, 0);
+    luaI_pcall_in(thread->ctx, 2, 1);
 //     it_collectsgarbage_scope(thread->ctx);
+    if (!lua_toboolean(thread->ctx->lua, -1)) {
+        // no 'need render' event listener, so we wait here
+        poll(NULL, 0, 2); // ms
+    }
+    lua_pop(thread->ctx->lua, 1); // emit return value
 }
 
 #if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
