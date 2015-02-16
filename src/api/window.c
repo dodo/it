@@ -40,9 +40,13 @@ void sdlI_idle(void* priv) {
     }
     // call lua …
     luaI_globalemit(win->thread->ctx->lua, "window", "need render");
-    luaI_pcall_in(win->thread->ctx, 2, 0);
+    luaI_pcall_in(win->thread->ctx, 2, 1);
 //     it_collectsgarbage_scope(win->thread->ctx);
-//     SDL_Delay(2); // FIXME
+    if (!lua_toboolean(win->thread->ctx->lua, -1)) {
+        // no 'need render' event listener, so we wait here
+        SDL_Delay(2); // ms
+    }
+    lua_pop(win->thread->ctx->lua, 1); // emit return value
 }
 
 void it_inits_window(it_windows* win, it_threads* thread) {
