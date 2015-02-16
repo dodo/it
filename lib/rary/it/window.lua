@@ -69,6 +69,7 @@ function Window:open(title, width, height, x, y)
     self.width = tonumber(self.native.width)
     self.raw = self.native.window
     self.thread:start()
+    return self
 end
 doc.info(Window.open,
         'window:open',
@@ -83,6 +84,7 @@ function Window:write_to_png(filename, surface)
         self.width, self.height, self.width * 4
     ).object:write_to_png(filename)
     self.native:unlock(screen)
+    return self
 end
 doc.info(Window.write_to_png,
         'window:write_to_png',
@@ -91,6 +93,7 @@ doc.info(Window.write_to_png,
 function Window:render(userdata)
     -- userdata should be in native endian
     self.native:blit(self.native:surface_from(userdata))
+    return self
 end
 doc.info(Window.render, 'window:render', '( userdata )')
 
@@ -109,6 +112,7 @@ function Window:surface(draw)
     if draw(self._surface.cairo) ~= false then
         self.native:blit(self._surface.sdl)
     end
+    return self
 end
 doc.info(Window.surface, 'window:surface', '( draw_function )')
 
