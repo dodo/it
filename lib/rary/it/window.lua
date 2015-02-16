@@ -56,6 +56,10 @@ function Window:init(pointer)
     self.native = self.type:create(nil, self.thread.reference)
     self.scope:define('_it_windows_', self.native, function ()
         window = require('window'):new(_D._it_windows_)
+        window:on('sdl event', function (event)
+            -- TODO make sdl event moar prettier here
+            window:emit('event', event)
+        end)
     end)
 end
 doc.info(Window.init, 'window:init', '( [pointer] )')

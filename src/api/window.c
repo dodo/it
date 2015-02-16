@@ -28,13 +28,11 @@ void sdlI_idle(void* priv) {
     if (win->thread->ctx->err) return;
     while (!win->thread->closed && SDL_PollEvent(&event)) {
         if (win->thread->ctx->err) return;
-
-        switch (event.type) {
-
-            default:
-                break;
-        }
         if (event.type == SDL_QUIT) break;
+        // call lua …
+        luaI_globalemit(win->thread->ctx->lua, "window", "sdl event");
+        lua_pushlightuserdata(win->thread->ctx->lua, &event);
+        luaI_pcall_in(win->thread->ctx, 3, 0);
     }
     if (event.type == SDL_QUIT || win->thread->closed) {
         it_closes_window(win);
