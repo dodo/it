@@ -1,3 +1,4 @@
+local _ffi = require 'util._ffi'
 local util = require 'util'
 local cdef = require 'cdef'
 local cface = require 'cface'
@@ -33,6 +34,7 @@ Window.type:load('libapi.so', {
     update = 'it_updates_window',
     lock = 'it_locks_window_surface',
     unlock = 'it_unlocks_window_surface',
+    push = 'it_pushes_event_window',
     close = 'it_closes_window',
     __gc = 'it_frees_window',
 }, cdef)
@@ -134,10 +136,38 @@ function Window:pixels(draw, surface)
             self.native:update()
         end
     end
+    return self
 end
 doc.info(Window.pixels,
         'window:pixels',
         '( draw_function[, surface=window.native:screen()] )')
+
+local SDLEVENTTYPES = cdef({find=true, unions='SDL_Event'})().extent
+function Window:push(name, data)
+    local event_type = SDLEVENTTYPES:match('([%w_]+)%s+' .. name .. ';')
+    if not event_type then error("event type not found for name " .. name) end
+    local extent = cdef({find=true, structs=event_type})().extent
+    local event_data = {}
+    for _, tname in extent:gmatch('([%w_]+)%s+([%w_]+);') do
+        if tname == 'timestamp' then
+            table.insert(event_data, 0)
+        else
+            if not data[tname] then
+                error(tname .. " is missing from provided data!")
+            end
+            if tname == 'type' then
+                table.insert(event_data, _ffi.convert_enum('event',
+                    data[tname], 'SDL_EventType', 'SDL_'))
+            else
+                table.insert(event_data, data[tname])
+            end
+        end
+    end
+    local event = ffi.new(event_type, event_data)
+    self.native:push(ffi.new('SDL_Event', {event.type, event}))
+    return self
+end
+doc.info(Window.push, 'window:push', '( event_name, event_data )')
 
 function Window:close()
     self.native:close()

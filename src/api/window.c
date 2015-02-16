@@ -146,6 +146,12 @@ void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface) {
         SDL_UnlockSurface(surface);
 }
 
+void it_pushes_event_window(it_windows* win, SDL_Event* event) {
+    if (!win->window) return;
+    if (SDL_PushEvent(event) < 0)
+        sdlI_error("SDL_PushEvent: failed to push event (%s)");
+}
+
 void it_closes_window(it_windows* win) {
     if (win->thread->on_free) {
         win->thread->on_free = NULL;

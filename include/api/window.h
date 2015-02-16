@@ -32,6 +32,8 @@ extern void it_updates_window(it_windows* win);
 extern void it_locks_window_surface(it_windows* win, SDL_Surface* surface);
 extern void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface);
 
+extern void it_pushes_event_window(it_windows* win, SDL_Event* event);
+
 extern void it_closes_window(it_windows* win);
 extern void it_frees_window(it_windows* win);
 
