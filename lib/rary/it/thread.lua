@@ -42,6 +42,7 @@ doc.info(Thread.init, 'thread:init', '( [pointer] )')
 function Thread:start()
     process.shutdown = false -- prevent process from shutting down
     self.reference:create()
+    return self
 end
 doc.info(Thread.start, 'thread:start', '(  )')
 
@@ -54,6 +55,7 @@ function Thread:safe(safe)
     if safe == nil then safe = true end
     self.reference:safe(not not safe)
     self.scope:safe(not not safe)
+    return self
 end
 doc.info(Thread.safe, 'thread:safe', '( nil=true|true|false )')
 
