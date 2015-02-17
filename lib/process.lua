@@ -44,6 +44,7 @@ function Process:init()
     end
     -- load api
     self.native = self._type:load('api', {
+        time = "double it_gets_time_process()";
         exit = "void it_exits_process(it_processes* process, int exit_code)";
     }):ptr(_D._it_processes_)
 end
@@ -63,6 +64,10 @@ end
 ffi.cdef("int poll(struct pollfd *fds, unsigned long nfds, int timeout);")
 function Process:sleep(milliseconds)
     ffi.C.poll(nil, 0, milliseconds)
+end
+
+function Process:time()
+    return self.native.time()
 end
 
 function Process:exit(code)

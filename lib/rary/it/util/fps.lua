@@ -19,7 +19,7 @@ doc.info(Fps.init, 'fps:init', '(  )')
 
 function Fps:start()
     self.running = true
-    self.start_time = os.clock()
+    self.start_time = process:time()
     self:emit('start')
 end
 doc.info(Fps.start, 'fps:start', '(  )')
@@ -32,11 +32,11 @@ doc.info(Fps.stop, 'fps:stop', '(  )')
 
 function Fps:update()
     if not self.running then return end
-    local time = os.clock()
+    local time = process:time()
     self.frames = self.frames + 1
-    if time > self.prev_time + 0.001 then
+    if time > self.prev_time + 1 then
         self.value = round(
-            (self.frames / 100) / (time - self.prev_time),
+            self.frames / (time - self.prev_time),
             self.accuracy
         )
         self:emit('update', self.value)

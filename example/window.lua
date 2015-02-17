@@ -53,6 +53,7 @@ window.scope:import(function ()
 --         x = (x+0.1 - 1) % 100 + 1
         x = x % 100 + 1
 
+--         process:sleep(16) -- should be ~60fps
     end)
     window:on('close', function ()
         print "window closed …"
