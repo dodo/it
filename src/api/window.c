@@ -137,11 +137,13 @@ void it_updates_window(it_windows* win) {
 }
 
 void it_locks_window_surface(it_windows* win, SDL_Surface* surface) {
+    if (!win->window) return;
     if (SDL_MUSTLOCK(surface) && SDL_LockSurface(surface))
         sdlI_error("SDL_LockSurface: failed to lock surface (%s)");
 }
 
 void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface) {
+    if (!win->window) return;
     if (SDL_MUSTLOCK(surface))
         SDL_UnlockSurface(surface);
 }
