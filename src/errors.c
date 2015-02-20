@@ -141,7 +141,8 @@ int luaI_stacktrace(lua_State* L) {
     if (thread->backtrace->count && strings) {
         if (lua_isstring(L, -2) && !lua_isnumber(L, -2)) {
             lua_insert(L, -2); // swap lua err msg with luaI_xpcall err msg
-            ++strings;
+            lua_pushstring(L, "\n");
+            strings += 2;
         }
     }
     while (level < 0 || lua_getstack(L, level, &info)) {
