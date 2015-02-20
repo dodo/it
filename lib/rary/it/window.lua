@@ -60,7 +60,7 @@ function Window:init(pointer)
         window = require('window'):new(_D._it_windows_)
         window:on('sdl event', function (event)
             -- TODO make sdl event moar prettier here
-            window:emit('event', event)
+            window:emit('event', require('ffi').cast('SDL_Event*', event))
         end)
     end)
 end
