@@ -1,3 +1,4 @@
+local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
 local util = require 'util'
 local cdef = require 'cdef'
@@ -6,7 +7,7 @@ local Thread = require 'thread'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
-cdef({
+local C = cdef({
     structs   = 'SDL_*',
     constants = 'SDL_*',
 --     typedefs  = 'SDL_*',
@@ -21,6 +22,7 @@ Surface.type = Metatype:use('SDL2', 'SDL_', 'Surface', 'FreeSurface')
 local Window = require(process.context and 'events' or 'prototype'):fork()
 Window.type = Metatype:struct("it_windows", cdef)
 Window.Surface = Surface
+Window.C = C
 
 Window.type:load('libapi.so', {
     ref = 'it_refs',
