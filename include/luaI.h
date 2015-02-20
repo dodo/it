@@ -33,49 +33,14 @@
 #define luaI_setmetatable(L,name) \
     (luaL_getmetatable(L,name), lua_setmetatable(L,-2))
 
+#define luaI_getlocalfield(L,fn) \
+    (lua_getfield(L,-1,fn), lua_remove(L,-2))
+
 #define luaI_getglobalfield(L,gn,fn) \
-    (lua_getglobal(L,gn), lua_getfield(L,-1,fn), lua_remove(L,-2))
+    (lua_getglobal(L,gn), luaI_getlocalfield(L,fn))
 
 #define luaI_setglobalfield(L,gn,fn) \
     (lua_getglobal(L,gn), lua_insert(L,-2), lua_setfield(L,-2,fn), lua_pop(L,1))
-
-#define luaI_pcall(L,nargs,nresults,safe) \
-    do{lua_getglobal(L, "_TRACEBACK"); \
-      lua_insert(L,0 - nargs - 2); \
-      if (luaI_xpcall(L,nargs,nresults,0 - nargs - 2, safe)) { \
-        lua_error(L); \
-      } \
-      lua_remove(L, 0 - nresults - 1);\
-    } while (0)
-
-#define luaI_pcall_in(ctx,nargs,nresults) \
-    do{if (!ctx->err) { \
-      lua_getglobal(ctx->lua, "_TRACEBACK"); \
-      lua_insert(ctx->lua,0 - nargs - 2); \
-      if (luaI_xpcall(ctx->lua,nargs,nresults,0 - nargs - 2, ctx->safe)) { \
-        ctx->err = lua_tostring(ctx->lua, -1); \
-        lua_pop(ctx->lua, 2); \
-      } else lua_remove(ctx->lua, 0 - nresults - 1);\
-    }} while (0)
-
-#define luaI_emit(L,ev) \
-    (lua_getfield(L,-1,"emit"),\
-     lua_pushvalue(L,-2),\
-     lua_remove(L,-3),\
-     lua_pushstring(L,ev))
-
-#define luaI_localemit(L,gn,ev) \
-    (lua_getfield(L,-1,gn),\
-     lua_remove(L,-2),\
-     luaI_emit(L,ev))
-
-#define luaI_globalemit(L,gn,ev) \
-    (luaI_getglobalfield(L,gn,"emit"),lua_getglobal(L,gn),lua_pushstring(L,ev))
-
-#define luaI_gc(L) \
-    do {if (lua_gc(L, LUA_GCCOLLECT, 0)) \
-        luaL_error(L, "internal error: lua_gc failed"); \
-    } while (0)
 
 
 int luaI_loadmetatable(lua_State* L, int i);
@@ -102,6 +67,15 @@ void luaI_pushvalue(lua_State* L, luaI_value* value);
 
 int luaI_newstate(it_states* ctx);
 int luaI_createstate(it_processes* process);
+
+int luaI_pcall(lua_State* L, int nargs, int nresults, int safe);
+int luaI_pcall_in(it_states* ctx, int nargs, int nresults);
+
+int luaI_emit(lua_State* L, const char* event);
+int luaI_localemit(lua_State* L, const char* field, const char* event);
+int luaI_globalemit(lua_State* L, const char* global, const char* event);
+
+int luaI_gc(lua_State* L);
 void luaI_close(lua_State* L, const char *global, int code);
 
 

@@ -269,6 +269,68 @@ int luaI_createstate(it_processes* process) {
     return 1;
 }
 
+int luaI_pcall(lua_State* L, int nargs, int nresults, int safe) {
+    lua_getglobal(L, "_TRACEBACK");
+    lua_insert(L, 0 - nargs - 2);
+    if (luaI_xpcall(L, nargs, nresults, 0 - nargs - 2, safe)) {
+        return lua_error(L);
+    }
+    lua_remove(L, 0 - nresults - 1);
+    return 0;
+}
+
+int luaI_pcall_in(it_states* ctx, int nargs, int nresults) {
+    if (ctx->err) return 1;
+    lua_getglobal(ctx->lua, "_TRACEBACK");
+    lua_insert(ctx->lua, 0 - nargs - 2);
+    if (luaI_xpcall(ctx->lua, nargs, nresults, 0 - nargs - 2, ctx->safe)) {
+        ctx->err = lua_tostring(ctx->lua, -1);
+        lua_pop(ctx->lua, 2);
+        return 1;
+    } else lua_remove(ctx->lua, 0 - nresults - 1);
+    return 0;
+}
+
+int luaI_emit(lua_State* L, const char* event) {
+    lua_getfield(L, -1, "emit");
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 2);
+        return 1;
+    }
+    lua_pushvalue(L, -2);
+    lua_remove(L, -3);
+    lua_pushstring(L, event);
+    return 0;
+}
+
+int luaI_localemit(lua_State* L, const char* field, const char* event) {
+    luaI_getlocalfield(L, field);
+    if (luaI_emit(L, event))
+        luaI_error(L,
+            "local field %s does not has an emit method for event %s.",
+            field, event);
+    return 0;
+}
+
+int luaI_globalemit(lua_State* L, const char* global, const char* event) {
+    luaI_getglobalfield(L, global, "emit");
+    if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        luaI_error(L,
+            "global %s does not has an emit method for event %s.",
+            global, event);
+    }
+    lua_getglobal(L, global);
+    lua_pushstring(L, event);
+    return 0;
+}
+
+int luaI_gc(lua_State* L) {
+    if (lua_gc(L, LUA_GCCOLLECT, 0))
+        luaI_error(L, "lua_gc failed");
+    return 0;
+}
+
 void luaI_close(lua_State* L, const char *global, int code) {
     lua_getglobal(L, global);
     lua_getfield(L, -1, "emit");
