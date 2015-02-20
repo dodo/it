@@ -163,7 +163,7 @@ window.scope:import(function ()
 end)
 
 enc.scope:define('window', window.native, function ()
-    window = require('window'):new(window)
+    window = require('window'):cast(_D.window)
     encoder:on('frame', function (frame)
         window:render(frame.raw.components[0].data)
     end)

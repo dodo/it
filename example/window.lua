@@ -69,7 +69,10 @@ window:open("test", width, height)
 print "window opened …"
 
 
-require('./samples').test('arc', window.width, window.height,
-    window.width*0.5, window.height*0.5, 100)
-require('./samples').test('quads', window.width, window.height,
-    0,0,window.width, window.height)
+-- require('./samples').test('arc', window.width, window.height,
+--     window.width*0.5, window.height*0.5, 100)
+-- require('./samples').test('quads', window.width, window.height,
+--     0,0,window.width, window.height)
+
+
+-- require('cli').repl()

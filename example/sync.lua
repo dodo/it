@@ -124,10 +124,10 @@ end
         thread.async = Async:new(thread)
         thread.coords = {coords.x, coords.y}
         thread.scope:define('backport', window.async.native, function ()
-            backport = require('async'):new(nil, _D.backport)
+            backport = require('async'):cast(_D.backport)
         end)
         thread.scope:define('window', window.native, function ()
-            window = require('window'):new(_D.window)
+            window = require('window'):cast(_D.window)
         end)
         thread.scope:define('height', h)
         thread.scope:define('width',  w)

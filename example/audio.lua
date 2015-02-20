@@ -79,24 +79,24 @@ end
 function process.setup()
     print "start loop …"
     freqs = {
-        53*40,
+        32*42,
      --   54*16,
-        47*158,--*math.random(),
-        197*90,
-        208*20,
-        85*48,
-        120*12,
-        134*25,
-        134*22,
+        103*13,--*math.random(),
+--        170*53,
+--        291*20,
+        19*48,
+        38*12,
+--        181*25,
+--        134*22,
      --   134*36,
-        134*30,
-    --    134*43,
-        134*11,
-        134*5,
+--        134*30,
+--        134*43,
+--        134*103,
+--        134*5,
     }
 --    freq = 581
     generate_my_data = sinusoidal
-    --generate_my_data = cosinusoidal
+--    generate_my_data = cosinusoidal
 --    generate_my_data = havefun
     n, freqn, val = n or 0, freqn or 1
     progress = progress or 0

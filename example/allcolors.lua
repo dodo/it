@@ -6,9 +6,10 @@ local size = 400
 -- local size = 4096
 
 function paint() ----------------------------------------------------------- {{{
-process.context.thread:safe(false)
+-- process.context.thread:safe(false)
 
 SEEDS = SEEDS or 200
+-- local COUNT = {x=1,y=1}
 local COUNT = {x=3,y=3}
 local pixelcount = 0
 local max_pixelcount = SEEDS
@@ -20,7 +21,7 @@ local step = 1
 local steps = 50000
 
 function allcolors() ------------------------------------------------------- {{{
-process.context.thread:safe(false)
+-- process.context.thread:safe(false)
 
 local steps = 10000
 SEEDS = SEEDS or 200
@@ -433,7 +434,7 @@ threads = {} do
         thread.async = Async:new(thread)
         thread.coords = {x=coords.x, y=coords.y}
         thread.scope:define('backport', window.async.native, function ()
-            backport = require('async'):new(nil, _D.backport)
+            backport = require('async'):cast(_D.backport)
         end)
         if png then
             thread.scope:define('png', png.surface.object, function ()
