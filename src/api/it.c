@@ -58,3 +58,10 @@ int it_versions_lua(lua_State* L) { // (apifile_path)
     uvI_dlsym(api, "api_version", &plugin_version);
     return plugin_version(L);
 }
+
+int it_holds_pointer_lua(lua_State* L) { // (pointer)
+    void* ptr = lua_touserdata(L, 1);
+    luaI_userdata* usr = (luaI_userdata*) lua_newuserdata(L, sizeof(luaI_userdata));
+    usr->pointer = ptr;
+    return 1;
+}

@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local util = require 'util'
+local _ffi = require 'util._ffi'
 local _table = require 'util.table'
 local cface = require 'cface'
 local Prototype = require 'prototype'
@@ -212,26 +213,13 @@ function Metatype:lib(clib, prefix, gcname)
 end
 doc.info(Metatype.lib, 'type:lib', '( clib|clibname, prefix=""[, gcname] )')
 
-local _define
-local function lua_pushlightuserdata(name, pointer)
-    if not _define then
-        _define = Metatype:fork():load('api', {
-            define = [[void it_defines_cdata_scope(void* ctx, const char* name,
-                                             void* cdata)]];
-        }):virt().define
-    end
-    _define(_D._it_scopes_, name, ffi.cast('void*', pointer))
-end
 function Metatype:api(metaname, cfunctions, apifile)
     cface.register(metaname, apifile or 'libapi.so')
     if not self.prototype._userdata then
         local data = _table.weak({})
         self.prototype._userdata = function (pointer)
             if data[pointer] then return data[pointer] end
-            local tmp_name = "__tmp_userdata" .. math.random()
-            lua_pushlightuserdata(tmp_name, pointer)
-            local userdata = _G[tmp_name]
-            _G[tmp_name] = nil
+            local userdata = _ffi.tolightuserdata(pointer)
             data[pointer] = userdata -- … and it's cached
             return userdata
         end

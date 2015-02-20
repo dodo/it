@@ -52,6 +52,39 @@ function exports.ptraddr(ptr)
 end
 doc.info(exports.ptraddr, 'util_ffi.ptraddr', '( pointer )')
 
+local __define
+local function lua_pushlightuserdata(name, pointer)
+    if not __define then
+        __define = require('metatype'):fork():load('api', {
+            define = 'it_defines_cdata_scope',
+        }, require('cdef')):virt().define
+    end
+    -- insert into _D:
+    __define(_D._it_scopes_, name, ffi.cast('void*', pointer))
+end
+exports.lua_pushlightuserdata = lua_pushlightuserdata
+doc.info(lua_pushlightuserdata, 'util_ffi.lua_pushlightuserdata', '( name, pointer )')
+
+local function tolightuserdata(pointer)
+    local tmp_name = string.format("__tmp_userdata__%f",
+        process.time() + math.random())
+    lua_pushlightuserdata(tmp_name, pointer)
+    local lightuserdata = _D[tmp_name]
+    _D[tmp_name] = nil
+    return lightuserdata
+end
+exports.tolightuserdata = tolightuserdata
+doc.info(tolightuserdata, 'util_ffi.tolightuserdata', '( pointer )')
+
+function exports.touserdata(pointer)
+    local lightuserdata = pointer
+    if type(pointer) == 'cdata' then
+        lightuserdata = tolightuserdata(pointer)
+    end
+    return _it.holds(lightuserdata)
+end
+doc.info(exports.touserdata, 'util_ffi.touserdata', '( pointer )')
+
 function exports.metatype(name, metatable)
     metatable = metatable or {}
     metatable.__ipairs = metatable.__ipairs or require('inspect').ipairs

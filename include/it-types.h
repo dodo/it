@@ -25,6 +25,10 @@ typedef enum _luaI_types {
     LUAI_TYPE_MAX
 } luaI_types;
 
+typedef struct _luaI_userdata {
+    void* pointer;
+} luaI_userdata;
+
 typedef struct _luaI_function {
     size_t      size;
     char const* name;

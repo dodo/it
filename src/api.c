@@ -15,6 +15,7 @@ static const luaL_Reg luaI_reg_it[] = {
     {"boots", it_boots_lua},
     {"loads", it_loads_lua},
     {"versions", it_versions_lua},
+    {"holds", it_holds_pointer_lua},
     {NULL, NULL}
 };
 
