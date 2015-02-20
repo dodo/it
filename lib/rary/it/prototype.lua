@@ -1,26 +1,42 @@
 local doc = require 'util.doc'
+local debug = require 'debug'
 
 
 local Prototype = {}
+Prototype.__index = Prototype
 Prototype.prototype = Prototype
-Prototype.metatable = { __index = Prototype }
 
 
 function Prototype:fork(proto)
-    proto = proto or {}
-    proto.prototype = self
-    local fork = setmetatable(proto, { __index = self })
-    fork.metatable = { __index = fork }
+    local fork = proto or {}
+    fork.__index = fork
+    fork.prototype = self
+    if type(fork) == 'userdata' then -- hopefully it's not a lightuserdata
+        debug.setmetatable(fork, self)
+    else
+              setmetatable(fork, self)
+    end
     return fork
 end
 doc.info(Prototype.fork, 'Prototype:fork', '( proto={} )')
 
 function Prototype:new(...)
-    local instance = setmetatable({}, self.metatable)
-    if instance.init then instance:init(...) end
+    local instance = setmetatable({}, self)
+    if instance.__new then instance:__new(...) end
     return instance
 end
-doc.info(Prototype.new, 'proto:new', '( ... )')
+doc.info(Prototype.new, 'proto:new', '( [...] )')
+
+function Prototype:cast(pointer, ...)
+    local instance = setmetatable({}, self)
+    if pointer then
+        if instance.__cast then instance:__cast(pointer, ...) end
+    else -- casting nil is as good as creating a new instance
+        if instance.__new then instance:__new(...) end
+    end
+    return instance
+end
+doc.info(Prototype.cast, 'proto:cast', '( pointer[, ...] )')
 
 function Prototype:bind(name, ...)
     self[name .. "*"] = self[name .. "*"] or
