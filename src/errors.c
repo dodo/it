@@ -100,6 +100,31 @@ int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe) {
     return result;
 }
 
+int lua_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f) {
+    int msgh = 0 - nargs - 2;
+    lua_pushcfunction(L, f);
+    lua_insert(L, msgh);
+    int result = lua_pcall(L, nargs, nresults, msgh);
+    if (result) nresults = 1; // just one error message
+    lua_remove(L, 0 - nresults - 1);
+    return result;
+}
+
+int luaI_simpleerror(lua_State* L) {
+    if (!lua_isstring(L, -1)) {
+        lua_pushstring(L, "missing error message");
+    } else {
+        luaL_loadstring(L, "return string.match(..., '([^\\n]+)')");
+        lua_pushvalue(L, -2);
+        if (lua_pcall(L, 1, 1, 0)) {
+            lua_pushstring(L, "error during message extraction: ");
+            lua_pushvalue(L, -2);
+            lua_concat(L, 2);
+        }
+    }
+    return 1;
+}
+
 int luaI_stacktrace(lua_State* L) {
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) abort();
@@ -193,15 +218,23 @@ int luaI_stacktrace(lua_State* L) {
             continue;
         }
         lua_pushstring(L, "        ");
-        luaL_loadstring(L, "return require('fs').line(...)");
-        lua_pushstring(L, info.short_src);
-        lua_pushinteger(L, info.currentline);
-        lua_call(L, 2, 1);
-        if (lua_isnil(L, -1)) {
-            lua_pop(L, 2);
-        } else {
-            lua_pushstring(L, "\n");
-            strings += 3;
+        { // try to extract lua code
+            luaL_loadstring(L, "return require('it.fs').line(...)");
+            lua_pushstring(L, info.short_src);
+            lua_pushinteger(L, info.currentline);
+            if (lua_pcall_with(L, 2, 1, luaI_simpleerror)) {
+                lua_pushstring(L, "--[[! internal error: missing lua lines: ");
+                lua_pushvalue(L, -2);
+                lua_remove(L, -3);
+                lua_pushstring(L, " !]]\n");
+                strings += 4;
+            } else if (lua_isnil(L, -1)) {
+                // no lua code found, so skip it
+                lua_pop(L, 2);
+            } else {
+                lua_pushstring(L, "\n");
+                strings += 3;
+            }
         }
         ++level;
     }
