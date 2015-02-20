@@ -29,4 +29,18 @@ function exports.round(val, decimal)
 end
 doc.info(exports.round, 'util_misc.round', '( value, decimal=1 )')
 
+local function quick_search(x, arr, l, u)
+    if l >= u then return end
+    local i = math.floor((u - l) * 0.5) + l
+        if not  arr[i] then return
+    elseif x == arr[i] then return i
+    elseif x <  arr[i] then return quick_search(x, arr, l, i-1)
+    elseif x >  arr[i] then return quick_search(x, arr, i+1, u)
+    end
+end
+exports.quick_search = quick_search
+doc.info(exports.quick_search,
+      'util_misc.quick_search',
+      '( value, array, lower_bound, upper_bound )')
+
 return exports
