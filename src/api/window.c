@@ -155,17 +155,17 @@ void it_pushes_event_window(it_windows* win, SDL_Event* event) {
 }
 
 void it_closes_window(it_windows* win) {
-    if (win->thread->on_free) {
-        win->thread->on_free = NULL;
-        luaI_globalemit(win->thread->ctx->lua, "window", "close");
-        luaI_pcall_in(win->thread->ctx, 2, 0);
-    }
     it_frees_window(win);
     it_closes_thread(win->thread);
 }
 
 void it_frees_window(it_windows* win) {
     if (!win) return;
+    if (win->thread->on_free) {
+        win->thread->on_free = NULL;
+        luaI_globalemit(win->thread->ctx->lua, "window", "close");
+        luaI_pcall_in(win->thread->ctx, 2, 0);
+    }
     if (win->window) {
         SDL_Window* window = win->window;
         win->window = NULL;
