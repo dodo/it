@@ -1,8 +1,45 @@
 local ffi = require 'ffi'
 local doc = require 'util.doc'
 
-local util = {}
+local function lazysubmodules(modname, names)
+    modname = modname and (modname..'.') or ''
+    local index = {}
+    local module = {}
+    for _, name in ipairs(names) do
+        index[name] = function ()
+            local submodule = require(modname .. name)
+            module[name] = submodule -- prevents next __index call on this
+            return submodule
+        end
+        doc.info(index[name],
+                'require',
+                string.format('( "%s%s" )', modname, name),
+                true--[[noval]])
+    end
+    return setmetatable(module, {
+        __metatable = index,
+        __pairs = function ()
+            return pairs(index)
+        end,
+        __ipairs = function ()
+            return ipairs(names)
+        end,
+        __index = function (t, name)
+            for _,n in ipairs(names) do
+                if n == name then
+                    return index[name]()
+                end
+            end
+        end,
+    })
+end
 
+local util = lazysubmodules('util', {'_ffi','bind', 'doc', 'fps', 'funcinfo',
+    'luastate', 'misc', 'pixel', 'string', 'table', 'traverse'})
+
+util.lazysubmodules = lazysubmodules
+doc.info(lazysubmodules,
+   'util.lazysubmodules', '( module_name, submodule_names )')
 
 function util.xpcall(f, errhandler, ...)
     errhandler = errhandler or _TRACEBACK
