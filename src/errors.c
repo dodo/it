@@ -30,11 +30,14 @@ int at_panic(lua_State* L) {
     // first things first
     if (!thread->backtrace->count)
         uvI_thread_stacktrace(thread);
+    // lets print the problem
+    luaI_stacktrace(L);
+    printerr("PANIC@%s\n", lua_tostring(L, -1));
+    // now try to announce the problem back to lua, when possible
     lua_getglobal(L, "process");
     if (lua_isnil(L, -1)) {
         lua_pop(L, 1);
-        luaI_stacktrace(L);
-        printerr("internal error during boot: %s\n", lua_tostring(L,-1));
+        printerr("internal error during boot.\n");
         panic_attack = FALSE;
         return 0;
     }
@@ -44,8 +47,6 @@ int at_panic(lua_State* L) {
     lua_pushstring(L, "panic");
     lua_pushvalue(L, -4);
     luaI_pcall(L, 3, 0, TRUE/*safe*/);
-    luaI_stacktrace(L);
-    printerr("PANIC@%s\n", lua_tostring(L, -1));
     panic_attack = FALSE;
     return 0;
 }
