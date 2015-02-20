@@ -121,6 +121,7 @@ int luaI_simpleerror(lua_State* L) {
         if (lua_pcall(L, 1, 1, 0)) {
             lua_pushstring(L, "error during message extraction: ");
             lua_pushvalue(L, -2);
+            lua_remove(L, -3);
             lua_concat(L, 2);
         }
     }
@@ -220,8 +221,8 @@ int luaI_stacktrace(lua_State* L) {
             ++level;
             continue;
         }
-        lua_pushstring(L, "        ");
         { // try to extract lua code
+            lua_pushstring(L, "        ");
             luaL_loadstring(L, "return require('it.fs').line(...)");
             lua_pushstring(L, info.short_src);
             lua_pushinteger(L, info.currentline);
