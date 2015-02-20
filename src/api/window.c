@@ -79,6 +79,7 @@ void it_creates_window(it_windows* win, const char* title,
         SDL_GetWindowSize(win->window, &w, &h);
         win->height = h;
         win->width = w;
+        win->title = title;
     }
 }
 

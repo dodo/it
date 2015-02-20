@@ -12,6 +12,7 @@ typedef struct _it_windows {
     it_threads *thread;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    const char *title;
     int width;
     int height;
 } it_windows;

@@ -44,12 +44,10 @@ function Window:init(pointer)
     if self.prototype.init then self.prototype.init(self) end
     if pointer then
         self.native = self.type:ptr(pointer)
-        self.raw = self.native.window
         self.thread = process.context.thread
         self.thread = (pointer == _D._it_windows_) and
                 process.context.thread or Thread:new(self.native.thread)
-        self.height = tonumber(self.native.height)
-        self.width = tonumber(self.native.width)
+        self:__updateraw()
         self.open = nil
         return
     end
@@ -71,15 +69,21 @@ function Window:open(title, width, height, x, y)
     self.native:create(title,
         cface.optint(x), cface.optint(y),
         width or 200, height or 200)
-    self.height = tonumber(self.native.height)
-    self.width = tonumber(self.native.width)
-    self.raw = self.native.window
+    self:__updateraw()
     self.thread:start()
     return self
 end
 doc.info(Window.open,
         'window:open',
         '( title, width=200, height=200[, x[, y]] )')
+
+function Window:__updateraw()
+    self.title = ffi.string(self.native.title)
+    self.height = tonumber(self.native.height)
+    self.width = tonumber(self.native.width)
+    self.raw = self.native.window
+end
+doc.private(Window.__updateraw, 'window:__updateraw', '(  )')
 
 function Window:write_to_png(filename, surface)
     -- init cairo
