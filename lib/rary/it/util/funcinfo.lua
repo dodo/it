@@ -564,6 +564,10 @@ local function list( t, _short, _visited )
 		if type( next ) == "table" and not _visited[next] then
 			result = result.."\n\n"..list( next, nil, _visited )
 		end
+		local next = mt.__metatable
+		if type( next ) == "table" and not _visited[next] then
+			result = result.."\n\n"..list( next, nil, _visited )
+		end
 	end
 	return result
 end
