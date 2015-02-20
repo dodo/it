@@ -18,6 +18,9 @@ if not process.verbose then
 else
     local _cdef = cdef.load(_it.execpath)
     function cdef.call(spec)
+        -- dont print cdefs when booting it:
+        spec.verbose = process.cdefs
+        -- if you still want them, just change process.cdefs
         local success, C, ffi = pcall(_cdef, spec)
         if not success then
             local err = C
