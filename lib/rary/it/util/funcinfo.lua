@@ -386,6 +386,20 @@ deprecated( package.seeall, 'package.seeall','( module )' )
 
 -- }}}
 
+-- private {{{
+
+local private
+do
+    local private_marker = ansi.bold..ansi.black
+    local private_note = " -PRIVATE-"
+    function private( f, name, arg )
+        funcinfo:add( f, private_marker..name, private_marker..arg..private_note )
+    end
+    funcinfo.private = private
+end
+
+-- }}}
+
 -- todo {{{
 
 local todo

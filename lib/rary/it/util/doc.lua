@@ -28,6 +28,12 @@ function doc.todo(f, name, args)
 end
 doc.info(doc.todo, 'doc.todo', '( function, name, args )')
 
+function doc.private(f, name, args)
+    push('private',  f, name, args)
+    return doc
+end
+doc.info(doc.private, 'doc.private', '( function, name, args )')
+
 function doc.deprecated(f, name, args)
     push('deprecated',  f, name, args)
     return doc
