@@ -4,49 +4,49 @@ local doc = {}
 local cache = {}
 
 
-local function push(typ, f, name, args)
+local function push(typ, f, name, args, noval)
     if cache then
-        table.insert(cache, {typ, f, name, args})
+        table.insert(cache, {typ, f, name, args, noval})
     else
         local funcinfo = debug.getregistry()._funcinfo
         if funcinfo then
-            funcinfo[typ](f, name, args)
+            funcinfo[typ](f, name, args, noval)
         end
     end
 end
 jit.off(push)
 
-function doc.info(f, name, args)
-    push('info',  f, name, args)
+function doc.info(f, name, args, noval)
+    push('info',  f, name, args, noval)
     return doc
 end
-doc.info(doc.info, 'doc.info', '( function, name, args )')
+doc.info(doc.info, 'doc.info', '( function, name, args[, noValue] )')
 
-function doc.todo(f, name, args)
-    push('todo',  f, name, args)
+function doc.todo(f, name, args, noval)
+    push('todo',  f, name, args, noval)
     return doc
 end
-doc.info(doc.todo, 'doc.todo', '( function, name, args )')
+doc.info(doc.todo, 'doc.todo', '( function, name, args[, noValue] )')
 
-function doc.private(f, name, args)
-    push('private',  f, name, args)
+function doc.private(f, name, args, noval)
+    push('private',  f, name, args, noval)
     return doc
 end
-doc.info(doc.private, 'doc.private', '( function, name, args )')
+doc.info(doc.private, 'doc.private', '( function, name, args[, noValue] )')
 
-function doc.deprecated(f, name, args)
-    push('deprecated',  f, name, args)
+function doc.deprecated(f, name, args, noval)
+    push('deprecated',  f, name, args, noval)
     return doc
 end
-doc.info(doc.deprecated, 'doc.deprecated', '( function, name, args )')
+doc.info(doc.deprecated, 'doc.deprecated', '( function, name, args[, noValue] )')
 
 function doc.init()
     local funcinfo = debug.getregistry()._funcinfo
     if funcinfo then
         local typ, f, name, args
         for _, queued in ipairs(cache) do
-            typ, f, name, args = unpack(queued)
-            funcinfo[typ](f, name, args)
+            typ, f, name, args, noval = unpack(queued)
+            funcinfo[typ](f, name, args, noval)
         end
     end
     cache = nil

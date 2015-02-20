@@ -7,13 +7,18 @@ local getmetatable = debug.getmetatable
 
 local funcinfo = setmetatable( { }, { __mode = "k" } )
 
-function funcinfo:add( f, name, args )
+function funcinfo:add( f, name, args, _noval )
 	-- add only if function actually exists
 	-- (fun with functions that hop around between versions/implementations)
-	if f then  funcinfo[f] = { args, name }  end
+	if f then
+		funcinfo[f] = { args, name }
+		if _noval then
+			funcinfo[f].noval = true
+		end
+	end
 end
-function funcinfo.info( f, name, args )
-	funcinfo:add( f, name, args )
+function funcinfo.info( f, name, args, noval )
+	funcinfo:add( f, name, args, noval )
 end
 
 debug.getregistry()._funcinfo = funcinfo
@@ -375,8 +380,8 @@ end
 local deprecated
 do
 	local deprecated_marker = " "..ansi.bold..ansi.yellow..ansi.on_red.."-DEPRECATED-"
-	function deprecated( f, name, arg )
-		funcinfo:add( f, name, arg..deprecated_marker )
+	function deprecated( f, name, arg, ... )
+		funcinfo:add( f, name, arg..deprecated_marker, ... )
 	end
 	funcinfo.deprecated = deprecated
 end
@@ -392,8 +397,8 @@ local private
 do
     local private_marker = ansi.bold..ansi.black
     local private_note = " -PRIVATE-"
-    function private( f, name, arg )
-        funcinfo:add( f, private_marker..name, private_marker..arg..private_note )
+    function private( f, name, arg, ... )
+        funcinfo:add( f, private_marker..name, private_marker..arg..private_note, ... )
     end
     funcinfo.private = private
 end
@@ -405,8 +410,8 @@ end
 local todo
 do
 	local todo_marker = " "..ansi.bold..ansi.yellow..ansi.on_blue.."-TODO-"
-	function todo( f, name, arg )
-		funcinfo:add( f, name, arg..todo_marker )
+	function todo( f, name, arg, ... )
+		funcinfo:add( f, name, arg..todo_marker, ... )
 	end
 	funcinfo.todo = todo
 end
@@ -480,8 +485,11 @@ do
 	show["function"] = function( f, _longForm )
 		local s = tostring( f )
 		if _longForm then
+			local info = funcinfo[f]
 			local arg, name = getFunctionParameters( f )
-			if name then  s = s..": "..name  end
+			if name and info and info.noval then s = name
+			elseif name then  s = s..": "..name
+			end
 			s = s..arg
 		end
 		return h_fun..s..h0, s
@@ -512,7 +520,9 @@ do
 			local info = funcinfo[c]
 			if info then
 				local arg, name = unpack(info)
-				if name then  s = s..": "..name  end
+				if name and info.noval then s = name
+				elseif name then  s = s..": "..name
+				end
 				s = s..arg
 			end
 		end
