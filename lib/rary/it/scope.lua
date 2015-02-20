@@ -28,6 +28,9 @@ function Scope:init(pointer)
     end
     self.state = self.type:create(nil, _D._it_processes_, _D._it_scopes_)
     self.raw = self.state.lua
+    if process.verbose then
+        self:import(function () process.verbose = true end)
+    end
     if process.debugmode then
         self:import(function () process.debug() end)
     end
