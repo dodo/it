@@ -55,7 +55,8 @@ extern uvI_thread_t* uvI_thread_tmp();
 extern int uvI_thread_create(uvI_thread_t* thread, void (*entry)(void *arg), void* arg);
 
 extern uvI_thread_t* uvI_thread_self();
-extern uvI_thread_t* uvI_thread_pool(pthread_t pthread);
+extern uvI_thread_t* uvI_thread_pool(const uv_thread_t pthread);
+extern int uvI_thread_pool_index(const uv_thread_t pthread);
 
 extern int  uvI_thread_notch(uvI_thread_t* thread);
 extern void uvI_thread_unnotch(uvI_thread_t* thread);

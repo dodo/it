@@ -48,7 +48,8 @@ void it_runs_thread(void* priv) {
     int err;
     thread->ctx->loop = (uv_loop_t*) malloc(sizeof(uv_loop_t));
     if (!thread->ctx->loop)
-        it_errors("failed to create loop!");
+        it_errors("failed to create loop in thread %d!"
+            uvI_thread_pool_index(*(thread->thread)));
     if ((err = uv_loop_init(thread->ctx->loop)))
         uvI_error(thread->ctx->loop, err, "%s uv_loop_init: %s");
 #endif
@@ -69,7 +70,9 @@ void it_runs_thread(void* priv) {
         // … and now run!
         uv_run(thread->ctx->loop, UV_RUN_DEFAULT);
     if (thread->ctx->err)
-        printerr("thread halted: scope error: %s", thread->ctx->err);
+        printerr("thread %d halted: scope error: %s",
+                uvI_thread_pool_index(*(thread->thread)),
+                thread->ctx->err);
     thread->closed = TRUE;
 }
 
@@ -91,7 +94,8 @@ void it_creates_thread(it_threads* thread) {
         it_errors("failed to initialize thread!");
     thread->thread = &(uvthread->pthread);
     if (uvI_thread_create(uvthread, it_runs_thread, thread))
-        it_errors("uv_thread_create: failed to create thread!");
+        it_errors("uv_thread_create: failed to create thread %d!",
+                uvI_thread_pool_index(uvthread->pthread));
 }
 
 void it_safes_thread(it_threads* thread, bool safe) {
@@ -120,7 +124,8 @@ void it_frees_thread(it_threads* thread) {
     if (!thread->closed) {
         thread->closed = TRUE;
         if (uv_thread_join(thread->thread))
-            it_errors("uv_thread_join: failed to join thread!");
+            it_errors("uv_thread_join: failed to join thread %d!",
+                uvI_thread_pool_index(*(thread->thread)));
     }
     uvI_thread_free(uvI_thread_pool(*(thread->thread)));
     thread->thread = NULL;

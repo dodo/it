@@ -83,6 +83,18 @@ uvI_thread_t* uvI_thread_pool(const uv_thread_t pthread) {
     return NULL;
 }
 
+int uvI_thread_pool_index(const uv_thread_t pthread) {
+    uvI_thread_t* next = pool;
+    int i = 0;
+    while (next) {
+        if (pthread_equal(pthread, next->pthread))
+            return i;
+        next = next->next;
+        i++;
+    }
+    return -1;
+}
+
 int uvI_thread_notch(uvI_thread_t* thread) {
     int pos = thread->count;
     if (++(thread->count) < thread->size)

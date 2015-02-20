@@ -32,7 +32,9 @@ int at_panic(lua_State* L) {
         uvI_thread_stacktrace(thread);
     // lets print the problem
     luaI_stacktrace(L);
-    printerr("PANIC@%s\n", lua_tostring(L, -1));
+    printerr("PANIC@Thread %d: %s\n",
+            uvI_thread_pool_index(thread->pthread),
+            lua_tostring(L, -1));
     // now try to announce the problem back to lua, when possible
     lua_getglobal(L, "process");
     if (lua_isnil(L, -1)) {
