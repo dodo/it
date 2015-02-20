@@ -19,7 +19,7 @@ function Metatype:fork(proto)
     local fork = Prototype.fork(self, proto)
     -- no Metatype functions inside ctype plz
     fork.prototype = {}
-    fork.metatable.__index = fork.prototype
+    fork.__index = fork.prototype
     return fork
 end
 doc.info(Metatype.fork, 'Metatype:fork', '( proto={} )')
@@ -68,7 +68,7 @@ end
 doc.info(Metatype.use, 'Metatype:use', '( clib|clibname, prefix, ct[, gcname] )')
 
 function Metatype:overload(name)
-    return cface.metatype(name, self.metatable)
+    return cface.metatype(name, self)
 end
 doc.info(Metatype.overload, 'type:overload', '( name )')
 
@@ -98,7 +98,7 @@ end
 doc.info(Metatype.initialize, 'type:initialize', '( instance, ... )')
 
 function Metatype:virt(...)
-    return self:initialize(setmetatable({}, self.metatable), ...)
+    return self:initialize(setmetatable({}, self), ...)
 end
 doc.info(Metatype.virt, 'type:virt', '( ... )')
 
@@ -177,7 +177,7 @@ function Metatype:load(clib, cfunctions, db)
         self.prototype[name] = clib[cname]
         doc.info(clib[cname], cname, cargs)
         if name:match('^__') then
-            self.metatable[name] = self.prototype[name]
+            self[name] = self.prototype[name]
         end
     end
     return self
@@ -190,7 +190,7 @@ function Metatype:lib(clib, prefix, gcname)
     prefix = prefix or ""
     self.prefix = prefix
     self.prototype = clib
-    self.metatable.__index = function (_, key)
+    self.__index = function (_, key)
         if key == 'metatype' then
             return that
         elseif key == 'prototype' then
@@ -199,12 +199,12 @@ function Metatype:lib(clib, prefix, gcname)
             return clib[that.prefix .. key]
         end
     end
-    jit.off(self.metatable.__index)
+    jit.off(self.__index)
     if gcname then
         if prefix ~= "" then
-            self.metatable.__gc = clib[prefix .. gcname]
+            self.__gc = clib[prefix .. gcname]
         else
-            self.metatable.__gc = function (...)
+            self.__gc = function (...)
                 return clib[that.prefix .. gcname](...)
             end
         end
@@ -234,7 +234,7 @@ function Metatype:api(metaname, cfunctions, apifile)
             return cfunction(_userdata(self), ...)
         end
         if name:match('^__') then
-            self.metatable[name] = self.prototype[name]
+            self[name] = self.prototype[name]
         end
     end
 end

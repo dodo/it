@@ -40,23 +40,8 @@ local SCHRO = {prefix="SCHRO_", enums={
   colour_matrix     = {typ="SchroColourMatrix",    prefix="COLOUR_MATRIX_"},
   transfer_function = {typ="SchroTransferFunction",prefix="TRANSFER_CHAR_"},
 }}
-function Encoder:init(filename, pointer, opts)
-    if self.prototype.init then self.prototype.init(self) end
-    self.frame_format = 'ARGB'
-    self.push = self:bind('push')
-    if pointer and type(pointer) == 'table' then
-        pointer, opts = nil, pointer
-    elseif pointer then -- other stuff not needed in scope process.context
-        self.native = self.type:ptr(pointer)
-        self.raw = self.native.encoder
-        self.thread = process.context.thread
-        self.thread = (pointer == _D._it_encodes_) and
-                process.context.thread or Thread:new(self.native.thread)
-        self.format = _table.readonly(self:getformat().raw)
-        self.settings = _table.readonly(self.native:getsettings())
-        self.start = nil
-        return
-    end
+function Encoder:__new(filename, opts)
+    self:init()
     opts = opts or {}
     self.thread = Thread:new()
     self.scope = self.thread.scope
@@ -83,7 +68,7 @@ function Encoder:init(filename, pointer, opts)
     self.raw = self.native.encoder
     self.settings = self.native:getsettings()
     self.scope:define('_it_encodes_', self.native, function ()
-        encoder = require('encoder'):new(nil, _D._it_encodes_)
+        encoder = require('encoder'):cast(_D._it_encodes_, process.context.thread)
         -- expose userdata as buffers
         encoder:on('userdata', function (raw, len)
             encoder:emit('data', require('buffer'):new(raw, len))
@@ -99,9 +84,25 @@ function Encoder:init(filename, pointer, opts)
         end)
     end)
 end
-doc.info(Encoder.init,
-        'encoder:init',
-        '( filename=process.stdout[, pointer], opts={} )')
+doc.info(Encoder.__new, 'Encoder:new', '( filename=process.stdout, opts={} )')
+
+function Encoder:__cast(pointer, thread)
+    self:init()
+    self.native = self.type:ptr(pointer)
+    self.raw = self.native.encoder
+    self.thread = thread or Thread:new(self.native.thread)
+    self.format = _table.readonly(self:getformat().raw)
+    self.settings = _table.readonly(self.native:getsettings())
+    self.start = nil
+end
+doc.info(Encoder.__cast, 'Encoder:cast', '( pointer[, thread] )')
+
+function Encoder:init()
+    if self.prototype.__new then self.prototype.__new(self) end
+    self.frame_format = 'ARGB'
+    self.push = self:bind('push')
+end
+doc.private(Encoder.init, 'encoder:init', '(  )')
 
 function Encoder:start()
     -- turn on errors at least
@@ -136,7 +137,7 @@ function Encoder:hook(stage)
     scope:define('stage', stage_name)
     scope:define('encoder', self.native) -- could have different thread than this scope
     scope:import(function ()
-        encoder = require('encoder'):new(nil, _D.encoder)
+        encoder = require('encoder'):cast(_D.encoder)
         encoder.stage = _D.stage
         -- expose SchroEncoderFrames
         encoder:on('run stage', function (pointer)

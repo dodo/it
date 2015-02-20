@@ -46,7 +46,7 @@ Audio.Buffer.Audio = Audio -- prevent circular dependency
 -- end
 
 
-function Audio:init(devicename, opts)
+function Audio:__new(devicename, opts)
     self.prototype.init(self)
     opts = opts or {}
     opts.sources = opts.sources or 1
@@ -57,8 +57,8 @@ function Audio:init(devicename, opts)
         opts.sources
     )
 end
-doc.info(Audio.init,
-        'audio:init',
+doc.info(Audio.__new,
+        'Audio:new',
         '( [devicename], ' ..
         'opts={ sources=1[, attrs] } )')
 

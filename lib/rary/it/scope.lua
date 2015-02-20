@@ -20,12 +20,7 @@ Scope.type:load('libapi.so', {
 }, cdef)
 
 
-function Scope:init(pointer)
-    if pointer then
-        self.state = self.type:ptr(pointer)
-        self.raw = self.state.lua
-        return
-    end
+function Scope:__new()
     self.state = self.type:create(nil, _D._it_processes_, _D._it_scopes_)
     self.raw = self.state.lua
     if process.verbose then
@@ -36,10 +31,16 @@ function Scope:init(pointer)
     end
     -- special case since object gets injected into process.context instead as global
     self:define('_it_scopes_', self.state, function ()
-        process.context.scope = require('scope'):new(_D._it_scopes_)
+        process.context.scope = require('scope'):cast(_D._it_scopes_)
     end)
 end
-doc.info(Scope.init, 'scope:init', '( [pointer] )')
+doc.info(Scope.__new, 'Scope:new', '(  )')
+
+function Scope:__cast(pointer)
+    self.state = self.type:ptr(pointer)
+    self.raw = self.state.lua
+end
+doc.info(Scope.__cast, 'Scope:cast', '( pointer )')
 
 function Scope:import(lua_function)
     self.state:import(lua_function)

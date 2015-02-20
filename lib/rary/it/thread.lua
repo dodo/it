@@ -18,26 +18,28 @@ Thread.type:load('libapi.so', {
 }, cdef)
 
 
-function Thread:init(pointer)
-    if self.prototype.init then self.prototype.init(self) end
-    if pointer then
-        self.reference = self.type:ptr(pointer)
-        self.raw = self.reference.thread
-        self.scope = (pointer == _D._it_threads_) and
-                process.context.scope or Scope:new(self.reference.ctx)
-        self.start = nil
-        return
-    end
+function Thread:__new()
+    if self.prototype.__new then self.prototype.__new(self) end
     self.close = nil
     self.scope = Scope:new()
     self.reference = self.type:create(nil, self.scope.state)
     self.raw = self.reference.thread
     -- special case since object gets injected into process.context instead as global
     self.scope:define('_it_threads_', self.reference, function ()
-        process.context.thread = require('thread'):new(_D._it_threads_)
+        process.context.thread = require('thread'):cast(
+            _D._it_threads_, process.context.scope)
     end)
 end
-doc.info(Thread.init, 'thread:init', '( [pointer] )')
+doc.info(Thread.__new, 'Thread:new', '(  )')
+
+function Thread:__cast(pointer)
+    if self.prototype.__new then self.prototype.__new(self) end
+    self.reference = self.type:ptr(pointer)
+    self.raw = self.reference.thread
+    self.scope = scope or Scope:cast(self.reference.ctx)
+    self.start = nil
+end
+doc.info(Thread.__cast, 'Thread:cast', '( pointer[, scope] )')
 
 function Thread:start()
     process.shutdown = false -- prevent process from shutting down

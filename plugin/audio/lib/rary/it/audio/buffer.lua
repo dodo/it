@@ -7,7 +7,7 @@ local Buffer = Prototype:fork()
 Buffer.Audio = nil -- gets filled by Audio (circular dependecy)
 
 
-function Buffer:init(num_buffers, data, opts)
+function Buffer:__new(num_buffers, data, opts)
     if type(num_buffers) ~= 'number' then
         num_buffers, data, opts = nil, num_buffers, data
     end
@@ -31,9 +31,10 @@ function Buffer:init(num_buffers, data, opts)
         self:data(data)
     end
 end
-doc.info(Buffer.init,
-        'albuf:init',
-        '( [num_buffers=1][, data], opts={ format="MONO16", frequency=44100 } )')
+doc.info(Buffer.__new,
+        'Buffer:new',
+        '( [num_buffers=1][, data], ' ..
+        'opts={ format="MONO16", frequency=44100 } )')
 
 function Buffer:data(i, data, length)
     if type(i) ~= 'number' then

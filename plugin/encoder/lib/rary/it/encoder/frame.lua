@@ -27,15 +27,23 @@ Frame.type:load('libencoder.so', {
 }, cdef)
 
 
-function Frame:init(width, height, format, pointer)
+function Frame:__new(width, height, format, pointer)
     self.format = format or 'ARGB'
     self.native = self.type:create(nil, width, height)
     self.width, self.height = width, height
     self:create(pointer)
 end
-doc.info(Frame.init,
-        'frame:init',
+doc.info(Frame.__new,
+        'Frame:new',
         '( width, height, format="ARGB"[, pointer] )')
+
+function Frame:__cast(pointer)
+    -- TODO format missing
+    self.native = self.type:ptr(pointer)
+    self.height = tonumber(self.native.height)
+    self.width = tonumber(self.native.width)
+end
+doc.todo(Frame.__cast, 'Frame:cast', '( pointer )')
 
 function Frame:create(pointer)
     if pointer then

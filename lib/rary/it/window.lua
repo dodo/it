@@ -42,29 +42,29 @@ Window.type:load('libapi.so', {
 }, cdef)
 
 
-function Window:init(pointer)
-    if self.prototype.init then self.prototype.init(self) end
-    if pointer then
-        self.native = self.type:ptr(pointer)
-        self.thread = process.context.thread
-        self.thread = (pointer == _D._it_windows_) and
-                process.context.thread or Thread:new(self.native.thread)
-        self:__updateraw()
-        self.open = nil
-        return
-    end
+function Window:__new()
+    if self.prototype.__new then self.prototype.__new(self) end
     self.thread = Thread:new()
     self.scope = self.thread.scope
     self.native = self.type:create(nil, self.thread.reference)
     self.scope:define('_it_windows_', self.native, function ()
-        window = require('window'):new(_D._it_windows_)
+        window = require('window'):cast(_D._it_windows_, process.context.thread)
         window:on('sdl event', function (event)
             -- TODO make sdl event moar prettier here
             window:emit('event', require('ffi').cast('SDL_Event*', event))
         end)
     end)
 end
-doc.info(Window.init, 'window:init', '( [pointer] )')
+doc.info(Window.__new, 'Window:new', '(  )')
+
+function Window:__cast(pointer, thread)
+    if self.prototype.__new then self.prototype.__new(self) end
+    self.native = self.type:ptr(pointer)
+    self.thread = thread or Thread:cast(self.native.thread)
+    self:__updateraw()
+    self.open = nil
+end
+doc.info(Window.__cast, 'Window:cast', '( pointer[, thread] )')
 
 function Window:open(title, width, height, x, y)
     self.open = nil

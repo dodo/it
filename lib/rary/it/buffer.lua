@@ -13,7 +13,7 @@ local Buffer = Prototype:fork()
 Buffer.type = Metatype:typedef('void*')
 
 
-function Buffer:init(data, length, encoding)
+function Buffer:__new(data, length, encoding)
     if type(data) == 'number' then
         data, length, encoding = nil, data, length
     end
@@ -32,7 +32,7 @@ function Buffer:init(data, length, encoding)
         self:malloc(length)
     end
 end
-doc.info(Buffer.init, 'buffer:init', '( data[, length[, encoding]] )') -- FIXME
+doc.info(Buffer.__new, 'Buffer:new', '( data[, length[, encoding]] )') -- FIXME
 
 function Buffer:malloc(length)
     self.free = true

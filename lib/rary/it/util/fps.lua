@@ -8,15 +8,15 @@ local Fps = EventEmitter:fork()
 Fps.accuracy = 6 -- os.clock max accuracy
 Fps.interval = 1
 
-function Fps:init()
-    self.prototype.init(self)
+function Fps:__new()
+    self.prototype.__new(self)
     self.frames = 0
     self.value = 0
     self.delta = 0
     self:start()
     self.prev_time = self.last_time
 end
-doc.info(Fps.init, 'fps:init', '(  )')
+doc.info(Fps.__new, 'Fps:new', '(  )')
 
 function Fps:start()
     self.running = true

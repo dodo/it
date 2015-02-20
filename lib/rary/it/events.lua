@@ -3,10 +3,10 @@ local doc = require 'util.doc'
 
 local EventEmitter = Prototype:fork()
 
-function EventEmitter:init()
+function EventEmitter:__new()
     self._events = {}
 end
-doc.info(EventEmitter.init, 'events:init', '(  )')
+doc.info(EventEmitter.__new, 'EventEmitter:new', '(  )')
 
 function EventEmitter:on(event, listener)
     self:emit('newListener', event, listener)

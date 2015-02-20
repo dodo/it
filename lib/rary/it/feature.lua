@@ -5,7 +5,7 @@ local function merge(o, i) -- inplace
     local hidden = {}
     for _, p in ipairs(i) do
         for k, v in pairs(p) do
-            if not (k == "prototype" or k == "metatable") then
+            if not (k == "prototype") then
                 if o[k] and type(v) == 'function' then
                     if not hidden[k] then
                         hidden[k] = {o[k], v}
