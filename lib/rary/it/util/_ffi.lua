@@ -53,14 +53,21 @@ end
 doc.info(exports.ptraddr, 'util_ffi.ptraddr', '( pointer )')
 
 local __define
-local function lua_pushlightuserdata(name, pointer)
+local function get_define(  )
     if not __define then
         __define = require('metatype'):fork():load('api', {
             define = 'it_defines_cdata_scope',
         }, require('cdef')):virt().define
     end
+    return __define
+end
+exports.get_define = get_define
+doc.private(get_define, 'util_ffi.get_define', '(  )')
+
+
+local function lua_pushlightuserdata(name, pointer)
     -- insert into _D:
-    __define(_D._it_scopes_, name, ffi.cast('void*', pointer))
+    get_define()(_D._it_scopes_, name, ffi.cast('void*', pointer))
 end
 exports.lua_pushlightuserdata = lua_pushlightuserdata
 doc.info(lua_pushlightuserdata, 'util_ffi.lua_pushlightuserdata', '( name, pointer )')
