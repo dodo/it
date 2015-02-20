@@ -5,21 +5,22 @@ local doc = require 'util.doc'
 
 
 local Fps = EventEmitter:fork()
-
+Fps.accuracy = 6 -- os.clock max accuracy
+Fps.interval = 1
 
 function Fps:init()
     self.prototype.init(self)
-    self.accuracy = 6 -- os.clock max accuracy
     self.frames = 0
     self.value = 0
+    self.delta = 0
     self:start()
-    self.prev_time = self.start_time
+    self.prev_time = self.last_time
 end
 doc.info(Fps.init, 'fps:init', '(  )')
 
 function Fps:start()
     self.running = true
-    self.start_time = process:time()
+    self.last_time = process.time()
     self:emit('start')
 end
 doc.info(Fps.start, 'fps:start', '(  )')
@@ -30,11 +31,11 @@ function Fps:stop()
 end
 doc.info(Fps.stop, 'fps:stop', '(  )')
 
-function Fps:update()
+function Fps:update(opts)
     if not self.running then return end
-    local time = process:time()
+    local time = process.time()
     self.frames = self.frames + 1
-    if time > self.prev_time + 1 then
+    if time > self.prev_time + self.interval or (opts and opts.force) then
         self.value = round(
             self.frames / (time - self.prev_time),
             self.accuracy
@@ -43,10 +44,11 @@ function Fps:update()
         self.prev_time = time
         self.frames = 0
     end
-    self.start_time = time
+    self.delta = time - self.last_time
+    self.last_time = time
     return time
 end
-doc.info(Fps.update, 'fps:update', '(  )')
+doc.info(Fps.update, 'fps:update', '( { force=false } )')
 
 
 return Fps

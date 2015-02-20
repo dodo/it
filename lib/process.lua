@@ -12,6 +12,7 @@ function Process:init()
     _it.boots(self)
     self.reload= self:bind('emit', 'reload')
     self.sleep = self:bind('sleep')
+    self.time  = self:bind('time')
     self.exit  = self:bind('exit')
     self.cwd   = self:bind('cwd')
     self.initialized = false
