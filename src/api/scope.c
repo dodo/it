@@ -10,7 +10,8 @@ int it_imports_scope_lua(lua_State* L) { // (ctx_userdata, lua_function)
     luaL_checktype(L, 2, LUA_TFUNCTION);
     lua_pushvalue(L, 2);
     // copy function and import into context
-    luaI_getglobalfield(ctx->lua, "context", "import");
+    luaI_getglobalfield(ctx->lua, "process", "context");
+    luaI_getlocalfield(ctx->lua, "import");
     luaI_copyfunction(ctx->lua, L);
     luaI_pcall_in(ctx, 1, 0);
     return 0;
@@ -43,7 +44,8 @@ void it_defines_cdata_scope(it_states* ctx, const char* name, void* cdata) {
 
 void it_calls_scope(it_states* ctx) {
     if (!ctx) return;
-    luaI_getglobalfield(ctx->lua, "context", "run");
+    luaI_getglobalfield(ctx->lua, "process", "context");
+    luaI_getlocalfield(ctx->lua, "run");
     luaI_pcall_in(ctx, 0, 0);
     it_collectsgarbage_scope(ctx);
 }
@@ -62,7 +64,8 @@ void it_frees_scope(it_states* ctx) {
         lua_State* L = ctx->lua;
         ctx->lua = NULL;
         // might take a while …
-        luaI_close(L, "context", -1);
+        luaI_getglobalfield(L, "process", "context");
+        luaI_close(L, -1);
     }
     if (ctx->free && ctx->loop) {
         ctx->loop = NULL;

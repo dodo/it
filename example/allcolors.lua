@@ -6,7 +6,7 @@ local size = 400
 -- local size = 4096
 
 function paint() ----------------------------------------------------------- {{{
-context.thread:safe(false)
+process.context.thread:safe(false)
 
 SEEDS = SEEDS or 200
 local COUNT = {x=3,y=3}
@@ -20,7 +20,7 @@ local step = 1
 local steps = 50000
 
 function allcolors() ------------------------------------------------------- {{{
-context.thread:safe(false)
+process.context.thread:safe(false)
 
 local steps = 10000
 SEEDS = SEEDS or 200
@@ -32,7 +32,7 @@ local ffi = require 'ffi'
 local util = require 'util'
 local _ffi = require 'util._ffi'
 local clamp = require('util.misc').clamp
-local api = context.async
+local api = process.context.async
 local pixels = ffi.cast('uint32_t*', ffi.cast('void*', _D.pixels))
 local id, w, h, width, height = _D.id, _D.w, _D.h, _D.width, _D.height
 print(id, w .. "x" .. h, "at", _D.x..",".._D.y, "("..(w*h).." pixels)")
@@ -374,15 +374,15 @@ end)
 -- api:on('', function ()
 -- end)
 
-context:on('exit', function ()
+process.context:on('exit', function ()
     print("close thread", id)
-    context.thread:close()
+    process.context.thread:close()
 end)
 
 reset()
 end ------------------------------------------------------------------------ }}}
 
-window.async = context.async
+window.async = process.context.async
 math.randomseed(os.time())
 local ffi = require 'ffi'
 local util = require 'util'

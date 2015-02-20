@@ -18,7 +18,7 @@ local Surface = {}
 Surface.type = Metatype:use('SDL2', 'SDL_', 'Surface', 'FreeSurface')
 
 
-local Window = require(context and 'events' or 'prototype'):fork()
+local Window = require(process.context and 'events' or 'prototype'):fork()
 Window.type = Metatype:struct("it_windows", cdef)
 Window.Surface = Surface
 
@@ -45,9 +45,9 @@ function Window:init(pointer)
     if pointer then
         self.native = self.type:ptr(pointer)
         self.raw = self.native.window
-        self.thread = context.thread
+        self.thread = process.context.thread
         self.thread = (pointer == _D._it_windows_) and
-                context.thread or Thread:new(self.native.thread)
+                process.context.thread or Thread:new(self.native.thread)
         self.height = tonumber(self.native.height)
         self.width = tonumber(self.native.width)
         self.open = nil

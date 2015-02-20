@@ -3,10 +3,10 @@ local EventEmitter = require 'events'
 
 
 process = Process:new()
-context = EventEmitter:new()
+process.context = EventEmitter:new()
 
-context.run    = context:bind('emit', '__run')
-context.import = context:bind('on',   '__run')
+process.context.run    = process.context:bind('emit', '__run')
+process.context.import = process.context:bind('on',   '__run')
 
 require('util.doc').rm()
 -- print(require('util').dump(_G))

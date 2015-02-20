@@ -31,9 +31,9 @@ function Scope:init(pointer)
     if process.debugmode then
         self:import(function () process.debug() end)
     end
-    -- special case since object gets injected into context instead as global
+    -- special case since object gets injected into process.context instead as global
     self:define('_it_scopes_', self.state, function ()
-        context.scope = require('scope'):new(_D._it_scopes_)
+        process.context.scope = require('scope'):new(_D._it_scopes_)
     end)
 end
 doc.info(Scope.init, 'scope:init', '( [pointer] )')

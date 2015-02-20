@@ -75,7 +75,8 @@ int main(int argc, char *argv[]) {
         uv_run(ctx.loop, UV_RUN_DEFAULT);
     }
     // shutdown
-    luaI_close(ctx.lua, "process", process.exit_code);
+    lua_getglobal(ctx.lua, "process");
+    luaI_close(ctx.lua, process.exit_code);
     //
     uv_signal_stop(process.sigint);
     process.sigint = NULL;

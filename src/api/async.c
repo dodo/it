@@ -8,9 +8,8 @@
 void default_async_callback(void* priv, it_queues* queue) {
     it_asyncs* async = (it_asyncs*) priv;
     if (async->thread->ctx->err) return;
-    luaI_getglobalfield(async->thread->ctx->lua, "context", "async");
-    if (lua_isnil(async->thread->ctx->lua, -1)) return;
-    luaI_emit(async->thread->ctx->lua, queue->key);
+    luaI_getglobalfield(async->thread->ctx->lua, "process", "context");
+    luaI_localemit(async->thread->ctx->lua, "async", queue->key);
     int nargs = 2 + queue->count;
     int i; for (i = 0; i < queue->count; i++) {
         luaI_value* value = queue->values[i];

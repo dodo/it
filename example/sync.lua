@@ -7,7 +7,7 @@ window.async = Async:new(window.thread)
 
 
 window.scope:import(function ()
---     context.thread:safe(false)
+--     process.context.thread:safe(false)
     math.randomseed(os.time() - 1)
 
 --     local COUNT = {x=4,y=4}
@@ -18,17 +18,17 @@ window.scope:import(function ()
     local Thread = require 'thread'
     local width, height = window.width, window.height
     local w, h = math.floor(width/(COUNT.x)), math.floor(height/(COUNT.y))
-    window.async = context.async
+    window.async = process.context.async
     print(width .. "x" .. height)
     COUNT.i = COUNT.x * COUNT.y
 
 
 function threaded()
---     context.thread:safe(false)
+--     process.context.thread:safe(false)
     math.randomseed(os.time() + id)
 
     local x = 0
-    local api = context.async
+    local api = process.context.async
     local id, width, height = _D.id, _D.width, _D.height
     local surface = require('lib.cairo').surface('ARGB32', width, height)
     print(id, width .. "x" .. height)
@@ -44,9 +44,9 @@ function threaded()
 --         x = (x+0.1 - 1) % 100 + 1
         x = x % (width/2) + 1
     end)
-    context:on('exit', function ()
+    process.context:on('exit', function ()
         print("close thread", id)
-        context.thread:close()
+        process.context.thread:close()
     end)
 -- require('util.luastate').dump_stats(io.stderr)
     backport:send('ready', id)
@@ -54,9 +54,9 @@ end
 
 
 function torched()
---     context.thread:safe(false)
+--     process.context.thread:safe(false)
     local cairo = require 'lib.cairo'
-    local api = context.async
+    local api = process.context.async
     local id, width, height = _D.id, _D.width, _D.height
     math.randomseed(os.time() + id)
     print(id, width .. "x" .. height)
@@ -88,10 +88,10 @@ function torched()
         process:sleep(100) -- should be ~10fps
         backport:send('result', id, surface.object)
     end)
-    context:on('exit', function ()
+    process.context:on('exit', function ()
         print("close thread", id)
         cam:stop()
-        context.thread:close()
+        process.context.thread:close()
     end)
     backport:send('ready', id)
 end

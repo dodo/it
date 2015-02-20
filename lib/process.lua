@@ -20,6 +20,8 @@ function Process:init()
     self.debugmode = nil
     self.debugger = nil
     self.verbose = nil
+    -- reserve these for thread scopes
+    self.context = nil
     -- reserve these for user callbacks
     self.main  = nil -- c event loop callback
     self.load  = nil

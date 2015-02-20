@@ -331,8 +331,7 @@ int luaI_gc(lua_State* L) {
     return 0;
 }
 
-void luaI_close(lua_State* L, const char *global, int code) {
-    lua_getglobal(L, global);
+void luaI_close(lua_State* L, int code) {
     lua_getfield(L, -1, "emit");
     lua_pushvalue(L, -2);
     lua_pushstring(L, "exit");

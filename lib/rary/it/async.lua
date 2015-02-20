@@ -25,15 +25,15 @@ function Async:init(thread, pointer)
         -- do init here since only here the right uvloop exists
         self.native = self.type:create(pointer)
         self.thread = (pointer == _D._it_asyncs_) and
-                context.thread or Thread:new(self.native.thread)
+                process.context.thread or Thread:new(self.native.thread)
         return
     end
     self.thread = thread or Thread:new()
     self.native = self.type:new()
     self.native.thread = self.thread.reference
-    -- special case since object gets injected into context instead as global
+    -- special case since object gets injected into process.context instead as global
     self.thread.scope:define('_it_asyncs_', self.native, function ()
-        context.async = require('async'):new(nil, _D._it_asyncs_)
+        process.context.async = require('async'):new(nil, _D._it_asyncs_)
     end)
 end
 doc.info(Async.init, 'async:init', '( thread|nil[, pointer] )')

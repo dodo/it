@@ -4,7 +4,7 @@ local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
 
-local Thread = require(context and 'events' or 'prototype'):fork()
+local Thread = require(process.context and 'events' or 'prototype'):fork()
 Thread.type = Metatype:struct("it_threads", cdef)
 
 Thread.type:load('libapi.so', {
@@ -24,7 +24,7 @@ function Thread:init(pointer)
         self.reference = self.type:ptr(pointer)
         self.raw = self.reference.thread
         self.scope = (pointer == _D._it_threads_) and
-                context.scope or Scope:new(self.reference.ctx)
+                process.context.scope or Scope:new(self.reference.ctx)
         self.start = nil
         return
     end
@@ -32,9 +32,9 @@ function Thread:init(pointer)
     self.scope = Scope:new()
     self.reference = self.type:create(nil, self.scope.state)
     self.raw = self.reference.thread
-    -- special case since object gets injected into context instead as global
+    -- special case since object gets injected into process.context instead as global
     self.scope:define('_it_threads_', self.reference, function ()
-        context.thread = require('thread'):new(_D._it_threads_)
+        process.context.thread = require('thread'):new(_D._it_threads_)
     end)
 end
 doc.info(Thread.init, 'thread:init', '( [pointer] )')

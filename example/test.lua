@@ -73,7 +73,7 @@ enc.scope:import(function ()
         x = (x+0.1 - 1) % 100 + 1
     end)
 
-    context:on('exit', function ()
+    process.context:on('exit', function ()
         print "close encoder"
     end)
     process:on('panic', function (err)

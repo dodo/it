@@ -15,7 +15,7 @@ void default_thread_idle(void* priv) {
         it_closes_thread(thread);
         return;
     }
-    lua_getglobal(thread->ctx->lua, "context");
+    luaI_getglobalfield(thread->ctx->lua, "process", "context");
     luaI_localemit(thread->ctx->lua, "thread", "idle");
     luaI_pcall_in(thread->ctx, 2, 1);
 //     it_collectsgarbage_scope(thread->ctx);
@@ -62,7 +62,8 @@ void it_runs_thread(void* priv) {
         thread->on_init(thread->priv);
     }
     // … then call into lua state first …
-    luaI_getglobalfield(thread->ctx->lua, "context", "run");
+    luaI_getglobalfield(thread->ctx->lua, "process", "context");
+    luaI_getlocalfield(thread->ctx->lua, "run");
     luaI_pcall_in(thread->ctx, 0, 0);
     if (!thread->ctx->err)
         // … and now run!

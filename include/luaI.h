@@ -76,7 +76,7 @@ int luaI_localemit(lua_State* L, const char* field, const char* event);
 int luaI_globalemit(lua_State* L, const char* global, const char* event);
 
 int luaI_gc(lua_State* L);
-void luaI_close(lua_State* L, const char *global, int code);
+void luaI_close(lua_State* L, int code);
 
 
 #endif /* LUAI_H */
