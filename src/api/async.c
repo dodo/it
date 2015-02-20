@@ -43,6 +43,7 @@ void uvI_async_call(uv_async_t* handle) {
 }
 
 void it_inits_async(it_asyncs* async) {
+    if (!async) return;
     uv_async_t* uvasync = (uv_async_t*) malloc(sizeof(uv_async_t));
     if (!uvasync) return;
     uv_mutex_t* uvmutex = (uv_mutex_t*) malloc(sizeof(uv_mutex_t));
