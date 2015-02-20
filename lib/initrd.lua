@@ -11,17 +11,18 @@ function Process:usage()
 Usage: it [options] scripts.lua [arguments]
 
 Options:
-  --debug           enable debug mode (jit.v,jit.dump)
+  -m --main <module> require module and run module.__main function
+  --debug            enable debug mode (jit.v,jit.dump)
 ]]
     if pcall(require, 'mobdebug') then
         usage = usage .. [[
-  --mobdebug        enable remote debug mod (mobdebug)
+  --mobdebug         enable remote debug mod (mobdebug)
 ]]
     end
     usage = usage .. [[
-  --verbose         increase verbosity
-  -v --version      print versions
-  -h --help         magic flag
+  --verbose          increase verbosity
+  -v --version       print versions
+  -h --help          magic flag
 ]]
     return usage
 end
@@ -71,13 +72,31 @@ if haz(process.argv, "--mobdebug") then
     end
 end
 
+if haz(process.argv, "-m") or haz(process.argv, "--main") then
+    local i = haz(process.argv, "-m") or haz(process.argv, "--main")
+    table.remove(process.argv, i)
+    local modulename = process.argv[i]
+    table.remove(process.argv, i)
+    doc.rm()
+    return function --[[boot]]()
+        local module = util.pcall(require, modulename)
+        if not module.__main then
+            print(string.format("module '%s' does not have a __main function.",
+                                modulename))
+            return process.exit(1)
+        end
+        return util.pcall(module.__main) -- could return a loop
+    end
+end
+
 return function --[[boot]]() -- called when finally initialized
     if #process.argv == 0 then
         doc.init()
         require('cli').repl()
     else
         if not fs.exists(process.argv[1]) then
-            print(string.format("script file '%s' does not exist.", process.argv[1]))
+            print(string.format("script file '%s' does not exist.",
+                                process.argv[1]))
             return process.exit(1)
         end
         doc.rm()
