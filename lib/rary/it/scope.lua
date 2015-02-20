@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local cdef = require 'cdef'
+local _ffi = require 'util._ffi'
 local Prototype = require 'prototype'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
@@ -13,11 +14,12 @@ Scope.type:load('libapi.so', {
     ref = 'it_refs',
     unref = 'it_unrefs',
     collectgarbage = 'it_collectsgarbage_scope',
-    defcdata = 'it_defines_cdata_scope',
+--     defcdata = 'it_defines_cdata_scope',
     init = 'it_inits_scope',
     call = 'it_calls_scope',
     __gc = 'it_frees_scope',
 }, cdef)
+Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
 
 
 function Scope:__new()
