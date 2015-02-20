@@ -21,6 +21,22 @@ function _table.readonly(table)
 end
 doc.info(_table.readonly, 'util_table.readonly', '( [table] )')
 
+function _table.fake(name, table)
+    name = name or '_'
+    return setmetatable(table or {}, {
+        __call = function ()
+            if process.verbose then
+                print(string.format("fake %s call", name))
+            end
+        end,
+        __index = function (t,k)
+            t[k] = _table.fake(name .. '.' .. k)
+            return t[k]
+        end
+    })
+end
+doc.info(_table.fake, 'util_table.fake', '( name="_", table={} )')
+
 function _table.sum(t1, t2)
     return _table.append(_table.copy(t1), t2)
 end
