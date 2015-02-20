@@ -1,11 +1,18 @@
 local io = require 'io'
+local util = require 'util'
 local doc = require 'util.doc'
+local ansi = require('console').color
 
 local cli = {}
 
 
 function cli.repl()
     local repl = require 'repl.console'
+    local funcinfo = require 'util.funcinfo'
+    -- globals
+    ffi = require 'ffi'
+    cdef = require 'cdef'
+    dump = require('util').dump
     -- load plugins …
     repl:loadplugin 'linenoise'
     repl:loadplugin 'history'
@@ -38,14 +45,21 @@ function cli.repl()
             process.exit()
         end
     end)
+    -- hold list of all core modules here
+    local coremodules = getmetatable(util.lazysubmodules(nil, {
+        'lib', 'util', 'async', 'buffer', 'cdef', 'cface', 'cli', 'console',
+        'events', 'feature', 'fs', 'inspect', 'metatype', 'prototype',
+        'reflect', 'scope', 'thread', 'window'
+    }))
     -- add help command function
     help = function (...)
         if #({...}) == 0 then
-            print "hello world!"
+            print(ansi.bold..ansi.yellow.."core modules:"..ansi.reset)
+            print(funcinfo.list(coremodules))
         elseif #({...}) == 1 then
-            print(require('util.funcinfo').list(...))
+            print(funcinfo.list(...))
         else
-            require('util.funcinfo').print(...)
+            funcinfo.print(...)
         end
     end
     doc.info(help, 'help', '( tables... )')
@@ -56,10 +70,6 @@ function cli.repl()
         repl:displayresults(results)
     end
     doc.info(pprint, 'pprint', '( ... )')
-    -- globals
-    ffi = require 'ffi'
-    cdef = require 'cdef'
-    dump = require('util').dump
     -- finally start it …
     process.shutdown = false
     repl:run()
