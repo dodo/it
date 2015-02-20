@@ -22,6 +22,50 @@ function EventEmitter:on(event, listener)
 end
 doc.info(EventEmitter.on, 'events:on', '( event, listener )')
 
+function EventEmitter:once(event, handler)
+    if not self._events[event] then
+        self._events[event] = { length = 0 }
+    elseif type(self._events[event]) == 'function' then
+        self._events[event] = { self._events[event], length = 1 }
+    end
+    return self:on(event, setmetatable({
+        emitter = self,
+        handler = handler,
+    }, {
+        __call = function (t, ...)
+            t.handler(...)
+            t.emitter:off(t.handler)
+        end,
+    }))
+end
+doc.info(EventEmitter.once, 'events:once', '( event, listener )')
+
+function EventEmitter:off(event, handler)
+    local listeners = self._events and self._events[event]
+    if not listeners then return false end
+    if type(listeners) == 'function' then
+        if listeners == handler then
+            self._events[event] = nil
+            return true
+        end
+    else
+        for i, listener in ipairs(listeners) do
+            if listener == handler or
+               (type(listener) == 'table' and listener.handler == handler) then
+                if listeners.length == 1 then
+                    self._events[event] = nil
+                else
+                    table.remove(listeners, i)
+                    listeners.length = listeners.length - 1
+                end
+                return true
+            end
+        end
+    end
+    return false
+end
+doc.info(EventEmitter.off, 'events:off', '( event, listener )')
+
 function EventEmitter:emit(event, ...)
     if event == "error" and self._events and not self._events.error then
         error(...)
