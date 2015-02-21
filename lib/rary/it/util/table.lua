@@ -64,6 +64,14 @@ function _table.append(t1, t2)
 end
 doc.info(_table.append, 'util_table.append', '( dst_table, src_table )')
 
+function _table.update(t1, t2)
+    for k,v in pairs(t2) do
+        t1[k] = v
+    end
+    return t1
+end
+doc.info(_table.update, 'util_table.update', '( dst_table, src_table )')
+
 function _table.index(t, val)
     for i, v in ipairs(t) do
         if v == val then
