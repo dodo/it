@@ -4,11 +4,10 @@ local doc = require 'util.doc'
 local function lazysubmodules(modname, names)
     modname = modname and (modname..'.') or ''
     local index = {}
-    local module = {}
     for _, name in ipairs(names) do
-        index[name] = function ()
+        index[name] = function (cache)
             local submodule = require(modname .. name)
-            module[name] = submodule -- prevents next __index call on this
+            cache[name] = submodule -- prevents next __index call on this
             return submodule
         end
         doc.info(index[name],
@@ -16,7 +15,8 @@ local function lazysubmodules(modname, names)
                 string.format('( "%s%s" )', modname, name),
                 true--[[noval]])
     end
-    return setmetatable(module, {
+    return setmetatable({}, {
+        names = names,
         __metatable = index,
         __pairs = function ()
             return pairs(index)
@@ -27,7 +27,7 @@ local function lazysubmodules(modname, names)
         __index = function (t, name)
             for _,n in ipairs(names) do
                 if n == name then
-                    return index[name]()
+                    return index[name](t)
                 end
             end
         end,
