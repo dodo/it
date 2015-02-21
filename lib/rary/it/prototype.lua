@@ -9,12 +9,22 @@ Prototype.prototype = Prototype
 
 function Prototype:fork(proto)
     local fork = proto or {}
+    local metatable = self
+    local mt = debug.getmetatable(fork)
+    if mt and mt.__metatable then
+        -- prevent changing a protected metatable
+        fork = {}
+        metatable = {
+            __index = self,
+            __metatable = mt.__metatable,
+        }
+    end
     fork.__index = fork
-    fork.prototype = self
+    fork.prototype = metatable
     if type(fork) == 'userdata' then -- hopefully it's not a lightuserdata
-        debug.setmetatable(fork, self)
+        debug.setmetatable(fork, metatable)
     else
-              setmetatable(fork, self)
+              setmetatable(fork, metatable)
     end
     return fork
 end
