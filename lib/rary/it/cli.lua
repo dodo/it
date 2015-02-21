@@ -9,6 +9,7 @@ local cli = {}
 function cli.repl()
     local repl = require 'repl.console'
     local funcinfo = require 'util.funcinfo'
+    local _module = require 'util.module'
     -- globals
     ffi = require 'ffi'
     cdef = require 'cdef'
@@ -45,15 +46,20 @@ function cli.repl()
             process.exit()
         end
     end)
-    -- hold list of all core modules here
-    local coremodules = getmetatable(util.lazysubmodules(nil, {
+    -- hold list of all internal modules here
+    local corenames = {
         'lib', 'util', 'async', 'buffer', 'cdef', 'cface', 'cli', 'console',
         'events', 'feature', 'fs', 'inspect', 'metatype', 'prototype',
         'reflect', 'scope', 'thread', 'window'
-    }))
+    }
     local pluginnames = { dofile(_it.libdir .. 'plugins.lua') }
     table.remove(pluginnames, 1) -- first entry is nil
+    local coremodules   = getmetatable(util.lazysubmodules(nil, corenames))
     local pluginmodules = getmetatable(util.lazysubmodules(nil, pluginnames))
+    -- make all modules lazy loadable from global namespace
+    _M = _module.lazymodules(pluginnames)
+    _module.lazymodules(corenames, _M) -- make sure that plugins dont overwrite core modules
+    package.loaded['_M'] = _M
     -- add help command function
     help = function (...)
         if #({...}) == 0 then
