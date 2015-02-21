@@ -334,7 +334,7 @@ int luaI_gc(lua_State* L) {
 void luaI_close(lua_State* L, int code) {
     lua_getfield(L, -1, "emit");
     lua_pushvalue(L, -2);
-    lua_pushstring(L, "exit");
+    lua_pushliteral(L, "exit");
     if (code > -1) lua_pushinteger(L, code);
     luaI_pcall(L, (code == -1) ? 2 : 3, 0, TRUE/*safe*/);
     // we are done now:
@@ -342,7 +342,7 @@ void luaI_close(lua_State* L, int code) {
 }
 
 const char* uvI_debug_stacktrace(uvI_thread_t* thread, lua_State* L) {
-    lua_pushstring(L, "DEBUG");
+    lua_pushliteral(L, "DEBUG");
     uvI_thread_stacktrace(thread);
     luaI_stacktrace(L);
     const char* st = lua_tostring(L, -1);

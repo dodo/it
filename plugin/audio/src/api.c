@@ -17,7 +17,7 @@ int register_api(lua_State* L, const char *name) {
 
 int api_version(lua_State* L) {
     lua_createtable(L, 0, 4);
-    lua_pushstring(L, "audio plugin");
+    lua_pushliteral(L, "audio plugin");
     lua_setfield(L, -2, "name");
     // * libopenal
     lua_pushfstring(L, "libopenal %s", PKG_OPENAL_VERSION);

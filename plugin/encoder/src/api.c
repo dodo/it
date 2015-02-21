@@ -31,7 +31,7 @@ int register_api(lua_State* L, const char *name) {
 
 int api_version(lua_State* L) {
     lua_createtable(L, 0, 4);
-    lua_pushstring(L, "encoder plugin");
+    lua_pushliteral(L, "encoder plugin");
     lua_setfield(L, -2, "name");
     // * libschrödinger
     lua_pushfstring(L, "libschrödinger %d.%d.%d (Dirac %d.%d)",

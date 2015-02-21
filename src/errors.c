@@ -46,7 +46,7 @@ int at_panic(lua_State* L) {
     lua_getfield( L, -1, "emit");
     lua_pushvalue(L, -2);
     lua_remove(   L, -3);
-    lua_pushstring(L, "panic");
+    lua_pushliteral(L, "panic");
     lua_pushvalue(L, -4);
     luaI_pcall(L, 3, 0, TRUE/*safe*/);
     panic_attack = FALSE;
@@ -114,12 +114,12 @@ int lua_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f) {
 
 int luaI_simpleerror(lua_State* L) {
     if (!lua_isstring(L, -1)) {
-        lua_pushstring(L, "missing error message");
+        lua_pushliteral(L, "missing error message");
     } else {
         luaL_loadstring(L, "return string.match(..., '([^\\n]+)')");
         lua_pushvalue(L, -2);
         if (lua_pcall(L, 1, 1, 0)) {
-            lua_pushstring(L, "error during message extraction: ");
+            lua_pushliteral(L, "error during message extraction: ");
             lua_pushvalue(L, -2);
             lua_remove(L, -3);
             lua_concat(L, 2);
@@ -142,7 +142,7 @@ int luaI_stacktrace(lua_State* L) {
     if (thread->backtrace->count && strings) {
         if (lua_isstring(L, -2) && !lua_isnumber(L, -2)) {
             lua_insert(L, -2); // swap lua err msg with luaI_xpcall err msg
-            lua_pushstring(L, "\n");
+            lua_pushliteral(L, "\n");
             strings += 2;
         }
     }
@@ -214,7 +214,7 @@ int luaI_stacktrace(lua_State* L) {
                 info.currentline);
             ++strings;
         }
-        lua_pushstring(L, "\n");
+        lua_pushliteral(L, "\n");
         ++strings;
         // get source code
         if (info.what[0] == 'C') {
@@ -222,28 +222,28 @@ int luaI_stacktrace(lua_State* L) {
             continue;
         }
         { // try to extract lua code
-            lua_pushstring(L, "        ");
+            lua_pushliteral(L, "        ");
             luaL_loadstring(L, "return require('it.fs').line(...)");
             lua_pushstring(L, info.short_src);
             lua_pushinteger(L, info.currentline);
             if (lua_pcall_with(L, 2, 1, luaI_simpleerror)) {
-                lua_pushstring(L, "--[[! internal error: missing lua lines: ");
+                lua_pushliteral(L, "--[[! internal error: missing lua lines: ");
                 lua_pushvalue(L, -2);
                 lua_remove(L, -3);
-                lua_pushstring(L, " !]]\n");
+                lua_pushliteral(L, " !]]\n");
                 strings += 4;
             } else if (lua_isnil(L, -1)) {
                 // no lua code found, so skip it
                 lua_pop(L, 2);
             } else {
-                lua_pushstring(L, "\n");
+                lua_pushliteral(L, "\n");
                 strings += 3;
             }
         }
         ++level;
     }
     if (level + thread->backtrace->count - skips) {
-        lua_pushstring(L, "\n");
+        lua_pushliteral(L, "\n");
         lua_insert(L, -strings);
         strings++;
     }
