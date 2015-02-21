@@ -78,13 +78,13 @@ void at_fatal_panic(int signum) {
 int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe) {
     if (!safe) {// hardcore!
         lua_call(L, nargs, nresults);
-        return nresults;
+        return 0;
     }
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) it_errors("current thread not found!");
     if (!thread->safe) {// hardcore!
         lua_call(L, nargs, nresults);
-        return nresults;
+        return 0;
     }
     signal(SIGILL, &at_fatal_panic);
     signal(SIGABRT, &at_fatal_panic);

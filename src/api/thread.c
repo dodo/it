@@ -99,6 +99,7 @@ void it_creates_thread(it_threads* thread) {
 }
 
 void it_safes_thread(it_threads* thread, bool safe) {
+    // TODO change lua_assert here as well?
     if (!thread->thread) return;
     uvI_thread_t* uvthread = uvI_thread_pool(*(thread->thread));
     if (!uvthread) return;

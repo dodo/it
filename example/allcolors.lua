@@ -6,7 +6,7 @@ local size = 400
 -- local size = 4096
 
 function paint() ----------------------------------------------------------- {{{
--- process.context.thread:safe(false)
+process.context.thread:safe(false)
 
 SEEDS = SEEDS or 200
 -- local COUNT = {x=1,y=1}
@@ -21,7 +21,7 @@ local step = 1
 local steps = 50000
 
 function allcolors() ------------------------------------------------------- {{{
--- process.context.thread:safe(false)
+process.context.thread:safe(false)
 
 local steps = 10000
 SEEDS = SEEDS or 200
