@@ -1,11 +1,14 @@
 local ffi = require 'ffi'
+local util = require 'util'
 local cdef = require 'cdef'
 local cface = require 'cface'
 local Metatype = require 'metatype'
 local doc = require 'util.doc'
 
 
-local Audio = require('events'):fork()
+local submodules = util.lazysubmodules('audio', {'buffer'})
+
+local Audio = require('events'):fork(submodules)
 
 
 cdef({

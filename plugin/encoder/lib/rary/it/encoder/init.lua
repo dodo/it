@@ -1,5 +1,6 @@
 local ffi = require 'ffi'
 local _ffi = require 'util._ffi'
+local util = require 'util'
 local cdef = require 'cdef'
 local cface = require 'cface'
 local Scope = require 'scope'
@@ -18,8 +19,9 @@ cface.metatype('SchroEncoder')
 cface.metatype('SchroEncoderFrame')
 cface.metatype('SchroVideoFormat')
 
+local submodules = util.lazysubmodules('encoder', {'frame'})
 
-local Encoder = require(process.context and 'events' or 'prototype'):fork()
+local Encoder = require(process.context and 'events' or 'prototype'):fork(submodules)
 Encoder.type = Metatype:struct("it_encodes", cdef)
 
 

@@ -51,11 +51,16 @@ function cli.repl()
         'events', 'feature', 'fs', 'inspect', 'metatype', 'prototype',
         'reflect', 'scope', 'thread', 'window'
     }))
+    local pluginnames = { dofile(_it.libdir .. 'plugins.lua') }
+    table.remove(pluginnames, 1) -- first entry is nil
+    local pluginmodules = getmetatable(util.lazysubmodules(nil, pluginnames))
     -- add help command function
     help = function (...)
         if #({...}) == 0 then
             print(ansi.bold..ansi.yellow.."core modules:"..ansi.reset)
             print(funcinfo.list(coremodules))
+            print(ansi.bold..ansi.yellow.."plugin modules:"..ansi.reset)
+            print(funcinfo.list(pluginmodules))
         elseif #({...}) == 1 then
             print(funcinfo.list(...))
         else
