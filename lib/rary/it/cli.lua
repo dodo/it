@@ -49,8 +49,8 @@ function cli.repl()
     -- hold list of all internal modules here
     local corenames = {
         'lib', 'util', 'async', 'buffer', 'cdef', 'cface', 'cli', 'console',
-        'events', 'feature', 'fs', 'inspect', 'metatype', 'prototype',
-        'reflect', 'scope', 'thread', 'window'
+        'events', 'feature', 'fs', 'inspect', 'metatype', 'prostitution',
+        'prototype', 'reflect', 'scope', 'thread', 'window'
     }
     local pluginnames = { dofile(_it.libdir .. 'plugins.lua') }
     table.remove(pluginnames, 1) -- first entry is nil
