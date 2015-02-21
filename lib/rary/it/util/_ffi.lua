@@ -27,7 +27,7 @@ local function update(interface, values, opts)
     return interface, changed
 end
 exports.update = update
-doc.info(update, 'util_ffi.update', '( interface, values, opts )')
+doc.private(update, 'util_ffi.update', '( interface, values, opts )')
 
 function exports.convert_enum(key, value, typ, prefix, suffix)
     return update({}, {[key]=value}, {
