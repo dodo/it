@@ -531,6 +531,9 @@ do
 end
 
 local function vshow( v, long )  return show[type( v )]( v, long )  end
+local function headline( name, v )
+	return ansi.bold..ansi.black..name..": "..ansi.reset..vshow( v, true )..ansi.reset
+end
 
 -- }}}
 
@@ -569,14 +572,17 @@ local function list( t, _short, _visited )
 	-- check metatable
 	local mt = getmetatable( t )
 	if mt and not _visited[mt] then
-		result = result.."\n\n"..list( mt, nil, _visited )
+		result = result.."\n\n"..headline( "<metatable>", mt )
+		result = result.."\n"..list( mt, nil, _visited )
 		local next = mt.__index
 		if type( next ) == "table" and not _visited[next] then
-			result = result.."\n\n"..list( next, nil, _visited )
+			result = result.."\n\n"..headline( "__index", next )
+			result = result.."\n"..list( next, nil, _visited )
 		end
 		local next = mt.__metatable
 		if type( next ) == "table" and not _visited[next] then
-			result = result.."\n\n"..list( next, nil, _visited )
+			result = result.."\n\n"..headline( "__metatable", next )
+			result = result.."\n"..list( next, nil, _visited )
 		end
 	end
 	return result
