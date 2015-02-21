@@ -40,7 +40,9 @@ doc.info(Prototype.new, 'proto:new', '( [...] )')
 function Prototype:cast(pointer, ...)
     local instance = setmetatable({}, self)
     if pointer then
-        if instance.__cast then instance:__cast(pointer, ...) end
+        if instance.__cast then instance:__cast(pointer, ...)
+        else error("cannot cast pointer! __cast method is missing!")
+        end
     else -- casting nil is as good as creating a new instance
         if instance.__new then instance:__new(...) end
     end
