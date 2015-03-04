@@ -52,38 +52,40 @@ end
 
 -- this uses at least 40mb!!! FIXME
 local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
+    local orig_require = getmetatable(package.env).require
     if not name or not name:match('^%w') then
-        return package.vanilla_require(name)
+        return orig_require(name)
     else
         local success, mod, api
         -- try to namespace all modules within it/lib/rary/
         local apiname = name and 'it.' .. name or name
-        success, api = pcall(package.vanilla_require, apiname)
+        success, api = pcall(orig_require, apiname)
         if success then return api end
         if not api:match('^module') then error(api) end
-        success, mod = pcall(package.vanilla_require, name)
+        success, mod = pcall(orig_require, name)
         if not success then error(api or mod) --[[error]] end
         return mod
     end
 end
 
--- add new loaders via environment
-function package.env(mode, ...)
-    if mode == 'vanilla' then
+package.env = setmetatable({
+    ['vanilla'] = function (env)
         -- copy loaders table to prevent luarocks from using api_loader
         local loaders = {}
-        for k,v in pairs(package.vanilla_loaders) do
+        for k,v in pairs(getmetatable(env).loaders) do
             loaders[k] = v
         end
         package.loaders = loaders
-        require = package.vanilla_require
-    elseif mode == 'it' then
-        package.env('vanilla') -- remove any previously defined custom loaders
+        require = getmetatable(env).require
+    end,
+    ['it'] = function (env)
+        env('vanilla') -- remove any previously defined custom loaders
         table.insert(package.loaders, 1, local_loader)
         table.insert(package.loaders, 2, api_loader)
         require = api_require
-    elseif mode == 'love' then
-        package.env('it')
+    end,
+    ['love'] = function (env, ...)
+        env('it')
         local window = ...
         if window and window.type and window.type.name == 'it_windows' then
             require('prostitution').emulator(window)
@@ -92,14 +94,21 @@ function package.env(mode, ...)
             if type(window) == 'string' then gamepath = window end
             require('prostitution').__main(gamepath)
         end
-    else
-        error(string.format("uknown package environment '%s'!", mode))
-    end
-end
+    end,
+}, {
+    require = require,
+    loaders = package.loaders,
+    __call = function (env, mode, ...)
+        if  env[mode] then
+            env[mode](env, ...)
+        else
+            error(string.format("unknown package environment '%s'!", mode))
+        end
+    end,
+})
+
 
 -- load luarocks loader if present
 pcall(require, "luarocks.loader")
 -- default
-package.vanilla_require = require
-package.vanilla_loaders = package.loaders
 package.env('it')
