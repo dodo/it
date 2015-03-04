@@ -185,6 +185,10 @@ enc.scope:import(function ()
             io.flush()
         end
     end)
+
+    process.context.thread:on('stop', function ()
+        print "encoder reached end of stream."
+    end)
 end)
 enc:start()
 print "encoder started …"
