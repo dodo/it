@@ -84,6 +84,7 @@ typedef struct _it_threads {
     uvI_thread_callback on_free;
     const char *name;
     bool closed;
+    bool stop;
     void* priv;
 } it_threads;
 

@@ -13,6 +13,7 @@ it_threads* it_allocs_thread() {
     it_threads* thread = (it_threads*) calloc(1, sizeof(it_threads));
     if (!thread)
         it_errors("calloc(1, sizeof(it_threads)): failed to allocate thread");
+    thread->stop = TRUE;
     thread->refc = 1;
     return thread;
 }
@@ -164,7 +165,7 @@ void it_joins_thread(it_threads* thread) {
 }
 
 void it_stops_thread(it_threads* thread) {
-    if (!thread) return;
+    if (!thread || !thread->stop) return;
     if (thread->idle) {
         uv_idle_t* idle = thread->idle;
         thread->idle = NULL;

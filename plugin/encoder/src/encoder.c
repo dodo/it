@@ -30,7 +30,13 @@ it_encodes* it_allocs_encoder() {
 
 void schroI_encoder_wait(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
-    if (enc->eos_pulled || enc->thread->ctx->err) return;
+    if (enc->eos_pulled || enc->thread->ctx->err) {
+        if (!enc->thread->stop) {
+            enc->thread->stop = TRUE;
+            it_stops_thread(enc->thread);
+        }
+        return;
+    }
     SchroStateEnum state = schro_encoder_wait(enc->encoder);
     switch (state) {
         case SCHRO_STATE_NEED_FRAME:
@@ -64,6 +70,7 @@ void schroI_encoder_wait(void* priv) {
             // close in cose of eos
             if (state == SCHRO_STATE_END_OF_STREAM) {
                 enc->eos_pulled = TRUE;
+                enc->thread->stop = TRUE;
                 it_closes_thread(enc->thread);
             }
             // skip lua and ogg in case buffer is not a full picture yet
@@ -164,7 +171,15 @@ void schroI_encoder_free(void* priv) {
 
 void it_inits_encoder(it_encodes* enc, it_threads* thread, SchroVideoFormatEnum format) {
     if (!enc || enc->encoder || !thread) return;
+    if (enc->thread) {
+        enc->thread->stop = TRUE;
+        it_frees_thread(enc->thread);
+    }
+    enc->thread = NULL;
+    if (!thread->refc) return;
     enc->thread = thread;
+    it_refs((it_refcounts*) thread);
+    thread->stop = FALSE;
     thread->priv = enc;
     thread->on_init = schroI_encoder_start;
     thread->on_idle = schroI_encoder_wait;
