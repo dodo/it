@@ -1,6 +1,7 @@
 local cdef = require 'cdef'
 local Scope = require 'scope'
 local Metatype = require 'metatype'
+local _ffi = require 'util._ffi'
 local doc = require 'util.doc'
 
 
@@ -20,20 +21,22 @@ Thread.type:load('libapi.so', {
 }, cdef)
 
 
-function Thread:__new()
+function Thread:__new(name)
     if self.prototype.__new then self.prototype.__new(self) end
+    local name = _ffi.toname(self.reference, name)
     self.stop = nil
     self.exit = true
-    self.scope = Scope:new()
+    self.scope = Scope:new(name .. ".scope")
     self.reference = self.type:create(nil, self.scope.state)
     self.raw = self.reference.thread
+    self.reference.name = name
     -- special case since object gets injected into process.context instead as global
     self.scope:define('_it_threads_', self.reference, function ()
         process.context.thread = require('thread'):cast(
             _D._it_threads_, process.context.scope)
     end)
 end
-doc.info(Thread.__new, 'Thread:new', '(  )')
+doc.info(Thread.__new, 'Thread:new', '( [name=ptr(reference)] )')
 
 function Thread:__cast(pointer)
     if self.prototype.__new then self.prototype.__new(self) end

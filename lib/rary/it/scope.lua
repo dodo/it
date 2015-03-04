@@ -24,8 +24,9 @@ Scope.type:load('libapi.so', {
 -- Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
 
 
-function Scope:__new()
+function Scope:__new(name)
     self.state = self.type:create(nil, _D._it_processes_)
+    self.state.name = _ffi.toname(self.state, name)
     self.raw = self.state.lua
     if process.verbose then
         self:import(function () process.verbose = true end)
@@ -38,7 +39,7 @@ function Scope:__new()
         process.context.scope = require('scope'):cast(_D._it_scopes_)
     end)
 end
-doc.info(Scope.__new, 'Scope:new', '(  )')
+doc.info(Scope.__new, 'Scope:new', '( [name=ptr(state)] )')
 
 function Scope:__cast(pointer)
     self.state = self.type:ptr(pointer)
@@ -48,9 +49,8 @@ doc.info(Scope.__cast, 'Scope:cast', '( pointer )')
 
 function Scope:import(lua_function)
     self.state:import(lua_function)
-    if self.state.err == nil then return end
-    error(ffi.string(self.state.err))
-    return self
+    if self.state.err == nil then return self end
+    self:error("scope:import")
 end
 doc.info(Scope.import, 'scope:import', '( lua_function )')
 
@@ -76,11 +76,16 @@ doc.info(Scope.safe, 'scope:safe', '( nil=true|true|false )')
 
 function Scope:run()
     self.state:call()
-    if self.state.err == nil then return end
-    error(ffi.string(self.state.err))
-    return self
+    if self.state.err == nil then return self end
+    self:error("scope:run")
 end
 doc.info(Scope.run, 'scope:run', '(  )')
+
+function Scope:error(msg)
+    local format, str, ctx = string.format, ff.string, self.state
+    error(format("error in scope %s: %s %s", str(ctx.name), msg, str(ctx.err)))
+end
+doc.info(Scope.error, 'scope:error', '( message )')
 
 function Scope:close()
     self.state:close()

@@ -13,7 +13,7 @@ process:on('panic', function (err)
 end)
 
 
-window = require('window'):new()
+window = require('window'):new('window')
 
 
 if process.argv[#process.argv]:match('.png$') then

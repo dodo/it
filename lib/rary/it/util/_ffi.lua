@@ -52,6 +52,11 @@ function exports.ptraddr(ptr)
 end
 doc.info(exports.ptraddr, 'util_ffi.ptraddr', '( pointer )')
 
+function exports.toname(ptr, name)
+    return name and tostring(name) or tostring(ptr):match(": (.*)$") or ""
+end
+doc.info(exports.toname, 'util_ffi.toname', '( pointer[, name] )')
+
 local __define
 local function get_define(  )
     if not __define then

@@ -43,9 +43,10 @@ Window.type:load('libapi.so', {
 }, cdef)
 
 
-function Window:__new()
+function Window:__new(name)
+    name = _ffi.toname(self, name)
     if self.prototype.__new then self.prototype.__new(self) end
-    self.thread = Thread:new()
+    self.thread = Thread:new(name .. ".thread")
     self.scope = self.thread.scope
     self.native = self.type:create(nil, self.thread.reference)
     self.scope:define('_it_windows_', self.native, function ()
@@ -56,7 +57,7 @@ function Window:__new()
         end)
     end)
 end
-doc.info(Window.__new, 'Window:new', '(  )')
+doc.info(Window.__new, 'Window:new', '( [name=ptr(window)] )')
 
 function Window:__cast(pointer, thread)
     if self.prototype.__new then self.prototype.__new(self) end

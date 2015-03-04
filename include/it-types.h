@@ -54,6 +54,7 @@ typedef struct _it_states {
     int refc;
     lua_State *lua;
     const char *err;
+    const char *name;
     bool safe;
 } it_states;
 
@@ -81,6 +82,7 @@ typedef struct _it_threads {
     uvI_thread_callback on_init;
     uvI_thread_callback on_idle;
     uvI_thread_callback on_free;
+    const char *name;
     bool closed;
     void* priv;
 } it_threads;

@@ -53,7 +53,7 @@ end
 -- this uses at least 40mb!!! FIXME
 local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
     local orig_require = getmetatable(package.env).require
-    if not name or not name:match('^%w') then
+    if not name or not tostring(name):match('^%w') then
         return orig_require(name)
     else
         local success, mod, api

@@ -2,7 +2,7 @@ local Async = require 'async'
 
 local width, height = 600,600
 
-window = require('window'):new()
+window = require('window'):new('window')
 window.async = Async:new(window.thread)
 
 

@@ -291,6 +291,11 @@ int luaI_pcall_in(it_states* ctx, int nargs, int nresults) {
         return 1;
     }
     if (luaI_xpcall(ctx->lua, nargs, nresults, ctx->safe)) {
+        if (lua_isstring(ctx->lua, -1)) {
+            const char* err = lua_tostring(ctx->lua, -1);
+            lua_pop(ctx->lua, 1);
+            lua_pushfstring(ctx->lua, "error in scope '%s': %s", ctx->name,err);
+        }
         ctx->err = lua_tostring(ctx->lua, -1);
         lua_pop(ctx->lua, 1);
         return 1;

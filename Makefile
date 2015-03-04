@@ -50,6 +50,7 @@ plugins: audio encoder
 
 api: libapi.so
 	echo -n "return nil" > lib/plugins.lua
+	echo -n '$$ORIGIN' >  $(IT_RPATHS)
 # 	echo -n '$$ORIGIN:$$ORIGIN/vendor/luajit-2.0/src' >  $(IT_RPATHS)
 	echo -n '$(IT_INCLUDES) $(IT_DEPENDS) $(IT_LAZY_LIBS)' > ccflags
 	cat lib/cdefs.c > combined-cdefs.c

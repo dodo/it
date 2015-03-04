@@ -60,10 +60,11 @@ void it_runs_thread(void* priv) {
         int err;
         thread->loop = (uv_loop_t*) malloc(sizeof(uv_loop_t));
         if (!thread->loop)
-            it_errors("failed to create loop in thread %d!",
-                uvI_thread_pool_index(pthread_self()));
+            it_errors("failed to create loop in thread %d '%s'!",
+                uvI_thread_pool_index(pthread_self()), thread->name);
         if ((err = uv_loop_init(thread->loop)))
-            uvI_error(thread->loop, err, "%s uv_loop_init: %s");
+            uvI_error(thread->loop, err, "%s uv_loop_init: %s (in thread %d '%s')",
+                uvI_thread_pool_index(pthread_self()), thread->name);
 #endif
     }
     uv_idle_t idle;
@@ -82,8 +83,15 @@ void it_runs_thread(void* priv) {
     if (!thread->ctx->err)
         // … and now run!
         uv_run(thread->loop, UV_RUN_DEFAULT);
-    if (thread->ctx->err)
-        printerr("thread %d halted: scope error: %s", idx, thread->ctx->err);
+    if (thread->ctx && thread->ctx->err)
+        printerr("thread %d '%s' halted: scope '%s' error: %s",
+                 idx, thread->name, thread->ctx->name, thread->ctx->err);
+    // tell lua that thread stops
+    if (thread->ctx && thread->ctx->lua && !thread->ctx->err) {
+        luaI_getglobalfield(thread->ctx->lua, "process", "context");
+        luaI_localemit(thread->ctx->lua, "thread", "stop");
+        luaI_pcall_in(thread->ctx, 2, 0);
+    }
     it_closes_thread(thread);
 }
 
@@ -136,8 +144,9 @@ void it_joins_thread(it_threads* thread) {
         thread->thread = NULL;
         it_closes_thread(thread);
         if (uvthread && uv_thread_join(uvthread))
-            it_errors("uv_thread_join: failed to join thread %d!",
-                ((!uvthread) ? -1 : uvI_thread_pool_index(*uvthread)));
+            it_errors("uv_thread_join: failed to join thread %d '%s'!",
+                ((!uvthread) ? -1 : uvI_thread_pool_index(*uvthread)),
+                thread->name);
     }
     if (uvthread) uvI_thread_free(uvI_thread_pool(*uvthread));
     if (thread->loop) {
@@ -160,11 +169,6 @@ void it_stops_thread(it_threads* thread) {
         uv_idle_t* idle = thread->idle;
         thread->idle = NULL;
         uv_close((uv_handle_t*) idle, NULL);
-        if (thread->ctx && thread->ctx->lua && !thread->ctx->err) {
-            luaI_getglobalfield(thread->ctx->lua, "process", "context");
-            luaI_localemit(thread->ctx->lua, "thread", "stop");
-            luaI_pcall_in(thread->ctx, 2, 0);
-        }
     }
     if (thread->loop) {
         uv_stop(thread->loop);

@@ -47,6 +47,7 @@ void it_creates_process(it_processes* process) {
     if (!process) return;
     process->ctx = it_allocs_scope();
     if (!process->ctx) return;
+    process->ctx->name = "process.scope";
     process->loop = uv_default_loop();
     it_sigints_process(process);
     uvI_init();
