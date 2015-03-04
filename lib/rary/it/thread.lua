@@ -55,7 +55,6 @@ function Thread:start()
         process:on('exit', function ()
             if  thread.exit then
                 thread:join()
-                thread.scope.state:__gc()
             end
         end)
         self._bound_join = true
