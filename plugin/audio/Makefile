@@ -19,6 +19,8 @@ IT_FLAGS = \
 IT_INCLUDES = -I./include -I$(IT_DIR)/include
 IT_WARNS = -Wall
 
+CC = gcc
+
 # DEBUG = ""
 # DEBUG = -g -O0
 DEBUG = -O2
@@ -30,7 +32,7 @@ ccflags:
 	echo -n ' -I./plugin/audio/include $(IT_DEPENDS)' > ccflags
 
 libaudio.so: $(IT_SRC_API)
-	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ \
+	$(CC) $(IT_WARNS) -shared -o $@ -fPIC $^ \
 		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_LINKS) $(IT_FLAGS)
 
 clean:

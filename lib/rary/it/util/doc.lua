@@ -3,12 +3,11 @@ local jit = require 'jit'
 local doc = {}
 local cache = {}
 
-
+local funcinfo
 local function push(typ, f, name, args, noval)
     if cache then
         table.insert(cache, {typ, f, name, args, noval})
     else
-        local funcinfo = debug.getregistry()._funcinfo
         if funcinfo then
             funcinfo[typ](f, name, args, noval)
         end
@@ -41,7 +40,7 @@ end
 doc.info(doc.deprecated, 'doc.deprecated', '( function, name, args[, noValue] )')
 
 function doc.init()
-    local funcinfo = debug.getregistry()._funcinfo
+    funcinfo = require 'util.funcinfo'
     if funcinfo then
         local typ, f, name, args
         for _, queued in ipairs(cache) do

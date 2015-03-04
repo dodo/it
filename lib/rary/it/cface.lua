@@ -96,12 +96,15 @@ doc.info(cface.typedef, 'cface.typedef', '( ct[, name] )')
 
 function cface.struct(name, fields)
     local header = ""
-    for _, field in pairs(fields) do
-        header = header .. field .. ";"
+    if fields then
+        for _, field in pairs(fields) do
+            header = header .. field .. ";"
+        end
+        header = "{" .. header .. "}"
     end
-    cface.typedef(string.format("struct _%s {%s}", name, header), name)
+    cface.typedef(string.format("struct _%s %s", name, header), name)
 end
-doc.info(cface.struct, 'cface.struct', '( name, fields )')
+doc.info(cface.struct, 'cface.struct', '( name[, fields] )')
 
 function cface.struct_from(name, filename)
     -- TODO load only on struct from filename (maybe recursive?)
@@ -119,13 +122,13 @@ function cface.optint(number)
 end
 doc.info(cface.optint, 'cface.optint', '( [number] )')
 
-function cface.assert(NIL)
+function cface.assert(NIL, msg)
     if NIL == nil then
-        assert(not NIL) -- NULL pointer
+        assert(not NIL, msg) -- NULL pointer
     end
     return NIL
 end
-doc.info(cface.assert, 'cface.assert', '( [NIL] )')
+doc.info(cface.assert, 'cface.assert', '( [NIL[, msg]] )')
 
 cface.struct("it_strings", {
     "const char *data";

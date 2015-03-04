@@ -9,7 +9,7 @@
 #include "luaI.h"
 #include "encoder-types.h"
 
-
+extern it_frames* it_allocs_frame();
 extern void it_inits_frame(it_frames* fr, int width, int height);
 extern void it_refs_frame(it_frames* fr, SchroFrame* frame);
 extern void it_creates_frame(it_frames* fr, SchroFrameFormat format);

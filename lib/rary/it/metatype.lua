@@ -1,6 +1,7 @@
 local ffi = require 'ffi'
 local util = require 'util'
 local _ffi = require 'util._ffi'
+local _type = require 'util.type'
 local _table = require 'util.table'
 local cface = require 'cface'
 local Prototype = require 'prototype'
@@ -11,8 +12,8 @@ local Metatype = Prototype:fork()
 Metatype.bind = nil
 
 local errors = {
-    missing_decl = "missing declaration for symbol '%g*init'",
-    no_member = "has no member named '%g*init'",
+    missing_decl = "missing declaration for symbol '%g*__init'",
+    no_member = "has no member named '%g*__init'",
 }
 
 function Metatype:fork(proto)
@@ -44,7 +45,7 @@ doc.info(Metatype.typedef, 'Metatype:typedef', '( ct, name=ct[, db] )')
 function Metatype:struct(name, fields)
     local struct = self:fork()
     struct.name = name
-    if type(fields) == 'function' or getmetatable(fields).__call then --is it callable?
+    if _type.iscallable(fields) then
         local db = fields
         fields = nil
         db({
@@ -84,15 +85,9 @@ end
 doc.info(Metatype.cache, 'type:cache', '(  )')
 
 function Metatype:initialize(instance, ...)
-    util.xpcall(function (...) if instance.init then instance:init(...) end end,
-        function (err)
-            -- ignore prefix
-            if err:match(errors.missing_decl) or err:match(errors.no_member) then
-                return nil -- ignore
-            else
-                return err
-            end
-        end, ...)
+    if self.__init then
+        instance:__init(...)
+    end
     return instance
 end
 doc.info(Metatype.initialize, 'type:initialize', '( instance, ... )')
@@ -129,22 +124,26 @@ doc.info(Metatype.cast, 'type:cast', '( pointer )')
 function Metatype:new(...)
     if not self.name then return self:virt() end
     self:cache()
---     return self:ref(_ffi.new(self.name, ...))
-    return self:ref(self.ctype(...))
+    if self.__ac then
+        return self.prototype.__ac()
+    else
+--         return self:ref(_ffi.new(self.name, ...))
+        return self:ref(self.ctype(...))
+    end
 end
 doc.info(Metatype.new, 'type:new', '( ... )')
 
 function Metatype:ref(native)
-    if self.prototype.ref then
-        self.prototype.ref(ffi.cast('void*', native))
+    if self.__ref then
+        self.prototype.__ref(ffi.cast('void*', native))
     end
     return native
 end
 doc.info(Metatype.ref, 'type:ref', '( native )')
 
 function Metatype:unref(native)
-    if self.prototype.unref then
-        native:unref()
+    if self.__unref then
+        native:__unref()
     end
     return native
 end
@@ -155,29 +154,42 @@ function Metatype:ispointer(native, pointer)
 end
 doc.info(Metatype.ispointer, 'type:ispointer', '( native, pointer )')
 
+local it_refs, it_unrefs
 function Metatype:load(clib, cfunctions, db)
     local cname, cargs
     clib = cface.register(clib)
     for name, cdecl in pairs(cfunctions or {}) do
-        if db then
-            cname = cdecl
-            db({ functions = cname, verbose = process.verbose })
-            local next = db({ functions = cname, find = true })
-            local statement = next() -- hopefully the first one is the right one
-            if statement then
-                cargs = statement.extent:gsub("^[^%(]*(.*)$", "%1")
-            else
-                cargs = "(...)" -- unknown
-            end
+        -- use cached it_refs & it_unrefs
+        if name == '__unref' and it_unrefs and cdecl:match('it_unrefs') then
+            self.prototype[name] = it_unrefs
+        elseif name == '__ref' and it_refs and cdecl:match('it_refs') then
+            self.prototype[name] = it_refs
         else
-            cface.declaration(cdecl .. ";")
-            cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
-            cargs = cdecl:gsub("^[^%(]*(.*)$", "%1")
-        end
-        self.prototype[name] = clib[cname]
-        doc.info(clib[cname], cname, cargs)
-        if name:match('^__') then
-            self[name] = self.prototype[name]
+            if db then
+                cname = cdecl
+                db({ functions = cname, verbose = process.verbose })
+                local next = db({ functions = cname, find = true })
+                local statement = next() -- hopefully the first one is the right one
+                if statement then
+                    cargs = statement.extent:gsub("^[^%(]*(.*)$", "%1")
+                else
+                    cargs = "(...)" -- unknown
+                end
+            else
+                cface.declaration(cdecl .. ";")
+                cname = cdecl:gsub("^%s*%S+%s+%*?([%w_]+)%s*%(.*$", "%1")
+                cargs = cdecl:gsub("^[^%(]*(.*)$", "%1")
+            end
+            self.prototype[name] = clib[cname]
+            doc.info(clib[cname], cname, cargs)
+            -- cache it_refs & it_unrefs
+            if name == '__unref' and cname == 'it_unrefs' then
+                it_unrefs = clib[cname]
+            elseif name == '__ref' and cname == 'it_refs' then
+                it_refs = clib[cname]
+            elseif name:match('^__') then
+                self[name] = self.prototype[name]
+            end
         end
     end
     return self
@@ -224,6 +236,7 @@ function Metatype:api(metaname, cfunctions, apifile)
             data[pointer] = userdata -- … and it's cached
             return userdata
         end
+        doc.private(self.prototype._userdata, metaname..':_userdata', '( cdata )')
         jit.off(self.prototype._userdata)
     end
     local clib = debug.getregistry()[metaname].__index
@@ -233,6 +246,7 @@ function Metatype:api(metaname, cfunctions, apifile)
         self.prototype[name] = function (self, ...)
             return cfunction(_userdata(self), ...)
         end
+        doc.info(self.prototype[name], metaname:lower()..':'..name, '( ... )')
         if name:match('^__') then
             self[name] = self.prototype[name]
         end

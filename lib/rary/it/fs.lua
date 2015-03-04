@@ -12,14 +12,14 @@ function fs.exists(filename)
 end
 doc.info(fs.exists, 'fs.exists', '( filename )')
 
-function fs.read(filename)
-    local file = io.open(filename, 'r')
+function fs.read(filename, mode)
+    local file = io.open(filename, mode or 'r')
     if not file then return end
     local content = file:read('*a')
     file:close()
     return content
 end
-doc.info(fs.read, 'fs.read', '( filename )')
+doc.info(fs.read, 'fs.read', '( filename, mode="r" )')
 
 function fs.line(filename, from, to)
     local file = io.open(filename, 'r')

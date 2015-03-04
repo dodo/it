@@ -29,7 +29,10 @@ end
 Audio.type = Metatype:struct("it_audios", cdef)
 
 Audio.type:load('libaudio.so', {
-    init = 'it_inits_audio',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_audio',
+    __init = 'it_inits_audio',
     __gc = 'it_frees_audio',
 }, cdef)
 
@@ -50,7 +53,7 @@ Audio.Buffer.Audio = Audio -- prevent circular dependency
 
 
 function Audio:__new(devicename, opts)
-    self.prototype.init(self)
+    self.prototype.__new(self)
     opts = opts or {}
     opts.sources = opts.sources or 1
     self.native = self.type:create(

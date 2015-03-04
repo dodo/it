@@ -8,6 +8,7 @@
 #include "it.h"
 #include "api.h"
 #include "core-types.h"
+#include "api/process.h"
 
 
 void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l) {
@@ -113,11 +114,6 @@ it_states* luaI_getstate(lua_State* L) {
 }
 
 int luaI_setstate(lua_State* L, it_states* ctx) {
-    int err;
-    size_t size = 2*PATH_MAX;
-    char exec_path[2*PATH_MAX];
-    if ((err = uv_exepath(exec_path, &size)))
-        uvI_lua_error(L, ctx->loop, err, "%s uv_exepath: %s");
     lua_pushlightuserdata(L, ctx);
     luaI_setdefine(L, "_it_scopes_");
     luaL_loadstring(L,
@@ -132,7 +128,12 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
         // load package patches
         "dofile(_it.libdir .. 'package.lua')"
     );
-    lua_pushlstring(L, exec_path, size);
+    { // add exec_path as only argument
+        size_t size =  2*PATH_MAX;
+        char exec_path[2*PATH_MAX];
+        uv_exepath(exec_path, &size);
+        lua_pushlstring(L, exec_path, size);
+    }
     lua_call(L, 1, 0);
     return 0;
 }
@@ -229,14 +230,13 @@ void luaI_pushvalue(lua_State* L, luaI_value* value) {
 }
 
 int luaI_newstate(it_states* ctx) {
+    if (!ctx || ctx->lua) return 1;
     // create lua state
     lua_State* L = luaL_newstate();
     if (!L) {
         it_prints_error("failed to allocate lua state!");
         return 1;
     }
-    ctx->safe = TRUE;
-    ctx->free = TRUE;
     ctx->lua = L;
     // enable JIT
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
@@ -257,37 +257,44 @@ int luaI_newstate(it_states* ctx) {
 }
 
 int luaI_createstate(it_processes* process) {
-    uvI_init();
+    if (!process) return 0; // fail
+    it_creates_process(process);
     it_states* ctx = process->ctx;
     if (luaI_newstate(ctx)) {
-        return 0;
+        return 0; // fail
     }
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setdefine(ctx->lua, "_it_processes_");
     // initrd returns a function to be called when everything is initialized
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "initrd.lua"));
-    return 1;
+    it_inits_process(process);
+    return 1; // success
+}
+
+int luaI_closestate(it_processes* process) {
+    if (!process) return 0; // fail
+    it_closes_process(process);
+    return 1; // success
 }
 
 int luaI_pcall(lua_State* L, int nargs, int nresults, int safe) {
-    lua_getglobal(L, "_TRACEBACK");
-    lua_insert(L, 0 - nargs - 2);
-    if (luaI_xpcall(L, nargs, nresults, 0 - nargs - 2, safe)) {
+    if (luaI_xpcall(L, nargs, nresults, safe)) {
         return lua_error(L);
     }
-    lua_remove(L, 0 - nresults - 1);
-    return 0;
+    return 0; // success
 }
 
 int luaI_pcall_in(it_states* ctx, int nargs, int nresults) {
-    if (ctx->err) return 1;
-    lua_getglobal(ctx->lua, "_TRACEBACK");
-    lua_insert(ctx->lua, 0 - nargs - 2);
-    if (luaI_xpcall(ctx->lua, nargs, nresults, 0 - nargs - 2, ctx->safe)) {
-        ctx->err = lua_tostring(ctx->lua, -1);
-        lua_pop(ctx->lua, 2);
+    if (!ctx || ctx->err) return 1;
+    if (!ctx->lua) {
+        ctx->err = "internal error: luaI_pcall_in missing lua state!";
         return 1;
-    } else lua_remove(ctx->lua, 0 - nresults - 1);
+    }
+    if (luaI_xpcall(ctx->lua, nargs, nresults, ctx->safe)) {
+        ctx->err = lua_tostring(ctx->lua, -1);
+        lua_pop(ctx->lua, 1);
+        return 1;
+    }
     return 0;
 }
 
@@ -336,7 +343,7 @@ void luaI_close(lua_State* L, int code) {
     lua_pushvalue(L, -2);
     lua_pushliteral(L, "exit");
     if (code > -1) lua_pushinteger(L, code);
-    luaI_pcall(L, (code == -1) ? 2 : 3, 0, TRUE/*safe*/);
+    luaI_pcall(L, (code == -1) ? 2 : 3, 0, 2/*super safe*/);
     // we are done now:
     lua_close(L);
 }

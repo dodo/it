@@ -20,6 +20,14 @@
 #include "api/scope.h"
 
 
+it_encodes* it_allocs_encoder() {
+    it_encodes* enc = (it_encodes*) calloc(1, sizeof(it_encodes));
+    if (!enc)
+        it_errors("calloc(1, sizeof(it_encodes)): failed to allocate encoder");
+    enc->refc = 1;
+    return enc;
+}
+
 void schroI_encoder_wait(void* priv) {
     it_encodes* enc = (it_encodes*) priv;
     if (enc->eos_pulled || enc->thread->ctx->err) return;
@@ -109,7 +117,7 @@ void schroI_encoder_wait(void* priv) {
 void schroI_run_stage(SchroEncoderFrame* frame) {
     it_encodes* enc = (it_encodes*) frame->encoder->userdata;
     it_states*  ctx = enc->hooks[frame->working];
-    if (!ctx) return;
+    if (!enc || !ctx || !ctx->lua) return;
     // need a temporary thread register here cuz stages can switch threads
     uvI_thread_t* thread = uvI_thread_tmp();
     luaI_globalemit(ctx->lua, "encoder", "run stage");
@@ -142,7 +150,6 @@ void schroI_encoder_free(void* priv) {
     // close all opened hook scope
     int i; for (i = 0; i < SCHRO_ENCODER_FRAME_STAGE_LAST; i++) {
         if (enc->hooks[i]) {
-            enc->hooks[i]->free = TRUE; // now we can
             it_frees_scope(enc->hooks[i]);
             enc->hooks[i] = NULL;
         }
@@ -152,10 +159,11 @@ void schroI_encoder_free(void* priv) {
         enc->buffer = NULL;
         enc->length = 0;
     }
+    it_frees_encoder(enc);
 }
 
 void it_inits_encoder(it_encodes* enc, it_threads* thread, SchroVideoFormatEnum format) {
-    if (enc->encoder || !thread) return;
+    if (!enc || enc->encoder || !thread) return;
     enc->thread = thread;
     thread->priv = enc;
     thread->on_init = schroI_encoder_start;
@@ -173,17 +181,20 @@ void it_inits_encoder(it_encodes* enc, it_threads* thread, SchroVideoFormatEnum 
 
 void it_hooks_stage_encoder(it_encodes* enc,
                            SchroEncoderFrameStateEnum stage, it_states* ctx) {
-    if (!enc->encoder || !ctx) return;
+    if (!enc || !enc->encoder || !ctx) return;
     // install encoding stage hook
     enc->encoder->user_stage = schroI_run_stage;
     enc->encoder->userdata = enc;
     // add hook
+    if (enc->hooks[stage]) it_frees_scope(enc->hooks[stage]);
+    enc->hooks[stage] = NULL;
+    if (!ctx->refc || ctx->err) return;
     enc->hooks[stage] = ctx;
-    ctx->free = FALSE; // take over ctx
+    it_refs((it_refcounts*) ctx);
 }
 
 int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr) {
-    if (!enc->encoder || !fr->frame) return 0;
+    if (!enc || !enc->encoder || !fr->frame) return 0;
     // … and right into encoder. hopefully everything is right!
     schro_encoder_push_frame(enc->encoder, fr->frame);
     fr->frame = NULL; // prevent schro_frame_unref
@@ -192,7 +203,7 @@ int it_pushes_frame_encoder(it_encodes* enc, it_frames* fr) {
 
 int it_starts_encoder_lua(lua_State* L) { // (enc_userdata, output, settings)
     it_encodes* enc = (it_encodes*) lua_touserdata(L, 1);
-    if (enc->started) return 0;
+    if (!enc || enc->started) return 0;
     // fill encoder settings with state from lua
     luaI_getencodersettings(L, 3, enc->encoder);
     // now open ogg container
@@ -247,4 +258,12 @@ int it_sets_format_encoder_lua(lua_State* L) { // (enc_userdata, videoformat_use
     schro_encoder_set_video_format(enc->encoder, format);
     free(format);
     return 0;
+}
+
+void it_frees_encoder(it_encodes* enc) {
+    if (!enc) return;
+    if (it_unrefs((it_refcounts*) enc) > 0) return;
+    it_frees_thread(enc->thread);
+    if (!enc->refc)
+        free(enc);
 }

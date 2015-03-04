@@ -26,9 +26,10 @@ Options:
 ]]
     return usage
 end
+doc.info(Process.usage, 'process.usage', '( )')
 
 process = Process:new()
-doc.info(Process.usage, 'process.usage', '( )')
+package.loaded['it.process'] = process
 
 -- -- -- -- -- -- -- --
 
@@ -85,9 +86,12 @@ if haz(process.argv, "-m") or haz(process.argv, "--main") then
                                 modulename))
             return process.exit(1)
         end
-        return util.pcall(module.__main) -- could return a loop
+        local result = util.pcall(module.__main) -- could return a loop
+        process.initialized = true
+        return result
     end
 end
+
 
 return function --[[boot]]() -- called when finally initialized
     if #process.argv == 0 then

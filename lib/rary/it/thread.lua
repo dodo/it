@@ -8,19 +8,22 @@ local Thread = require(process.context and 'events' or 'prototype'):fork()
 Thread.type = Metatype:struct("it_threads", cdef)
 
 Thread.type:load('libapi.so', {
-    ref = 'it_refs',
-    unref = 'it_unrefs',
-    init = 'it_inits_thread',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_thread',
+    __init = 'it_inits_thread',
     safe = 'it_safes_thread',
+    join = 'it_joins_thread',
+    stop = 'it_stops_thread',
     create = 'it_creates_thread',
-    close = 'it_closes_thread',
     __gc = 'it_frees_thread',
 }, cdef)
 
 
 function Thread:__new()
     if self.prototype.__new then self.prototype.__new(self) end
-    self.close = nil
+    self.stop = nil
+    self.exit = true
     self.scope = Scope:new()
     self.reference = self.type:create(nil, self.scope.state)
     self.raw = self.reference.thread
@@ -42,16 +45,28 @@ end
 doc.info(Thread.__cast, 'Thread:cast', '( pointer[, scope] )')
 
 function Thread:start()
+    if self.reference.closed == 0 then return self end
     process.shutdown = false -- prevent process from shutting down
+    if not self._bound_join then
+        local thread = self
+        process:on('exit', function ()
+            if  thread.exit then
+                thread:join()
+                thread.scope.state:__gc()
+            end
+        end)
+        self._bound_join = true
+    end
     self.reference:create()
     return self
 end
 doc.info(Thread.start, 'thread:start', '(  )')
 
 function Thread:join()
-    -- TODO
+    self.reference:join()
+    return self
 end
-doc.todo(Thread.join, 'thread:join', '(  )')
+doc.info(Thread.join, 'thread:join', '(  )')
 
 function Thread:safe(safe)
     if safe == nil then safe = true end
@@ -61,11 +76,12 @@ function Thread:safe(safe)
 end
 doc.info(Thread.safe, 'thread:safe', '( nil=true|true|false )')
 
-function Thread:close()
-    self.reference:close()
+function Thread:stop()
+    self.reference:stop()
     self.reference = nil
+    self.raw = nil
 end
-doc.info(Thread.close, 'thread:close', '(  )')
+doc.info(Thread.stop, 'thread:stop', '(  )')
 
 
 return Thread

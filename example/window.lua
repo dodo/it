@@ -29,8 +29,8 @@ end
 
 window.scope:import(function ()
         local fps = require('util.fps'):new()
-        fps:on('update', function ()
-            io.write(string.format('  %f fps     \r', fps.value))
+        fps:on('update', function (value)
+            io.write(string.format('  %f fps     \r', value))
             io.flush()
         end)
 --     print("window" .. require('util').dump(window))
@@ -55,6 +55,9 @@ window.scope:import(function ()
         x = x % 100 + 1
 
         process:sleep(16) -- should be ~60fps
+    end)
+    process.context:on('exit', function ()
+        print "thread going down …"
     end)
     window:on('close', function ()
         print "window closed …"

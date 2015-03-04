@@ -12,6 +12,7 @@
 #include "api/thread.h"
 #include "api/scope.h"
 
+extern it_threads* it_allocs_thread();
 
 extern void default_thread_init(void* priv);
 extern void default_thread_idle(void* priv);
@@ -26,6 +27,8 @@ extern void it_runs_thread(void* priv);
 extern void it_inits_thread(it_threads* thread, it_states* ctx);
 extern void it_creates_thread(it_threads* thread);
 extern void it_safes_thread(it_threads* thread, bool safe);
+extern void it_joins_thread(it_threads* thread);
+extern void it_stops_thread(it_threads* thread);
 extern void it_closes_thread(it_threads* thread);
 extern void it_frees_thread(it_threads* thread);
 

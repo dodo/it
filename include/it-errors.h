@@ -10,7 +10,11 @@
 
 #define BACK_TRACE_SIZE 64
 #define C_STACK_MINSIZE 2
+#define IT_CHECKSUMS 42
 
+
+#define putz(s, ...) \
+        printf("%d "s"\n", uvI_thread_pool_index(pthread_self()), ##__VA_ARGS__)
 
 #define printerr(msg, ...) \
         fprintf(stderr, msg"\n", ##__VA_ARGS__)
@@ -67,8 +71,8 @@
 
 extern int at_panic(lua_State* L);
 extern void at_fatal_panic(int signum);
-extern int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe);
-extern int lua_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f);
+extern int luaI_xpcall(lua_State* L, int nargs, int nresults, int safe);
+extern int luaI_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f);
 
 extern int luaI_stacktrace(lua_State* L);
 extern int luaI_simpleerror(lua_State* L);

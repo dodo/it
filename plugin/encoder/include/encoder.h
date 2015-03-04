@@ -24,6 +24,8 @@
 #include "frame.h"
 
 
+extern it_encodes* it_allocs_encoder();
+
 extern void schroI_encoder_wait(void* priv);
 extern void schroI_encoder_start(void* priv);
 extern void schroI_encoder_free(void* priv);
@@ -40,6 +42,8 @@ extern int it_debugs_encoder_lua(lua_State* L);
 extern int it_gets_settings_encoder_lua(lua_State* L);
 extern int it_gets_format_encoder_lua(lua_State* L);
 extern int it_sets_format_encoder_lua(lua_State* L);
+
+extern void it_frees_encoder(it_encodes* enc);
 
 
 #endif /* API_ENCODER_H */

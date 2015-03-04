@@ -67,7 +67,7 @@ end
 doc.info(EventEmitter.off, 'events:off', '( event, listener )')
 
 function EventEmitter:emit(event, ...)
-    if event == "error" and self._events and not self._events.error then
+    if event == "error" and (not self._events or not self._events.error) then
         error(...)
         return false
     end

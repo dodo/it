@@ -25,9 +25,10 @@ Window.Surface = Surface
 Window.C = C
 
 Window.type:load('libapi.so', {
-    ref = 'it_refs',
-    unref = 'it_unrefs',
-    init = 'it_inits_window',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_window',
+    __init = 'it_inits_window',
     create = 'it_creates_window',
     surface_from = 'it_surfaces_from_window',
     surface = 'it_surfaces_window',
@@ -68,9 +69,9 @@ doc.info(Window.__cast, 'Window:cast', '( pointer[, thread] )')
 
 function Window:open(title, width, height, x, y)
     self.open = nil
-    self.native:create(title,
+    self.native:create(title or self.native.title,
         cface.optint(x), cface.optint(y),
-        width or 200, height or 200)
+        width or self.native.width or 200, height or self.native.height or 200)
     self:__updateraw()
     self.thread:start()
     return self

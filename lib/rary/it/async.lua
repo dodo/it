@@ -9,9 +9,10 @@ Async.type = Metatype:struct("it_asyncs", cdef)
 
 Async.type:api("Async", {'push'})
 Async.type:load('libapi.so', {
-    ref = 'it_refs',
-    unref = 'it_unrefs',
-    init = 'it_inits_async',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_async',
+    __init = 'it_inits_async',
     newqueue = 'it_queues_async',
     pushcdata = 'it_pushes_cdata_async',
     send = 'it_sends_async',

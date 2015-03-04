@@ -18,6 +18,8 @@ function Prototype:fork(proto)
             __index = self,
             __metatable = mt.__metatable,
         }
+        -- dont break self.prototype lookup behavior
+        setmetatable(metatable, metatable)
     end
     fork.__index = fork
     fork.prototype = metatable
@@ -59,7 +61,7 @@ doc.info(Prototype.bind, 'instance:bind', '( name[, ...] )')
 
 function Prototype:isinstance(instance)
     -- FIXME make it recursive (check parent prototypes too)
-    return instance and instance.prototype == self -- prototype
+    return instance and (instance.prototype == self or getmetatable(instance) == self) -- prototype
 end
 doc.todo(Prototype.isinstance, 'proto:isinstance', '( instance )')
 

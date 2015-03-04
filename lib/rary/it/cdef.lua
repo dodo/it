@@ -39,9 +39,13 @@ doc.info(cdef.call, 'cdef.call', '( { '
     .. '[enums = { }], '
     .. '[typedefs = { }], '
     .. '[verbose = false], '
+    .. '[ignore = false], '
     .. '[find = false], '
     .. ' } )')
 
+-- it_processes is loaded in process.lua by "hand" to ignore dependencies
+-- tell cdefdb here to ignore loading it a second time
+cdef.call({ ignore=true, typedefs='it_processes', structs='_it_processes' })
 
 return setmetatable(cdef, { __call = function (t, ...)
     return cdef.call(...)

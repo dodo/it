@@ -376,8 +376,8 @@ end)
 -- end)
 
 process.context:on('exit', function ()
-    print("close thread", id)
-    process.context.thread:close()
+    print("stop thread", id)
+    process.context.thread:stop()
 end)
 
 reset()

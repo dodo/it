@@ -5,7 +5,13 @@ local Metatype = require 'metatype'
 
 
 local Process = EventEmitter:fork()
-Process._type = Metatype:typedef('struct _$', 'it_processes')
+Process._type = Metatype:struct('it_processes', {
+    "int argc";
+    "char **argv";
+    "int exit_code";
+    "void /*uv_loop_t*/ *loop";
+--     … the rest is not important for lua
+})
 
 function Process:__new()
     self.prototype.__new(self)
@@ -33,17 +39,18 @@ function Process:__new()
     self.stdout = io.stdout
     self.stderr = io.stderr
     self.stdin = io.stdin
-    --load funcinfo
+    -- load funcinfo
     if #self.argv == 0 then
-        require 'util.funcinfo'
         require('util.doc')
             .info(self.cwd,   'process.cwd',   '( [path] )')
             .info(self.sleep, 'process.sleep', '( milliseconds )')
+            .info(self.time,  'process.time', '(  )')
             .info(self.exit,  'process.exit',  '( [code=0] )')
-            .info(Process.__new, 'Process:new',   '( )')
-            .info(Process.cwd,   'process:cwd',   '( [path] )')
+            .info(Process.__new, 'Process:new()', '(  )')
             .info(Process.sleep, 'process:sleep', '( milliseconds )')
+            .info(Process.time,  'process:time',  '(  )')
             .info(Process.exit,  'process:exit',  '( [code=0] )')
+            .info(Process.cwd,   'process:cwd',   '( [path] )')
     end
     -- load api
     self.native = self._type:load('api', {

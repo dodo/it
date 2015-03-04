@@ -21,8 +21,6 @@ function funcinfo.info( f, name, args, noval )
 	funcinfo:add( f, name, args, noval )
 end
 
-debug.getregistry()._funcinfo = funcinfo
-
 local function getFunctionParameters( f )
 	-- try known info
 	local info = funcinfo[f]
@@ -286,7 +284,9 @@ if jit then
 
 	funcinfo:add( jit.status, 'jit.status','( )' )
 
-	funcinfo:add( jit.opt.start, 'jit.opt.start','( [...] )' )
+	if jit.opt then
+		funcinfo:add( jit.opt.start, 'jit.opt.start','( [...] )' )
+	end
 
 	funcinfo:add( jit.attach, 'jit.attach','( cbfunc, "bc"|"trace"|"record"|"texit"|nil )' )
 	-- cb_bytecode( func )
@@ -297,7 +297,9 @@ if jit then
 	-- cb_record( traceno, func, pc, inlining_depth )
 	-- cb_texit( traceno, exitno, numgpregs, numfpregs )
 
-	funcinfo:add( jit.util.funcinfo, 'jit.util.funcinfo','( attach_func, attach_pc )' )
+	if jit.util then
+		funcinfo:add( jit.util.funcinfo, 'jit.util.funcinfo','( attach_func, attach_pc )' )
+	end
 
 end
 

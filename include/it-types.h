@@ -53,18 +53,20 @@ typedef struct _it_refcounts {
 typedef struct _it_states {
     int refc;
     lua_State *lua;
-    uv_loop_t *loop;
     const char *err;
     bool safe;
-    bool free;
 } it_states;
 
 
 typedef struct _it_processes {
-    it_states *ctx;
-    uv_signal_t *sigint;
+    /* lua publics */
     int argc; char **argv;
     int exit_code;
+    uv_loop_t *loop;
+    /* lua privates */
+    it_states *ctx;
+    uv_idle_t *init;
+    uv_signal_t *sigint;
 } it_processes;
 
 
@@ -74,6 +76,7 @@ typedef struct _it_threads {
     int refc;
     it_states *ctx;
     uv_thread_t *thread;
+    uv_loop_t *loop;
     uv_idle_t *idle;
     uvI_thread_callback on_init;
     uvI_thread_callback on_idle;
@@ -100,10 +103,10 @@ typedef struct _it_asyncs {
 
 struct _it_queues {
     it_queues *next;
-    const char* key;
-    luaI_value **values;
     int size;
     int count;
+    const char* key;
+    luaI_value **values;
 };
 
 

@@ -10,6 +10,13 @@
 #include "audio.h"
 
 
+it_audios* it_allocs_audio() {
+    it_audios* audio = (it_audios*) calloc(1, sizeof(it_audios));
+    if (!audio)
+        it_errors("calloc(1, sizeof(it_audios)): failed to allocate audio");
+    audio->refc = 1;
+    return audio;
+}
 
 void it_inits_audio(it_audios* audio,
                     const ALCchar *devicename,
@@ -54,4 +61,6 @@ void it_frees_audio(it_audios* audio) {
         // might take a while …
         alcCloseDevice(dev);
     }
+    if (!audio->refc)
+        free(audio);
 }

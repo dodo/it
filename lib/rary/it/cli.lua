@@ -59,7 +59,7 @@ function cli.repl()
     -- make all modules lazy loadable from global namespace
     _M = _module.lazymodules(pluginnames)
     _module.lazymodules(corenames, _M) -- make sure that plugins dont overwrite core modules
-    package.loaded['_M'] = _M
+    package.loaded['it._M'] = _M
     -- add help command function
     help = function (...)
         if #({...}) == 0 then

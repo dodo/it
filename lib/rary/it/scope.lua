@@ -11,19 +11,21 @@ Scope.type = Metatype:struct("it_states", cdef)
 
 Scope.type:api("Scope", {'import', 'define'})
 Scope.type:load('libapi.so', {
-    ref = 'it_refs',
-    unref = 'it_unrefs',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_scope',
+    __init = 'it_inits_scope',
     collectgarbage = 'it_collectsgarbage_scope',
---     defcdata = 'it_defines_cdata_scope',
-    init = 'it_inits_scope',
+    defcdata = 'it_defines_cdata_scope',
+    close = 'it_closes_scope',
     call = 'it_calls_scope',
     __gc = 'it_frees_scope',
 }, cdef)
-Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
+-- Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
 
 
 function Scope:__new()
-    self.state = self.type:create(nil, _D._it_processes_, _D._it_scopes_)
+    self.state = self.type:create(nil, _D._it_processes_)
     self.raw = self.state.lua
     if process.verbose then
         self:import(function () process.verbose = true end)
@@ -79,5 +81,10 @@ function Scope:run()
     return self
 end
 doc.info(Scope.run, 'scope:run', '(  )')
+
+function Scope:close()
+    self.state:close()
+end
+doc.info(Scope.close, 'scope:close', '(  )')
 
 return Scope

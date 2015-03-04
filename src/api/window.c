@@ -13,34 +13,46 @@ int sdlI_ref(int c) {
             sdlI_error("SDL_Init: failed to initialize SDL (%s)");
     }
     count += c;
-    if (count < 0) count = 0;
     if (!count) SDL_Quit();
+    if (count < 0) count = 0;
     return count;
 }
 
-void sdlI_free(void* priv) {
-    it_frees_window((it_windows*) priv);
+it_windows* it_allocs_window() {
+    it_windows* win = (it_windows*) calloc(1, sizeof(it_windows));
+    if (!win)
+        it_errors("calloc(1, sizeof(it_windows)): failed to allocate window");
+    win->refc = 1;
+    return win;
 }
 
-void sdlI_idle(void* priv) {
+void default_on_free_window_close(void* priv) {
     it_windows* win = (it_windows*) priv;
+    it_closes_window(win);
+}
+
+void default_on_idle_window_emit_need_render(void* priv) {
+    it_windows* win = (it_windows*) priv;
+    if (!win->thread || win->thread->ctx->err) return;
     SDL_Event event;
-    if (win->thread->ctx->err) return;
     while (!win->thread->closed && SDL_PollEvent(&event)) {
-        if (win->thread->ctx->err) return;
+        if (!win->thread || win->thread->ctx->err) return;
+        if (win->thread->closed) return;
         if (event.type == SDL_QUIT) break;
         // call lua …
         luaI_globalemit(win->thread->ctx->lua, "window", "sdl event");
         lua_pushlightuserdata(win->thread->ctx->lua, &event);
         luaI_pcall_in(win->thread->ctx, 3, 0);
     }
-    if (event.type == SDL_QUIT || win->thread->closed) {
-        it_closes_window(win);
+    if (!win || !win->thread || win->thread->closed) return;
+    if (event.type == SDL_QUIT) {
+        default_on_free_window_close(priv);
         return;
     }
     // call lua …
     luaI_globalemit(win->thread->ctx->lua, "window", "need render");
     luaI_pcall_in(win->thread->ctx, 2, 1);
+    if (!win || !win->thread || !win->thread->ctx) return;
 //     it_collectsgarbage_scope(win->thread->ctx);
     if (!lua_toboolean(win->thread->ctx->lua, -1)) {
         // no 'need render' event listener, so we wait here
@@ -50,18 +62,23 @@ void sdlI_idle(void* priv) {
 }
 
 void it_inits_window(it_windows* win, it_threads* thread) {
-    if (!thread) return;
+    if (!win || !thread) return;
+    if (win->thread) it_frees_thread(win->thread);
+    win->thread = NULL;
+    if (!thread->refc) return;
+    it_refs((it_refcounts*) thread);
     win->thread = thread;
     thread->priv = win;
-    thread->on_idle = sdlI_idle;
-    thread->on_free = sdlI_free;
+    thread->on_idle = default_on_idle_window_emit_need_render;
+    thread->on_free = default_on_free_window_close;
 }
 
 void it_creates_window(it_windows* win, const char* title,
                        const int* x, const int* y,
                        int width, int height) {
-    sdlI_ref(1);
-    if (win->window) it_frees_window(win);
+    if (!win) return;
+    sdlI_ref(1); // prevent SDL_Quit
+    if (win->window) it_closes_window(win);
     win->window = SDL_CreateWindow(title,
             (x) ? ((intptr_t) &x) : SDL_WINDOWPOS_UNDEFINED,
             (y) ? ((intptr_t) &y) : SDL_WINDOWPOS_UNDEFINED,
@@ -84,7 +101,7 @@ void it_creates_window(it_windows* win, const char* title,
 }
 
 SDL_Surface* it_surfaces_from_window(it_windows* win, void* data) {
-    if (!win->window) return NULL;
+    if (!win || !win->window) return NULL;
     SDL_Surface* surface = SDL_CreateRGBSurfaceFrom(
             data, win->width, win->height, 32, 4 * win->width,
             0x00ff0000, // Rmask
@@ -99,7 +116,7 @@ SDL_Surface* it_surfaces_from_window(it_windows* win, void* data) {
 }
 
 SDL_Surface* it_surfaces_window(it_windows* win, bool no_rle) {
-    if (!win->window) return NULL;
+    if (!win || !win->window) return NULL;
     SDL_Surface* surface = SDL_CreateRGBSurface(
         0, win->width, win->height, 32,
             0x00ff0000, // Rmask
@@ -114,7 +131,7 @@ SDL_Surface* it_surfaces_window(it_windows* win, bool no_rle) {
 }
 
 SDL_Surface* it_screens_window(it_windows* win) {
-    if (!win->window) return NULL;
+    if (!win || !win->window) return NULL;
     SDL_Surface* screen = SDL_GetWindowSurface(win->window);
     if (!screen)
         sdlI_error("SDL_GetWindowSurface: failed to get window surface (%s)");
@@ -122,7 +139,7 @@ SDL_Surface* it_screens_window(it_windows* win) {
 }
 
 void it_blits_window(it_windows* win, SDL_Surface* surface) {
-    if (!win->window || !surface) return;
+    if (!win || !win->window || !surface) return;
     SDL_Surface* screen = SDL_GetWindowSurface(win->window);
     if (!screen)
         sdlI_error("SDL_GetWindowSurface: failed to get window surface (%s)");
@@ -132,46 +149,34 @@ void it_blits_window(it_windows* win, SDL_Surface* surface) {
 }
 
 void it_updates_window(it_windows* win) {
-    if (!win->window) return;
+    if (!win || !win->window) return;
     if (SDL_UpdateWindowSurface(win->window))
         sdlI_error("SDL_UpdateWindowSurface: failed to update window surface (%s)");
 }
 
 void it_locks_window_surface(it_windows* win, SDL_Surface* surface) {
-    if (!win->window) return;
+    if (!win || !win->window) return;
     if (SDL_MUSTLOCK(surface) && SDL_LockSurface(surface))
         sdlI_error("SDL_LockSurface: failed to lock surface (%s)");
 }
 
 void it_unlocks_window_surface(it_windows* win, SDL_Surface* surface) {
-    if (!win->window) return;
+    if (!win || !win->window) return;
     if (SDL_MUSTLOCK(surface))
         SDL_UnlockSurface(surface);
 }
 
 void it_pushes_event_window(it_windows* win, SDL_Event* event) {
-    if (!win->window) return;
+    if (!win || !win->window) return;
     if (SDL_PushEvent(event) < 0)
         sdlI_error("SDL_PushEvent: failed to push event (%s)");
 }
 
 void it_closes_window(it_windows* win) {
-    it_frees_window(win);
-    it_closes_thread(win->thread);
-}
-
-void it_frees_window(it_windows* win) {
     if (!win) return;
-    if (win->thread->on_free) {
+    if (win->thread) {
         win->thread->on_free = NULL;
-        luaI_globalemit(win->thread->ctx->lua, "window", "close");
-        luaI_pcall_in(win->thread->ctx, 2, 0);
-    }
-    if (win->window) {
-        SDL_Window* window = win->window;
-        win->window = NULL;
-        // might take a while …
-        SDL_DestroyWindow(window);
+        it_closes_thread(win->thread);
     }
     if (win->renderer) {
         SDL_Renderer* renderer = win->renderer;
@@ -179,6 +184,26 @@ void it_frees_window(it_windows* win) {
         // might take a while …
         SDL_DestroyRenderer(renderer);
     }
+    if (win->window) {
+        if (win->thread
+        &&  win->thread->ctx
+        &&  win->thread->ctx->lua) {
+            luaI_globalemit(win->thread->ctx->lua, "window", "close");
+            luaI_pcall_in(win->thread->ctx, 2, 0);
+        }
+        SDL_Window* window = win->window;
+        win->window = NULL;
+        // might take a while …
+        SDL_DestroyWindow(window);
+        sdlI_ref(-1);
+    }
+}
+
+void it_frees_window(it_windows* win) {
+    if (!win) return;
+    // window always referenced in its scope
     if (it_unrefs((it_refcounts*) win) > 0) return;
-    sdlI_ref(-1);
+    it_closes_window(win);
+    it_frees_thread(win->thread);
+    win->thread = NULL;
 }

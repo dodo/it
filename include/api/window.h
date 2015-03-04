@@ -14,8 +14,10 @@
 
 int sdlI_ref(int c);
 
-extern void sdlI_free(void* priv);
-extern void sdlI_idle(void* priv);
+extern it_windows* it_allocs_window();
+
+extern void default_free_window_close(void* priv);
+extern void default_idle_window_emit_need_render(void* priv);
 
 extern void it_inits_window(it_windows* win, it_threads* thread);
 extern void it_creates_window(it_windows* win, const char* title,

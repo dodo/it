@@ -2,6 +2,10 @@
 #define _GNU_SOURCE
 #include <dlfcn.h>
 
+#ifdef NDEBUG
+    #undef NDEBUG
+#endif
+
 #include <assert.h>
 #include <string.h>
 #include <signal.h>
@@ -26,7 +30,7 @@ int at_panic(lua_State* L) {
     }
     panic_attack = TRUE;
     uvI_thread_t* thread = uvI_thread_self();
-    if (!thread) abort();
+    if (!thread) it_errors("at_panic: current thread not found!");
     // first things first
     if (!thread->backtrace->count)
         uvI_thread_stacktrace(thread);
@@ -48,7 +52,7 @@ int at_panic(lua_State* L) {
     lua_remove(   L, -3);
     lua_pushliteral(L, "panic");
     lua_pushvalue(L, -4);
-    luaI_pcall(L, 3, 0, TRUE/*safe*/);
+    luaI_pcall(L, 3, 0, 2/*super safe*/);
     panic_attack = FALSE;
     return 0;
 }
@@ -56,7 +60,10 @@ int at_panic(lua_State* L) {
 void at_fatal_panic(int signum) {
     // first things first
     uvI_thread_t* thread = uvI_thread_self();
-    if (!thread) abort();
+    if (!thread) {
+        it_prints_error("at_fatal_panic: current thread not found!");
+        return;
+    }
     uvI_thread_stacktrace(thread);
     // shorten back trace by removing 'it'-internals
 //     Dl_info dlinfo;
@@ -75,14 +82,14 @@ void at_fatal_panic(int signum) {
 }
 
 // TODO FIXME use siglongjump to block all signals during exception, to prevent recursion
-int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe) {
-    if (!safe) {// hardcore!
+int luaI_xpcall(lua_State* L, int nargs, int nresults, int safe) {
+    if (!safe) { // hardcore!
         lua_call(L, nargs, nresults);
         return 0;
     }
     uvI_thread_t* thread = uvI_thread_self();
-    if (!thread) it_errors("current thread not found!");
-    if (!thread->safe) {// hardcore!
+    if (!thread) it_errors("at luaI_xpcall: current thread not found!");
+    if (!thread->safe && safe != 2) { // hardcore!
         lua_call(L, nargs, nresults);
         return 0;
     }
@@ -91,18 +98,31 @@ int luaI_xpcall(lua_State* L, int nargs, int nresults, int errfunc, int safe) {
     signal(SIGFPE, &at_fatal_panic);
     signal(SIGSEGV, &at_fatal_panic);
     signal(SIGSYS, &at_fatal_panic);
+    thread->checksum = IT_CHECKSUMS;
     int pos = uvI_thread_notch(thread);
     int num = setjmp(thread->jmp[pos]);
     if (num) uvI_thread_unnotch(thread);
-    if (num < 0) return luaL_error(L, "%s%s", (lua_isstring(L, -1)?": ":""), strsignal(-num)); // got signal
+    if (num < 0) {
+        lua_State* lua = luaL_newstate();
+        if (lua) {
+            lua_pushfstring(lua, "caught signal %d: %s\n", -num, strsignal(-num));
+            luaI_stacktrace(lua);
+            lua_error(lua);
+        } else {
+            it_prints_error("caught signal %d: %s\n", -num, strsignal(-num));
+        }
+        return 0;
+    }
+    // got signal
     if (num > 0) return num - 1; // ignore error and keep running
-    int result = lua_pcall(L, nargs, nresults, errfunc);
+//     int result = luaI_pcall_with(L, nargs, nresults, luaI_simpleerror);
+    int result = luaI_pcall_with(L, nargs, nresults, luaI_stacktrace);
     // success
     uvI_thread_unnotch(thread);
     return result;
 }
 
-int lua_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f) {
+int luaI_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f) {
     int msgh = 0 - nargs - 2;
     lua_pushcfunction(L, f);
     lua_insert(L, msgh);
@@ -114,23 +134,34 @@ int lua_pcall_with(lua_State* L, int nargs, int nresults, lua_CFunction f) {
 
 int luaI_simpleerror(lua_State* L) {
     if (!lua_isstring(L, -1)) {
+        lua_pop(L, 1); // whateva it is
         lua_pushliteral(L, "missing error message");
+    } else if (lua_isnil(L, -1)) {
+        lua_pop(L, 1);
+        lua_pushliteral(L, "nil error message");
     } else {
-        luaL_loadstring(L, "return string.match(..., '([^\\n]+)')");
-        lua_pushvalue(L, -2);
-        if (lua_pcall(L, 1, 1, 0)) {
+        lua_State* lua = luaL_newstate();
+        if (!lua) {
+            it_prints_error("error while getting simple error message");
+            it_prints_error("%s", lua_tostring(L, -1));
+            lua_pop(L, 1);
+        }
+        luaL_loadstring(lua, "return string.match(..., '([^\\n]+)')");
+        lua_pushstring(lua, lua_tostring(L, -1));
+        lua_pop(L, 1);
+        if (lua_pcall(lua, 1, 1, 0)) {
             lua_pushliteral(L, "error during message extraction: ");
-            lua_pushvalue(L, -2);
-            lua_remove(L, -3);
+            lua_pushstring( L, lua_tostring(lua, -1));
             lua_concat(L, 2);
         }
+        lua_close(lua);
     }
     return 1;
 }
 
 int luaI_stacktrace(lua_State* L) {
     uvI_thread_t* thread = uvI_thread_self();
-    if (!thread) abort();
+    if (!thread) it_errors("luaI_stacktrace: current thread not found!");
     lua_CFunction func;
     lua_Debug info;
     Dl_info dlinfo;
@@ -138,12 +169,20 @@ int luaI_stacktrace(lua_State* L) {
     char addr[LUA_IDSIZE];
     int skips = 0;
     int level = 0 - thread->backtrace->count;
+    it_states *tmp = calloc(1, sizeof(it_states));
+    if (tmp && luaI_newstate(tmp)) {
+        free(tmp);
+        tmp = NULL;
+    }
     int strings = lua_isstring(L, -1); // starts with error message on top of stack
+    if (strings && !lua_objlen(L, -1)) {
+        lua_pop(L, 1);
+        --strings;
+    }
     if (thread->backtrace->count && strings) {
         if (lua_isstring(L, -2) && !lua_isnumber(L, -2)) {
-            lua_insert(L, -2); // swap lua err msg with luaI_xpcall err msg
-            lua_pushliteral(L, "\n");
-            strings += 2;
+//             lua_remove(L, -2); // somehow err msg is doubled
+            ++strings;
         }
     }
     while (level < 0 || lua_getstack(L, level, &info)) {
@@ -175,7 +214,7 @@ int luaI_stacktrace(lua_State* L) {
                     }
                     sprintf(addr, "|%p%c", dlinfo.dli_saddr, '\0');
                 }
-                sprintf(info.short_src, "%s%c", dlinfo.dli_fname, '\0');
+                sprintf(info.short_src, "%s", dlinfo.dli_fname);
                 info.name = dlinfo.dli_sname;
                 if (!info.namewhat[0])
                      info.namewhat = "function";
@@ -221,22 +260,25 @@ int luaI_stacktrace(lua_State* L) {
             ++level;
             continue;
         }
-        { // try to extract lua code
+        if (tmp) { // try to extract lua code
             lua_pushliteral(L, "        ");
-            luaL_loadstring(L, "return require('it.fs').line(...)");
-            lua_pushstring(L, info.short_src);
-            lua_pushinteger(L, info.currentline);
-            if (lua_pcall_with(L, 2, 1, luaI_simpleerror)) {
+            luaL_loadstring(tmp->lua, "return require('it.fs').line(...)");
+            lua_pushstring(tmp->lua, info.short_src);
+            lua_pushinteger(tmp->lua, info.currentline);
+            if (luaI_pcall_with(tmp->lua, 2, 1, luaI_simpleerror)) {
                 lua_pushliteral(L, "--[[! internal error: missing lua lines: ");
-                lua_pushvalue(L, -2);
-                lua_remove(L, -3);
+                lua_pushstring( L, lua_tostring(tmp->lua, -1));
                 lua_pushliteral(L, " !]]\n");
+                lua_pop(tmp->lua,  1);
                 strings += 4;
-            } else if (lua_isnil(L, -1)) {
+            } else if (lua_isnil(tmp->lua, -1)) {
                 // no lua code found, so skip it
-                lua_pop(L, 2);
+                lua_pop(tmp->lua, 1);
+                lua_pop(L, 1);
             } else {
+                lua_pushstring( L, lua_tostring(tmp->lua, -1));
                 lua_pushliteral(L, "\n");
+                lua_pop(tmp->lua,  1);
                 strings += 3;
             }
         }
@@ -244,8 +286,12 @@ int luaI_stacktrace(lua_State* L) {
     }
     if (level + thread->backtrace->count - skips) {
         lua_pushliteral(L, "\n");
-        lua_insert(L, -strings);
-        strings++;
+        lua_insert(L, 0 - strings);
+        ++strings;
+    }
+    if (tmp) {
+        lua_close(tmp->lua);
+        free(tmp);
     }
     lua_concat(L, strings);
     thread->backtrace->count = 0;
@@ -254,7 +300,7 @@ int luaI_stacktrace(lua_State* L) {
 
 int luaI_init_errorhandling(lua_State* L) {
     signal(SIGPIPE, SIG_IGN); // ignore borken pipe
-
+    // lets generate heisenbugs!
     lua_atpanic(L, at_panic);
     lua_pushcfunction(L, luaI_stacktrace);
     lua_setglobal(L, "_TRACEBACK");

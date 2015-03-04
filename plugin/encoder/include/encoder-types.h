@@ -9,6 +9,7 @@
 
 
 typedef struct _it_encodes {
+    int refc;
     it_threads *thread;
     it_states *hooks[SCHRO_ENCODER_FRAME_STAGE_LAST];
     SchroEncoder *encoder;

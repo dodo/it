@@ -3,9 +3,6 @@ local fs = require 'fs'
 local Window = require 'window'
 local fake = require('util.table').fake
 
--- love is fake object, that allows all keys to be indexed (recursive) and called
-love = fake 'love'
-
 --------------------------------------------------------------------------------
 function emulator(external_window)
 window = external_window or window
@@ -602,8 +599,12 @@ function emulate(gamepath)
     end
     process.cwd(gamepath)
 
+    -- love is fake object, that allows all keys to be indexed (recursive) and called
+    love = fake 'love'
+
     local window = Window:new()
     window.scope:import(emulator)
+    love.window = window
 
     local c = love.conf
     if fs.exists('conf.lua') then
@@ -634,7 +635,7 @@ end
 return {
     emulator = emulator,
     emulate  = emulate,
-    __main   = function ()
-        emulate(process.argv[1])
+    __main   = function (gamepath)
+        emulate(gamepath or process.argv[1])
     end,
 }

@@ -15,11 +15,11 @@
 #include "audio.h"
 
 
+extern it_audios* it_allocs_audio();
 extern void it_inits_audio(it_audios* audio,
                            const ALCchar *devicename,
                            const ALCint* attrlist,
                            int nsource);
-
 extern void it_frees_audio(it_audios* audio);
 
 

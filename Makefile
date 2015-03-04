@@ -11,10 +11,11 @@ IT_SRC_API = src/api.c \
 	src/api/process.c \
 	src/api/window.c
 
+LUAJIT_INC = $(shell pkg-config --cflags luajit)
+# LUAJIT_INC = -Ivendor/luajit-2.0/src
 
-IT_DEPENDS = \
+IT_DEPENDS = $(LUAJIT_INC) \
 	$(shell pkg-config --cflags libuv) \
-	$(shell pkg-config --cflags luajit) \
 	$(shell pkg-config --cflags sdl2)
 
 IT_LINKS = \
@@ -29,12 +30,15 @@ IT_LAZY_LIBS = \
 IT_INCLUDES = -I./include
 IT_WARNS = -Wall
 
+CC = gcc
+
 # DEBUG = ""
 # DEBUG = -g -O0
 DEBUG = -O2
 
 IT_RPATHS = /tmp/it-rpath
 
+_rpath = -Wl,-z,origin -Wl,-rpath
 
 cleanall: clean all
 
@@ -46,19 +50,19 @@ plugins: audio encoder
 
 api: libapi.so
 	echo -n "return nil" > lib/plugins.lua
-	echo -n '$$ORIGIN' >  $(IT_RPATHS)
+# 	echo -n '$$ORIGIN:$$ORIGIN/vendor/luajit-2.0/src' >  $(IT_RPATHS)
 	echo -n '$(IT_INCLUDES) $(IT_DEPENDS) $(IT_LAZY_LIBS)' > ccflags
 	cat lib/cdefs.c > combined-cdefs.c
 
 audio: api lib/plugins.lua
-	make -C plugin/audio \
+	make -C plugin/audio CC=$(CC) DEBUG=$(DEBUG) \
 		&& echo -n ",'audio'" >> lib/plugins.lua \
 		&& echo -n ':$$ORIGIN/plugin/audio' >> $(IT_RPATHS) \
 		&& cat plugin/audio/lib/cdefs.c >> combined-cdefs.c \
 		&& cat plugin/audio/ccflags >> ccflags
 
 encoder: api lib/plugins.lua
-	make -C plugin/encoder \
+	make -C plugin/encoder CC=$(CC) DEBUG=$(DEBUG) \
 		&& echo -n ",'encoder'" >> lib/plugins.lua \
 		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS) \
 		&& cat plugin/encoder/lib/cdefs.c >> combined-cdefs.c \
@@ -68,15 +72,17 @@ cdefdb.so: $(IT_SRC_API) combined-cdefs.c
 	./vendor/cdefdb/gen-cdefdb combined-cdefs.c $(shell cat ccflags)
 
 libapi.so:  $(IT_SRC_API)
-	gcc $(IT_WARNS) -shared -o $@ -fPIC $(IT_SRC_API) \
-		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_LINKS)
+	$(CC) $(DEBUG) $(IT_WARNS) -shared -o $@ -fPIC $(IT_SRC_API) \
+		$(IT_INCLUDES) $(IT_DEPENDS) $(IT_LINKS) \
+		$(_rpath),'$(shell cat $(IT_RPATHS))'
 
 it: api cdefdb.so $(IT_SRC_BIN)
-	gcc $(IT_WARNS) -o $@ $(IT_SRC_BIN) $(IT_INCLUDES) $(DEBUG) \
+	$(CC) $(DEBUG) $(IT_WARNS) -o $@ $(IT_SRC_BIN) $(IT_INCLUDES) \
 		-L. -lapi \
 		$(shell pkg-config --cflags --libs libuv) \
-		$(shell pkg-config --cflags --libs luajit) \
-		-Wl,-z,origin -Wl,-rpath,'$(shell cat $(IT_RPATHS))'
+		$(shell pkg-config --libs luajit) $(LUAJIT_INC) \
+		$(_rpath),'$(shell cat $(IT_RPATHS))'
+# 		$(shell pkg-config --cflags --libs luajit)
 
 
 clean:

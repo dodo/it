@@ -106,15 +106,20 @@ int uvI_thread_notch(uvI_thread_t* thread) {
     realloc(thread, sizeof(uvI_thread_t) +
                     sizeof(jmp_buf) *
                     (thread->size - old_size - C_STACK_MINSIZE));
+    // stub to disableclang warning: Value stored to 'thread' is never read
+    thread = thread;
     return pos;
 }
 
 void uvI_thread_unnotch(uvI_thread_t* thread) {
     --(thread->count);
+//     if (thread->checksum != IT_CHECKSUMS) FIXME
+//         it_errors("possible buffer overflow detected!");
+    thread->checksum = 0;
 }
 
 void uvI_thread_stacktrace(uvI_thread_t* thread) {
-    thread->backtrace->count = backtrace(thread->backtrace->addrs, BACK_TRACE_SIZE);
+    thread->backtrace->count = backtrace(thread->backtrace->addrs, BACK_TRACE_SIZE * sizeof(intptr_t));
 }
 
 void uvI_thread_jmp(uvI_thread_t* thread, int num) {

@@ -16,9 +16,10 @@ local Frame = Prototype:fork()
 Frame.type = Metatype:struct("it_frames", cdef)
 
 Frame.type:load('libencoder.so', {
-    ref = 'it_refs',
-    unref = 'it_unrefs',
-    init = 'it_inits_frame',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_frame',
+    __init = 'it_inits_frame',
     create = 'it_creates_frame',
     convert = 'it_converts_frame',
     reference = 'it_refs_frame',

@@ -3,12 +3,12 @@ local doc = require 'util.doc'
 local _table = {}
 
 
-function _table.weak(table)
+function _table.weak(table, mode)
     return setmetatable(table or {}, {
-        __mode = 'k',
+        __mode = mode or 'k',
     })
 end
-doc.info(_table.weak, 'util_table.weak', '( table={} )')
+doc.info(_table.weak, 'util_table.weak', '( table={}, mode="k" )')
 
 function _table.readonly(table)
     return setmetatable({}, {
@@ -30,7 +30,7 @@ function _table.fake(name, table)
             end
         end,
         __index = function (t,k)
-            t[k] = _table.fake(name .. '.' .. k)
+            t[k] = _table.fake(name .. '.' .. tostring(k))
             return t[k]
         end
     })

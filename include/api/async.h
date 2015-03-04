@@ -12,6 +12,7 @@
 #include "api/async.h"
 #include "api/thread.h"
 
+extern it_asyncs* it_allocs_async();
 
 extern void default_async_callback(void* priv, it_queues* queue);
 #if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10

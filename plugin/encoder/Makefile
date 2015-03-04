@@ -31,6 +31,8 @@ IT_FLAGS = \
 IT_INCLUDES = -I./include -I$(IT_DIR)/include
 IT_WARNS = -Wall
 
+CC = gcc
+
 # DEBUG = ""
 # DEBUG = -g -O0
 DEBUG = -O2
@@ -49,7 +51,7 @@ ccflags:
 
 libencoder.so: $(IT_SRC_API) \
 	$(IT_DIR)/vendor/schroedinger/schroedinger/.libs/libschroedinger-1.0.a
-	gcc $(IT_WARNS) -shared -o $@ -fPIC $^ \
+	$(CC) $(IT_WARNS) -shared -o $@ -fPIC $^ \
 		$(IT_INCLUDES) $(DEBUG) $(IT_DEPENDS) $(IT_LINKS) $(IT_FLAGS)
 
 clean:

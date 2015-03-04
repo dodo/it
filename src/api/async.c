@@ -5,20 +5,23 @@
 #include "api/thread.h"
 
 
+it_asyncs* it_allocs_async() {
+    it_asyncs* async = (it_asyncs*) calloc(1, sizeof(it_asyncs));
+    if (!async)
+        it_errors("calloc(1, sizeof(it_asyncs)): failed to allocate async event emitter");
+    async->refc = 1;
+    return async;
+}
+
 void default_async_callback(void* priv, it_queues* queue) {
     it_asyncs* async = (it_asyncs*) priv;
-    if (async->thread->ctx->err) return;
+//     if (async->thread->ctx->closed) return;
     luaI_getglobalfield(async->thread->ctx->lua, "process", "context");
     luaI_localemit(async->thread->ctx->lua, "async", queue->key);
     int nargs = 2 + queue->count;
     int i; for (i = 0; i < queue->count; i++) {
         luaI_value* value = queue->values[i];
         luaI_pushvalue(async->thread->ctx->lua, value);
-    }
-    queue->size = queue->count = 0;
-    if (queue->values) {
-        free(queue->values);
-        queue->values = NULL;
     }
     luaI_pcall_in(async->thread->ctx, nargs, 0);
 }
@@ -37,25 +40,37 @@ void uvI_async_call(uv_async_t* handle) {
     uv_mutex_unlock(async->mutex);
     // work queue …
     while (queue) {
+        if (!async->thread->ctx || (async->thread->ctx && async->thread->ctx->err)) break;
         async->on_sync(async->priv, queue);
-        queue = queue->next;
+        it_queues* next = queue->next;
+        queue->size = queue->count = 0;
+        if (queue->values) {
+            free(queue->values);
+            queue->values = NULL;
+        }
+        free(queue);
+        queue = next;
     }
 }
 
 void it_inits_async(it_asyncs* async) {
     if (!async) return;
-    uv_async_t* uvasync = (uv_async_t*) malloc(sizeof(uv_async_t));
-    if (!uvasync) return;
-    uv_mutex_t* uvmutex = (uv_mutex_t*) malloc(sizeof(uv_mutex_t));
-    if (!uvmutex) return;
-    async->async = uvasync;
-    async->mutex = uvmutex;
+    if (!async->thread) it_errors("thread required");
     async->priv = async;
     async->on_sync = default_async_callback;
-    // initialize uv stuff
-    uv_mutex_init(uvmutex);
-    uv_async_init(async->thread->ctx->loop, uvasync, uvI_async_call);
-    uvasync->data = async;
+    if (!async->async) {
+        uv_async_t* uvasync = (uv_async_t*) malloc(sizeof(uv_async_t));
+        if (!uvasync) return;
+        async->async = uvasync;
+        uv_async_init(async->thread->loop, uvasync, uvI_async_call);
+        uvasync->data = async;
+    }
+    if (!async->mutex) {
+        uv_mutex_t* uvmutex = (uv_mutex_t*) malloc(sizeof(uv_mutex_t));
+        if (!uvmutex) return;
+        async->mutex = uvmutex;
+        uv_mutex_init(uvmutex);
+    }
 }
 
 it_queues* it_queues_async(it_asyncs* async) {
@@ -71,7 +86,7 @@ void it_pushes_async(it_queues* queue, luaI_value* value) {
     int pos = queue->count;
     if (++(queue->count) >= queue->size) {
         queue->size = queue->size == 0 ? 1 : 2 * queue->size;
-        queue->values = realloc(queue->values, sizeof(luaI_value) * queue->size);
+        queue->values = realloc(queue->values, sizeof(luaI_value*) * queue->size);
     }
     queue->values[pos] = value;
 }
@@ -93,7 +108,9 @@ void it_pushes_cdata_async(it_queues* queue, void* cdata) {
 }
 
 void it_sends_async(it_asyncs* async, const char* key, it_queues* queue) {
-    if (!async || !queue) return;
+    if (!queue || !async || !async->async) return;
+    if (!async->thread || async->thread->ctx->err || async->thread->closed) return;
+//     if (async->async->loop && async->async->loop->stop_flag) return;
     queue->key = key;
     // append to queue …
     uv_mutex_lock(async->mutex);
@@ -111,6 +128,19 @@ void it_sends_async(it_asyncs* async, const char* key, it_queues* queue) {
 void it_frees_async(it_asyncs* async) {
     if (!async) return;
     if (it_unrefs((it_refcounts*) async) > 0) return;
+    it_queues* queue = async->queue;
+    async->queue = NULL;
+    async->last = NULL;
+    while (queue) {
+        it_queues* next = queue->next;
+        queue->size = queue->count = 0;
+        if (queue->values) {
+            free(queue->values);
+            queue->values = NULL;
+        }
+        free(queue);
+        queue = next;
+    }
     if (async->async) {
         uv_async_t* uvasync = async->async;
         async->async = NULL;

@@ -60,6 +60,7 @@ local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
         local apiname = name and 'it.' .. name or name
         success, api = pcall(package.vanilla_require, apiname)
         if success then return api end
+        if not api:match('^module') then error(api) end
         success, mod = pcall(package.vanilla_require, name)
         if not success then error(api or mod) --[[error]] end
         return mod
@@ -67,7 +68,7 @@ local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
 end
 
 -- add new loaders via environment
-function package.env(mode)
+function package.env(mode, ...)
     if mode == 'vanilla' then
         -- copy loaders table to prevent luarocks from using api_loader
         local loaders = {}
@@ -81,6 +82,18 @@ function package.env(mode)
         table.insert(package.loaders, 1, local_loader)
         table.insert(package.loaders, 2, api_loader)
         require = api_require
+    elseif mode == 'love' then
+        package.env('it')
+        local window = ...
+        if window and window.type and window.type.name == 'it_windows' then
+            require('prostitution').emulator(window)
+        else -- start new window
+            local gamepath = nil -- else process.argv[1]
+            if type(window) == 'string' then gamepath = window end
+            require('prostitution').__main(gamepath)
+        end
+    else
+        error(string.format("uknown package environment '%s'!", mode))
     end
 end
 

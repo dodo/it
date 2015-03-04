@@ -11,7 +11,7 @@ local doc = require 'util.doc'
 local debug_level
 local Frame = require 'encoder.frame'
 
-cdef({
+local C = cdef({
     typedefs = 'SchroEncoder*',
     verbose  = process.verbose,
 })
@@ -23,15 +23,19 @@ local submodules = util.lazysubmodules('encoder', {'frame'})
 
 local Encoder = require(process.context and 'events' or 'prototype'):fork(submodules)
 Encoder.type = Metatype:struct("it_encodes", cdef)
-
+Encoder.C = C
 
 Encoder.type:api('Encoder',
     {'start', 'debug', 'getsettings', 'getformat', 'setformat'},
     _it.plugin.encoder.apifile)
 Encoder.type:load('libencoder.so', {
-    init = 'it_inits_encoder',
+    __ref = 'it_refs',
+    __unref = 'it_unrefs',
+    __ac = 'it_allocs_encoder',
+    __init = 'it_inits_encoder',
     hook = 'it_hooks_stage_encoder',
     push = 'it_pushes_frame_encoder',
+    __gc = 'it_frees_encoder',
 }, cdef)
 
 
@@ -92,9 +96,10 @@ function Encoder:__cast(pointer, thread)
     self:init()
     self.native = self.type:ptr(pointer)
     self.raw = self.native.encoder
-    self.thread = thread or Thread:new(self.native.thread)
+    self.thread = thread or Thread:cast(self.native.thread)
     self.format = _table.readonly(self:getformat().raw)
     self.settings = _table.readonly(self.native:getsettings())
+    self.scope = self.thread.scope
     self.start = nil
 end
 doc.info(Encoder.__cast, 'Encoder:cast', '( pointer[, thread] )')

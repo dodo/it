@@ -59,13 +59,16 @@ local CTState do
   local co = coroutine.create(function()end) -- Any live coroutine will do.
   local G = ffi.cast(global_state_ptr, ffi.cast("uint32_t*", memptr(co))[2])
   CTState = ffi.cast("CTState*", G.ctype_state)
+  if CTState == nil then CTState = nil end
 end
 
 -- Acquire the CTState's miscmap table as a Lua variable
 local miscmap do
   local t = {}; t[0] = t
-  local tvalue = ffi.cast("uint32_t*", memptr(t))[2]
-  ffi.cast("uint32_t*", tvalue)[ffi.abi"le" and 0 or 1] = ffi.cast("uint32_t", ffi.cast("uintptr_t", CTState.miscmap))
+  if CTState then
+    local tvalue = ffi.cast("uint32_t*", memptr(t))[2]
+    ffi.cast("uint32_t*", tvalue)[ffi.abi"le" and 0 or 1] = ffi.cast("uint32_t", ffi.cast("uintptr_t", CTState.miscmap))
+  end
   miscmap = t[0]
 end
 
@@ -285,6 +288,7 @@ local function sib_iter(s, refct)
 end
 
 local function siblings(refct)
+  if not CTState then return end
   -- Follow to the end of the attrib chain, if any.
   while refct.attributes do
     refct = refct_from_id(CTState.tab[refct.typeid].sib)
@@ -305,6 +309,7 @@ metatables.enum.__index.siblings = siblings
 metatables.enum.__index.values = siblings
 
 local function find_sibling(refct, name)
+  if not CTState then return end
   local num = tonumber(name)
   if num then
     for sib in siblings(refct) do
@@ -330,6 +335,7 @@ metatables.func.__index.argument = find_sibling
 metatables.enum.__index.value = find_sibling
 
 function reflect.typeof(cdata) -- refct = reflect.typeof(ct)
+  if not CTState then return end
   return refct_from_id(tonumber(ffi.typeof(cdata)))
 end
 doc.info(reflect.typeof, 'reflect.typeof', '( cdata )')

@@ -43,40 +43,41 @@
     (lua_getglobal(L,gn), lua_insert(L,-2), lua_setfield(L,-2,fn), lua_pop(L,1))
 
 
-int luaI_loadmetatable(lua_State* L, int i);
-void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
+extern int luaI_loadmetatable(lua_State* L, int i);
+extern void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
-int luaI_copyfunction(lua_State* L, lua_State* src);
-luaI_function* luaI_tofunction(lua_State* L, int index);
-int luaI_pushfunction(lua_State* L, luaI_function* func);
+extern int luaI_copyfunction(lua_State* L, lua_State* src);
+extern luaI_function* luaI_tofunction(lua_State* L, int index);
+extern int luaI_pushfunction(lua_State* L, luaI_function* func);
 
-int luaI_dofile(lua_State* L, const char *filename);
-void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
+extern int luaI_dofile(lua_State* L, const char *filename);
+extern void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
 
-it_processes* luaI_getprocess(lua_State* L);
-it_states* luaI_getstate(lua_State* L);
-int luaI_setstate(lua_State* L, it_states* ctx);
-const char* luaI_getlibpath(lua_State* L, const char* filename);
+extern it_processes* luaI_getprocess(lua_State* L);
+extern it_states* luaI_getstate(lua_State* L);
+extern int luaI_setstate(lua_State* L, it_states* ctx);
+extern const char* luaI_getlibpath(lua_State* L, const char* filename);
 
-void luaI_createdefinetable(lua_State* L);
-void luaI_getdefine(lua_State* L, const char* key);
-void luaI_setdefine(lua_State* L, const char* key);
+extern void luaI_createdefinetable(lua_State* L);
+extern void luaI_getdefine(lua_State* L, const char* key);
+extern void luaI_setdefine(lua_State* L, const char* key);
 
-luaI_value* luaI_getvalue(lua_State* L, int i);
-void luaI_pushvalue(lua_State* L, luaI_value* value);
+extern luaI_value* luaI_getvalue(lua_State* L, int i);
+extern void luaI_pushvalue(lua_State* L, luaI_value* value);
 
-int luaI_newstate(it_states* ctx);
-int luaI_createstate(it_processes* process);
+extern int luaI_newstate(it_states* ctx);
+extern int luaI_createstate(it_processes* process);
+extern int luaI_closestate(it_processes* process);
 
-int luaI_pcall(lua_State* L, int nargs, int nresults, int safe);
-int luaI_pcall_in(it_states* ctx, int nargs, int nresults);
+extern int luaI_pcall(lua_State* L, int nargs, int nresults, int safe);
+extern int luaI_pcall_in(it_states* ctx, int nargs, int nresults);
 
-int luaI_emit(lua_State* L, const char* event);
-int luaI_localemit(lua_State* L, const char* field, const char* event);
-int luaI_globalemit(lua_State* L, const char* global, const char* event);
+extern int luaI_emit(lua_State* L, const char* event);
+extern int luaI_localemit(lua_State* L, const char* field, const char* event);
+extern int luaI_globalemit(lua_State* L, const char* global, const char* event);
 
-int luaI_gc(lua_State* L);
-void luaI_close(lua_State* L, int code);
+extern int luaI_gc(lua_State* L);
+extern void luaI_close(lua_State* L, int code);
 
 
 #endif /* LUAI_H */

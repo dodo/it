@@ -20,7 +20,7 @@
 #elif UV_VERSION_MAJOR >= 1 // libuv >=1.0
 
     #define uvI_loop_delete(loop) \
-        do{ if (loop && !uv_loop_close(loop)) \
+        do{ if (!uv_loop_close(loop)) \
             free(loop); \
         } while (0)
 
@@ -38,6 +38,7 @@ struct uvI_thread_s {
     uv_thread_t pthread;
     uvI_stacktrace_t *backtrace;
     uvI_thread_t *next;
+    int checksum;
     int size;
     int count;
     bool safe;
