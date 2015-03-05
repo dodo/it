@@ -60,7 +60,7 @@ doc.info(exports.toname, 'util_ffi.toname', '( pointer[, name] )')
 local __define
 local function get_define(  )
     if not __define then
-        __define = require('metatype'):fork():load('api', {
+        __define = require('metatype'):fork():load(_it.api('api'), {
             define = 'it_defines_cdata_scope',
         }, require('cdef')):virt().define
     end

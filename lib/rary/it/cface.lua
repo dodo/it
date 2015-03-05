@@ -16,7 +16,8 @@ function cface.register(clib, apifile)
         if apifile then
             clib = _it.loads(name, apifile)
         else
-            clib = _CFACE_REGISTRY[name] or ffi.load(name)
+            clib = _CFACE_REGISTRY[name]
+            clib = clib or ffi.load(name)
             _CFACE_REGISTRY[name] = clib
         end
     end

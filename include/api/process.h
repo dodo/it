@@ -19,5 +19,7 @@ extern void it_exits_process(it_processes* process, int code);
 
 extern double it_gets_time_process();
 
+extern int it_runs_process(lua_State* L, int argc, char *argv[]);
+
 
 #endif /* API_PROCESS_H */

@@ -120,7 +120,7 @@ int luaI_setstate(lua_State* L, it_states* ctx) {
         // concat arguments to get one string
         "_it.execcmd = ... "
         // remove executable name
-        "_it.execpath = _it.execcmd:match('^(.*/)[^/]+$') "
+        "_it.execpath = (_it.execpath or _it.execcmd):match('^(.*/)[^/]+$') "
         // build some static paths
         "_it.apifile = 'api' "
         "_it.plugindir = _it.execpath .. 'plugin/' "
@@ -229,10 +229,11 @@ void luaI_pushvalue(lua_State* L, luaI_value* value) {
     }
 }
 
-int luaI_newstate(it_states* ctx) {
+int luaI_newstate(lua_State* L, it_states* ctx) {
     if (!ctx || ctx->lua) return 1;
+    int newstate = L ? 0 : 1;
     // create lua state
-    lua_State* L = luaL_newstate();
+    if (!L) L = luaL_newstate();
     if (!L) {
         it_prints_error("failed to allocate lua state!");
         return 1;
@@ -245,6 +246,14 @@ int luaI_newstate(it_states* ctx) {
     luaL_openlibs(L);
     luaI_createdefinetable(L);
     register_api(ctx->lua, "_it"); // api.c main
+    if (!newstate) {
+        // get requirepath of itself
+        luaI_getglobalfield(L, "package", "searchpath");
+        lua_pushliteral(L, "libapi");
+        luaI_getglobalfield(L, "package", "cpath");
+        lua_call(L, 2, 1);
+        luaI_setglobalfield(ctx->lua, "_it", "execpath");
+    }
 
     if (luaI_setstate(L, ctx)) {
         lua_gc(L, LUA_GCRESTART, -1);
@@ -256,11 +265,11 @@ int luaI_newstate(it_states* ctx) {
     return 0;
 }
 
-int luaI_createstate(it_processes* process) {
+int luaI_createstate(lua_State* L, it_processes* process) {
     if (!process) return 0; // fail
     it_creates_process(process);
     it_states* ctx = process->ctx;
-    if (luaI_newstate(ctx)) {
+    if (luaI_newstate(L, ctx)) {
         return 0; // fail
     }
     lua_pushlightuserdata(ctx->lua, process);

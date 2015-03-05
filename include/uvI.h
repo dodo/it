@@ -12,6 +12,11 @@
         uvI_dlerror(lib, "uv_dlsym: failed to sym "name); \
     } while (0)
 
+#define uvI_lua_dlsym(L, lib, name, var) \
+    do{ if (uv_dlsym(lib,name, (void**) (var))) \
+        uvI_lua_dlerror(L, lib, "uv_dlsym: failed to sym "name); \
+    } while (0)
+
 #if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 
     #define uvI_loop_delete(loop) \

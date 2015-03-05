@@ -65,8 +65,8 @@ extern void luaI_setdefine(lua_State* L, const char* key);
 extern luaI_value* luaI_getvalue(lua_State* L, int i);
 extern void luaI_pushvalue(lua_State* L, luaI_value* value);
 
-extern int luaI_newstate(it_states* ctx);
-extern int luaI_createstate(it_processes* process);
+extern int luaI_newstate(lua_State* L, it_states* ctx);
+extern int luaI_createstate(lua_State* L, it_processes* process);
 extern int luaI_closestate(it_processes* process);
 
 extern int luaI_pcall(lua_State* L, int nargs, int nresults, int safe);

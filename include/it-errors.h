@@ -35,6 +35,10 @@
          it_errors(msg" (%s)", ##__VA_ARGS__, uv_dlerror(lib)); \
     }
 
+#define uvI_lua_dlerror(L, lib, msg, ...) { \
+         luaI_error(L, msg" (%s)", ##__VA_ARGS__, uv_dlerror(lib)); \
+    }
+
 #if UV_VERSION_MAJOR == 0 && UV_VERSION_MINOR == 10 // libuv 0.10
 
     #define uvI_error(loop, err, msg) { \

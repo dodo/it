@@ -8,7 +8,7 @@ local doc = require 'util.doc'
 local Thread = require(process.context and 'events' or 'prototype'):fork()
 Thread.type = Metatype:struct("it_threads", cdef)
 
-Thread.type:load('libapi.so', {
+Thread.type:load(_it.api('api'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_thread',

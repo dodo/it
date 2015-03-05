@@ -10,7 +10,7 @@ local Scope = Prototype:fork()
 Scope.type = Metatype:struct("it_states", cdef)
 
 Scope.type:api("Scope", {'import', 'define'})
-Scope.type:load('libapi.so', {
+Scope.type:load(_it.api('api'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_scope',

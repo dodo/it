@@ -72,3 +72,9 @@ int api_version(lua_State* L) {
     lua_setfield(L, -2, "sdl");
     return 1;
 }
+
+#include "api/process.h"
+LUA_API int luaopen_libapi(lua_State* L) {
+    it_runs_process(L, 0, NULL);
+    return 0;
+}

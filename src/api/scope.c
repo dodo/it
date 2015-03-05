@@ -40,7 +40,7 @@ int it_defines_scope_lua(lua_State* L) { // (ctx_userdata, name, value)
 
 void it_inits_scope(it_states* ctx, it_processes* process) {
     if (!ctx) return;
-    if (luaI_newstate(ctx)) return;
+    if (luaI_newstate(NULL, ctx)) return;
     ctx->err = NULL;
     lua_pushlightuserdata(ctx->lua, process);
     luaI_setdefine(ctx->lua, "_it_processes_");

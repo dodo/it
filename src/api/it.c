@@ -46,7 +46,7 @@ int it_boots_lua(lua_State* L) { // (process)
 int it_loads_lua(lua_State* L) { // (metatable_name, apifile_path)
     void (*load_metatable)(lua_State*, const char*);
     uv_lib_t* api = uvI_dlopen(lua_tostring(L, 2));
-    uvI_dlsym(api, "register_api", &load_metatable);
+    uvI_lua_dlsym(L, api, "register_api", &load_metatable);
     load_metatable(L, luaL_checkstring(L, 1));
     return 0;
 }
@@ -55,7 +55,7 @@ int it_versions_lua(lua_State* L) { // (apifile_path)
     if (lua_isnil(L, 1)) return api_version(L);
     int (*plugin_version)(lua_State*);
     uv_lib_t* api = uvI_dlopen(lua_tostring(L, 1));
-    uvI_dlsym(api, "api_version", &plugin_version);
+    uvI_lua_dlsym(L, api, "api_version", &plugin_version);
     return plugin_version(L);
 }
 

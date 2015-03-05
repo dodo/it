@@ -8,7 +8,7 @@ local Async = require('events'):fork()
 Async.type = Metatype:struct("it_asyncs", cdef)
 
 Async.type:api("Async", {'push'})
-Async.type:load('libapi.so', {
+Async.type:load(_it.api('api'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_async',

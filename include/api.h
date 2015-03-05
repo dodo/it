@@ -16,5 +16,7 @@
 extern int register_api(lua_State* L, const char *name);
 extern int api_version(lua_State* L);
 
+LUA_API int luaopen_libapi(lua_State* L);
+
 
 #endif /* API_H */

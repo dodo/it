@@ -170,7 +170,7 @@ int luaI_stacktrace(lua_State* L) {
     int skips = 0;
     int level = 0 - thread->backtrace->count;
     it_states *tmp = calloc(1, sizeof(it_states));
-    if (tmp && luaI_newstate(tmp)) {
+    if (tmp && luaI_newstate(NULL, tmp)) {
         free(tmp);
         tmp = NULL;
     }

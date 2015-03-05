@@ -226,7 +226,7 @@ end
 doc.info(Metatype.lib, 'type:lib', '( clib|clibname, prefix=""[, gcname] )')
 
 function Metatype:api(metaname, cfunctions, apifile)
-    cface.register(metaname, apifile or 'libapi.so')
+    cface.register(metaname, apifile or _it.api('api'))
     _ffi.get_define() -- cache function now, so package.env doesnt clash
     if not self.prototype._userdata then
         local data = _table.weak({})
@@ -252,7 +252,7 @@ function Metatype:api(metaname, cfunctions, apifile)
         end
     end
 end
-doc.info(Metatype.api, 'type:api', '( metaname, cfunctions, apifile="libapi.so" )')
+doc.info(Metatype.api, 'type:api', '( metaname, cfunctions, apifile=_it.api("api") )')
 
 
 return Metatype

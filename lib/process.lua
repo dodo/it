@@ -53,7 +53,7 @@ function Process:__new()
             .info(Process.cwd,   'process:cwd',   '( [path] )')
     end
     -- load api
-    self.native = self._type:load('api', {
+    self.native = self._type:load(_it.api('api'), {
         time = "double it_gets_time_process()";
         exit = "void it_exits_process(it_processes* process, int exit_code)";
     }):ptr(_D._it_processes_)

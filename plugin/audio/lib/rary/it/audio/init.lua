@@ -28,7 +28,7 @@ end
 
 Audio.type = Metatype:struct("it_audios", cdef)
 
-Audio.type:load('libaudio.so', {
+Audio.type:load(_it.api('audio'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_audio',

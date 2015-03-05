@@ -108,3 +108,24 @@ double it_gets_time_process() {
     /* Unix Epoch time (time since January 1, 1970 (UTC)) */
     return v.tv_sec + v.tv_usec/1.0e6;
 }
+
+int it_runs_process(lua_State* L, int argc, char *argv[]) {
+    it_processes process;
+    // default state values
+    process.argc = argc;
+    process.argv = argv;
+    process.exit_code = -1;
+    // create lua state
+    if (!luaI_createstate(L, &process)) {
+        // nothing to call!
+        return 1;
+    }
+    // run forest run!
+    if (process.exit_code == -1) {
+        process.exit_code = 0;
+        uv_run(process.loop, UV_RUN_DEFAULT);
+    }
+    luaI_closestate(&process);
+    // return exit code set by lua
+    return process.exit_code;
+}

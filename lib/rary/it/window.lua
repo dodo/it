@@ -24,7 +24,7 @@ Window.type = Metatype:struct("it_windows", cdef)
 Window.Surface = Surface
 Window.C = C
 
-Window.type:load('libapi.so', {
+Window.type:load(_it.api('api'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_window',

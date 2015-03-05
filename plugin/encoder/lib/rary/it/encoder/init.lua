@@ -27,8 +27,8 @@ Encoder.C = C
 
 Encoder.type:api('Encoder',
     {'start', 'debug', 'getsettings', 'getformat', 'setformat'},
-    _it.plugin.encoder.apifile)
-Encoder.type:load('libencoder.so', {
+    _it.api('encoder'))
+Encoder.type:load(_it.api('encoder'), {
     __ref = 'it_refs',
     __unref = 'it_unrefs',
     __ac = 'it_allocs_encoder',

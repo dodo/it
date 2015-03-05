@@ -5,6 +5,7 @@ require 'ffi'
 package.path = './?/init.lua;' .. package.path
 
 -- add new path to api libs (core + plugins)
+package.apicpath = _it.execpath .. 'lib?.so'
 package.apipath = _it.libdir .. 'rary/?/init.lua'
 package.apipath = _it.libdir .. 'rary/?.lua;' .. package.apipath
 
@@ -16,11 +17,17 @@ for _,name in pairs({dofile(_it.libdir .. 'plugins.lua')}) do
         plugin.path = _it.plugindir .. name .. '/'
         plugin.libdir = plugin.path .. 'lib/'
         plugin.apifile = 'lib' .. name .. '.so'
+        package.apicpath = package.apicpath .. ';'
+            .. plugin.path .. 'lib?.so'
         package.apipath = package.apipath .. ';'
             .. plugin.libdir .. 'rary/?.lua;'
             .. plugin.libdir .. 'rary/?/init.lua'
         _it.plugin[name] = plugin
     end
+end
+
+function _it.api(name)
+    return package.searchpath(name, package.apicpath)
 end
 
 --create api loader
