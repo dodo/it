@@ -32,6 +32,7 @@ math.randomseed(os.time() + _D.id)
 local ffi = require 'ffi'
 local util = require 'util'
 local _ffi = require 'util._ffi'
+local pixel = require 'util.pixel'
 local clamp = require('util.misc').clamp
 local api = process.context.async
 local pixels = ffi.cast('uint32_t*', ffi.cast('void*', _D.pixels))
@@ -41,11 +42,6 @@ print(id, w .. "x" .. h, "at", _D.x..",".._D.y, "("..(w*h).." pixels)")
 ffi.cdef [[void *malloc(size_t size);void free(void *ptr);]]
 ffi.cdef [[typedef struct coord {int x, y;} coord;]]
 ffi.cdef [[typedef struct seed {int x, y; uint32_t c;} seed;]]
-if ffi.abi 'le' then
-    ffi.cdef [[typedef struct pixel { union u { uint32_t i; struct bgra {uint8_t b,g,r,a;} c; } u; } pixel;]]
-else -- big endian
-    ffi.cdef [[typedef struct pixel { union u { uint32_t i; struct argb {uint8_t a,r,g,b;} c; } u; } pixel;]]
-end
 function clean()
     if coords then
         for i = 0,coords.len-1 do
@@ -80,22 +76,17 @@ end
 
 
 function unpackrgb(x,y)
-    local c = ffi.new('pixel', {})
-    c.u.i = pixels[_D.x + x + (y + _D.y) * width]
+    return pixel.get(pixels, width, _D.x + x, _D.y + y)
+--     local c = ffi.new('pixel', {})
+--     c.u.i = pixels[_D.x + x + (y + _D.y) * width]
 --     c.u.i = pixels[x + (y + _D.y) * (w + _D.x)]
-    return c.u.c.r,c.u.c.g,c.u.c.b,c.u.c.a
+--     return c.u.c.r,c.u.c.g,c.u.c.b,c.u.c.a
 end
 
 local pixelcount = 0
 function setpixel(x,y,c)
     pixels[_D.x + x + (y + _D.y) * width] = c
     pixelcount = pixelcount + 1
-end
-
-function rgb(r, g, b)
-    local p = ffi.new('pixel', {})
-    p.u.c.r, p.u.c.g, p.u.c.b = r, g, b
-    return p
 end
 
 
@@ -160,20 +151,20 @@ function filter_coords(n,x,y, avail, global)
     return t
 end
 
--- function pick_color()
---     if colors.len == 0 then return end
--- --     local i = 0
--- --     local i = colors.len - 1
---     local i = math.random(colors.len) - 1
---     local c = colors.data[i]
---     -- remove from possible colors without breaking order
--- --     ffi.copy(colors.data + i, colors.data + i + 1, (colors.len - i))
---     colors.len = colors.len - 1
---     colors.data[i] = colors.data[colors.len]
---     local p = ffi.new('pixel', {})
---     p.u.i = c
---     return p
--- end
+function pick_color(p)
+    if colors.len == 0 then return end
+--     local i = 0
+--     local i = colors.len - 1
+    local i = math.random(colors.len) - 1
+    local c = colors.data[i]
+    -- remove from possible colors without breaking order
+--     ffi.copy(colors.data + i, colors.data + i + 1, (colors.len - i))
+    colors.len = colors.len - 1
+    colors.data[i] = colors.data[colors.len]
+    local p = p or ffi.new('it_pixels', {})
+    p.u.i = c
+    return p
+end
 
 function qsearch(x, arr, l, u)
     if l >= u then return end
@@ -187,7 +178,7 @@ end
 
 function rm_color(c)
     if not c or colors.len == 0 then return end
-    local i = qsearch(c.u.i, colors.data, 0, colors.len)
+    local i = qsearch(c, colors.data, 0, colors.len)
     if not i then return end
     -- remove from possible colors without breaking order
 --     ffi.copy(colors.data + i, colors.data + i + 1, colors.len - i)
@@ -199,10 +190,12 @@ end
 function seed(c, x, y)
     local i = math.random(colors.len) - 1
     if png then
-        c = ffi.new('pixel', {})
-        c.u.i = png.data[_D.x + x + (y + _D.y) * width]
+        c = pixel.rawget(png.data, width, _D.x + x, _D.y + y)
+--         print(pixel.unpack(c))
+--         c = ffi.new('pixel', {})
+--         c.u.i = png.data[_D.x + x + (y + _D.y) * width]
         c = rm_color(c) or c
-        c = c.u.i
+--         c = c.u.i
     else
         c = c or colors.data[i]
     end
@@ -222,7 +215,7 @@ end
 
 -- TODO make fast with async and multiple threads
 function iterate()
-    local avgcol,x,y = ffi.new('pixel', {})
+    local avgcol,x,y = ffi.new('it_pixels', {})
     if coords.seeds.all and coords.seeds.len > 0 then
         coords.seeds.len = coords.seeds.len - 1
         local s = coords.seeds.pos + coords.seeds.len
@@ -251,7 +244,7 @@ function iterate()
         return
     end
     -- -- -- -- -- -- -- --
---     avgcol = pick_color() or error("no color anymore!")
+    avgcol = pick_color(avgcol) or error("no color anymore!")
     local n,r,g,b, _r,_g,_b = 0,0,0,0
     local neighbors = filter_coords(2 ,x,y, true --[[taken]], true --[[global]])
     for _,neighbor in ipairs(neighbors) do
@@ -273,19 +266,20 @@ function iterate()
 --         avgcol.u.c.b = clamp(math.floor(b * n), 0, 255)
 --         print(d,'-',avgcol.u.c.r,avgcol.u.c.g,avgcol.u.c.b,'-',r,g,b,'-',avgcol.u.i)
 
-        local a, i = avgcol
+        local a, i
 --         print(i,n,r,g,b)
-        avgcol = rm_color(a)
-        if not avgcol then
-            avgcol = a
-            if not coords.seeds.all then
-                if r + g + b == 0 then
-                    colors.fail = colors.fail + 1
-                else
-                    colors.fail = 0
-                end
-            end
-        end
+--         a = rm_color(avgcol.u.i)
+--         if a then
+--             avgcol.u.i = a
+--         else
+--             if not coords.seeds.all then
+--                 if r + g + b == 0 then
+--                     colors.fail = colors.fail + 1
+--                 else
+--                     colors.fail = 0
+--                 end
+--             end
+--         end
 --         if not avgcol then
 --             avgcol = a
 --             if avgcol.u.i > colors.len then avgcol.u.i = colors.len - 1 end
@@ -294,11 +288,11 @@ function iterate()
 --             colors.len = colors.len - 1
 --         end
 --         local a = avgcol
---         avgcol = rm_color(avgcol)
+--         avgcol = rm_color(avgcol.u.i)
 --         if not avgcol then
---             if a.u.i < colors.len then
+--             if a.u.i < colors.len then -- >
 --                 a.u.i = colors.data[a.u.i]
---                 avgcol = rm_color(a)
+--                 avgcol = rm_color(a.u.i)
 --             end
 --         end
 --         avgcol = avgcol or pick_color() or error("no color anymore!")
@@ -367,9 +361,7 @@ end)
 
 
 api:on('color', function (color)
-    local c = ffi.new('pixel')
-    c.u.i = color
-    rm_color(c)
+    rm_color(color)
 end)
 
 -- api:on('', function ()
@@ -389,6 +381,7 @@ local ffi = require 'ffi'
 local util = require 'util'
 local Thread = require 'thread'
 local Async = require 'async'
+local pixel = require 'util.pixel'
 local surface = window.native:surface(false)
 local width, height = window.width, window.height
 local w, h = math.floor(width/(COUNT.x)), math.floor(height/(COUNT.y))
@@ -398,12 +391,6 @@ ffi.fill(surface.pixels, width * height)
 COUNT.i = COUNT.x * COUNT.y
 
 local image = require('lib.cairo').surface_from(surface.pixels, 'ARGB32', width, height, width * 4)
-
-if ffi.abi 'le' then
-    ffi.cdef [[typedef struct pixel { union u { uint32_t i; struct bgra {uint8_t b,g,r,a;} c; } u; } pixel;]]
-else -- big endian
-    ffi.cdef [[typedef struct pixel { union u { uint32_t i; struct argb {uint8_t a,r,g,b;} c; } u; } pixel;]]
-end
 
 window.async:on('ready', function (id)
     print("thread " .. id .. " is ready.")
@@ -417,12 +404,11 @@ end)
 
 print "" -- placeholder
 window:pixels(function (pixels)
-    local black = ffi.new('pixel')
-    black.u.c.a = 255
+    local black = pixel.pack(0, 0, 0, 255)
     pixels = ffi.cast('uint32_t*', ffi.cast('void*', pixels))
 --     ffi.fill(pixels, w * h * 4)
     for i=0,(width * height - 1) do
-        pixels[i] = black.u.i
+        pixels[i] = black
     end
 end)
 
