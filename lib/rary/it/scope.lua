@@ -26,7 +26,7 @@ Scope.type:load(_it.api('api'), {
 
 function Scope:__new(name)
     self.state = self.type:create(nil, _D._it_processes_)
-    self.state.name = _ffi.toname(self.state, name)
+    self.state.name = _ffi.toname(self, name)
     self.raw = self.state.lua
     if process.verbose then
         self:import(function () process.verbose = true end)

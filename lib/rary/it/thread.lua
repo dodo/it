@@ -23,7 +23,7 @@ Thread.type:load(_it.api('api'), {
 
 function Thread:__new(name)
     if self.prototype.__new then self.prototype.__new(self) end
-    local name = _ffi.toname(self.reference, name)
+    local name = _ffi.toname(self, name)
     self.stop = nil
     self.exit = true
     self.scope = Scope:new(name .. ".scope")
