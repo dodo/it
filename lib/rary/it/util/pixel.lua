@@ -27,15 +27,25 @@ function pixel.pack(r, g, b, a)
 end
 doc.info(pixel.pack, 'util_pixel.pack', '( r=0, g=0, b=0, a=0 )')
 
+function pixel.rawget(pixels, width, x, y)
+    return pixels[x + y * width]
+end
+doc.info(pixel.rawget, 'util_pixel.rawget', '( pixels, width, x, y )')
+
+function pixel.rawset(pixels, width, x,y, c)
+    if pixels == nil then return end
+    pixels[x + y * width] = c
+end
+doc.info(pixel.rawset, 'util_pixel.rawset', '( pixels, width, x, y, c )')
+
 function pixel.get(pixels, width, x, y)
     if pixels == nil then return end
-    return pixel.unpack(pixels[x + y * width])
+    return pixel.unpack(pixel.rawget(pixels, width, x, y))
 end
 doc.info(pixel.get, 'util_pixel.get', '( pixels, width, x, y )')
 
 function pixel.set(pixels, width, x,y, r,g,b,a)
-    if pixels == nil then return end
-    pixels[x + y * width] = pixel.pack(r,g,b,a)
+    pixel.rawset(pixels, width, pixel.pack(r,g,b,a))
 end
 doc.info(pixel.set, 'util_pixel.set', '( pixels, width, x, y, r=0, g=0, b=0, a=0 )')
 
