@@ -73,6 +73,7 @@ end
 
 ffi.cdef("int poll(struct pollfd *fds, unsigned long nfds, int timeout);")
 function Process:sleep(milliseconds)
+    -- FIXME blocks all other fds
     ffi.C.poll(nil, 0, milliseconds)
 end
 
