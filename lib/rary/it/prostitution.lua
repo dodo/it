@@ -59,9 +59,9 @@ end
 
 function ImageData:mapPixel(pixelFunction)
     local pixels = self.pixels
-    local w = self.width
-    for y = 0, self.height - 1 do
-        for x = 0, self.width - 1 do
+    local w, h = self.width, self.height
+    for y = 0, h - 1 do
+        for x = 0, w - 1 do
             pixel.set(pixels,w,x,y,pixelFunction(x,y,pixel.get(pixels,w,x,y)))
         end
     end
