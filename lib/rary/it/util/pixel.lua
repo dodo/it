@@ -45,7 +45,7 @@ end
 doc.info(pixel.get, 'util_pixel.get', '( pixels, width, x, y )')
 
 function pixel.set(pixels, width, x,y, r,g,b,a)
-    pixel.rawset(pixels, width, pixel.pack(r,g,b,a))
+    pixel.rawset(pixels, width, x, y, pixel.pack(r,g,b,a))
 end
 doc.info(pixel.set, 'util_pixel.set', '( pixels, width, x, y, r=0, g=0, b=0, a=0 )')
 
