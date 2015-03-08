@@ -7,6 +7,7 @@ C Deps: (apt-get install *-dev)
  * libclang
  * libuv
  * luajit
+ * libatomic (libatomic-ops)
  * liboggz
  * liborc
  * libsdl2

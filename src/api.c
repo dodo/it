@@ -2,6 +2,7 @@
 
 #include <uv.h>
 #include <SDL.h>
+#include <atomic_ops.h>
 
 #include "it.h"
 #include "luaI.h"
@@ -60,6 +61,12 @@ int api_version(lua_State* L) {
     lua_pushfstring(L, "%s with %s",
                         LUAJIT_VERSION, LUA_RELEASE); // + _VERSION
     lua_setfield(L, -2, "lua");
+    // * libatomic
+    lua_pushfstring(L, "libatomic %d.%d.%d",
+                        AO_VERSION_MAJOR,
+                        AO_VERSION_MINOR,
+                        AO_VERSION_MICRO);
+    lua_setfield(L, -2, "atomic");
     // * libsdl2
     SDL_version compiled;
     SDL_version linked;

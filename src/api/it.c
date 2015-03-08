@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdatomic.h>
+#include <atomic_ops.h>
 
 #include "it.h"
 #include "uvI.h"
@@ -9,11 +9,13 @@
 
 
 int it_refs(it_refcounts* ref) {
-    return atomic_fetch_add(&ref->refc, 1);
+    AO_fetch_and_add1_acquire_read((AO_t*) &ref->refc);
+    return ref->refc;
 }
 
 int it_unrefs(it_refcounts* ref) {
-    return atomic_fetch_sub(&ref->refc, 1);
+    AO_fetch_and_sub1_acquire_read((AO_t*) &ref->refc);
+    return ref->refc;
 }
 
 int it_stdios_lua(lua_State* L) { // (process)

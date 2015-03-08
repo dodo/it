@@ -16,11 +16,13 @@ LUAJIT_INC = $(shell pkg-config --cflags luajit)
 
 IT_DEPENDS = $(LUAJIT_INC) \
 	$(shell pkg-config --cflags libuv) \
+	$(shell pkg-config --cflags atomic_ops) \
 	$(shell pkg-config --cflags sdl2)
 
 IT_LINKS = \
 	$(shell pkg-config --libs libuv) \
 	$(shell pkg-config --libs luajit) \
+	$(shell pkg-config --libs atomic_ops) \
 	$(shell pkg-config --libs sdl2)
 
 IT_LAZY_LIBS = \
