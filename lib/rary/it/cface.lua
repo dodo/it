@@ -133,8 +133,14 @@ doc.info(cface.assert, 'cface.assert', '( [NIL[, msg]] )')
 
 cface.struct("it_strings", {
     "const char *data";
-    "int *length";
+    "int length";
 })
+
+function cface.constchar(lstring, len)
+    return ffi.new('it_strings', {lstring, len or string.len(lstring)})
+end
+doc.info(cface.constchar, 'cface.constchar', '( luastring[, length] )')
+
 function cface.string(cstring)
     return ffi.string(cstring.data, cstring.length)
 end
