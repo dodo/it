@@ -11,6 +11,7 @@
 extern int it_stdios_lua(lua_State* L);
 extern int it_boots_lua(lua_State* L);
 extern int it_loads_lua(lua_State* L);
+extern int it_trims_string_lua(lua_State* L);
 extern int it_holds_pointer_lua(lua_State* L);
 
 extern int it_versions_lua(lua_State* L);

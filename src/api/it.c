@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <atomic_ops.h>
 
 #include "it.h"
@@ -60,6 +61,16 @@ int it_versions_lua(lua_State* L) { // (apifile_path)
     uv_lib_t* api = uvI_dlopen(lua_tostring(L, 1));
     uvI_lua_dlsym(L, api, "api_version", &plugin_version);
     return plugin_version(L);
+}
+
+int it_trims_string_lua(lua_State *L) { // (string)
+    size_t size;
+    const char* front = luaL_checklstring(L, 1, &size);
+    const char* end   = &front[size - 1];
+    for (; size && isspace(*front); size-- , front++);
+    for (; size && isspace(*end); size-- , end--);
+    lua_pushlstring(L, front, (size_t)(end - front) + 1);
+    return 1;
 }
 
 int it_holds_pointer_lua(lua_State* L) { // (pointer)

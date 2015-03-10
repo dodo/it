@@ -24,5 +24,10 @@ function _string.gsplit(s, sep, plain)
 end
 doc.info(_string.gsplit, 'util_string.gsplit', '( string, separator[, plain] )')
 
+function _string.trim(lstring)
+    return _it.trims(lstring)
+end
+doc.info(_string.trim, 'util_string.trim', '( luastring )')
+
 
 return _string
