@@ -1,5 +1,7 @@
+local math = require 'math'
 local ffi = require 'ffi'
 local doc = require 'util.doc'
+-- local reflect = require 'reflect' -- lazy loaded in enum_string
 
 local exports = {}
 
@@ -46,6 +48,26 @@ function exports.enum_string(val, ct, prefix)
     return string.lower(str)--:gsub('_', ' ')
 end
 doc.info(exports.enum_string, 'util_ffi.enum_string', '( value, ct, prefix="" )')
+
+function exports.ptr(cdata, ctype)
+    if not ctype then
+        if type(cdata) == 'number' then
+            if math.floor(cdata) == cdata then
+                ctype = 'int'
+            else
+                ctype = 'double'
+            end
+        elseif type(cdata) == 'string' then
+            ctype = 'char*'
+        elseif type(cdata) == 'cdata' then
+            ctype = tostring(ffi.typeof(cdata)):match('ctype<(.*)>')
+        else
+            error('ctype not detectable!')
+        end
+    end
+    return ffi.new(ctype .. '[1]', {cdata})
+end
+doc.info(exports.ptr, 'util_ffi.ptr', '( cdata[, ctype] )')
 
 function exports.ptraddr(ptr)
     return tonumber(ffi.cast('intptr_t', ffi.cast('void *', ptr)))
