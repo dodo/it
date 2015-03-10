@@ -236,6 +236,30 @@ end
 function love.filesystem.isFile(filename)
     return fs.exists(filename)
 end
+
+function love.filesystem.load(name)
+    return loadfile(name)
+end
+
+function love.filesystem.lines(name)
+    if name then
+        return io.lines(name)
+    end
+end
+
+function love.filesystem.read(name, size)
+    return fs.read(name)
+end
+
+function love.filesystem.write(name, data, size)
+    local fail = not fs.write(name, data or '')
+    return not fail, fail and "file not found"
+end
+
+function love.filesystem.append(name, data, size)
+    local fail = not fs.write(name, data or '', 'a')
+    return not fail, fail and "file not found"
+end
 -- }}}
 
 -- love.graphics {{{
