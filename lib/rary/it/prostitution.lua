@@ -2,6 +2,7 @@
 local fs = require 'fs'
 local Window = require 'window'
 local fake = require('util.table').fake
+local dirname = require('util.path').dirname
 
 --------------------------------------------------------------------------------
 local function emulator(external_window)
@@ -591,12 +592,17 @@ end
 end -- emulator
 --------------------------------------------------------------------------------
 
-function emulate(gamepath)
+local function emulate(gamepath)
+    if love then return end
     if not gamepath then
         io.stderr:write("path to love game missing!\n")
         io.stderr:flush()
         process.exit(1)
         return
+    end
+    if type(gamepath) == 'number' then
+        local  i = gamepath
+        gamepath = dirname(process.argv[i])
     end
     process.cwd(gamepath)
 
@@ -626,7 +632,7 @@ function emulate(gamepath)
         c.window.height = 600
     end
 
-    window:open(
+    return window:open(
         c.window.title,
         c.window.width,
         c.window.height
