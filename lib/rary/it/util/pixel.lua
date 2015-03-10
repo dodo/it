@@ -1,52 +1,77 @@
 local ffi = require 'ffi'
 local doc = require 'util.doc'
+local cface = require 'cface'
+local Prototype = require 'prototype'
 
-local pixel = {}
+local Pixel = Prototype:fork()
 
-if ffi.abi 'le' then
-    ffi.cdef [[typedef struct _it_pixels {
-        union u { uint32_t i; struct bgra {uint8_t b,g,r,a;} c; } u;
-    } it_pixels;]]
-else -- big endian
-    ffi.cdef [[typedef struct _it_pixels {
-        union u { uint32_t i; struct argb {uint8_t a,r,g,b;} c; } u;
-    } it_pixels;]]
+local refc
+local function cdef(value_type, channel_type)
+    local def
+    local name = 'it_pixels' .. tostring(refc or '')
+    refc = (refc or 0) + 1
+    if ffi.abi 'le' then
+        def = [[typedef struct _%s {
+            union u { %s i; struct bgra {%s b,g,r,a;} c; } u;
+        } %s;]]
+    else -- big endian
+        def = [[typedef struct _%s {
+            union u { %s i; struct argb {%s a,r,g,b;} c; } u;
+        } %s;]]
+    end
+    cface.declaration(string.format(def, name, value_type, channel_type, name))
+    return name
 end
+cdef('uint32_t', 'uint8_t')
+local default = ffi.new('it_pixels', {})
 
-local p = ffi.new('it_pixels', {})
+function Pixel:__new(pixels, width, value_type, channel_type)
+    if value_type and channel_type then
+        self.native = ffi.new(cdef(value_type, channel_type), {})
+    else
+        self.native = default
+    end
+    self.pixels = pixels
+    self.width = width
+end
+doc.info(Pixel.__new,
+        'Pixel:new',
+        '( pixels, width, value_type="uint32_t", channel_type="uint8_t" )')
 
-function pixel.unpack(i)
+function Pixel:unpack(i)
+    local p = self.native
     p.u.i = i
     return p.u.c.r, p.u.c.g, p.u.c.b, p.u.c.a
 end
-doc.info(pixel.unpack, 'util_pixel.unpack', '( uint32_value )')
+doc.info(Pixel.unpack, 'pixel:unpack', '( uint32_value )')
 
-function pixel.pack(r, g, b, a)
+function Pixel:pack(r, g, b, a)
+    local p = self.native
     p.u.c.r, p.u.c.g, p.u.c.b, p.u.c.a = r or 0, g or 0, b or 0, a or 0
     return p.u.i
 end
-doc.info(pixel.pack, 'util_pixel.pack', '( r=0, g=0, b=0, a=0 )')
+doc.info(Pixel.pack, 'pixel:pack', '( r=0, g=0, b=0, a=0 )')
 
-function pixel.rawget(pixels, width, x, y)
-    return pixels[x + y * width]
+function Pixel:rawget(x, y)
+    return self.pixels[x + y * self.width]
 end
-doc.info(pixel.rawget, 'util_pixel.rawget', '( pixels, width, x, y )')
+doc.info(Pixel.rawget, 'pixel:rawget', '( x, y )')
 
-function pixel.rawset(pixels, width, x,y, c)
-    if pixels == nil then return end
-    pixels[x + y * width] = c
+function Pixel:rawset(x,y, c)
+    if self.pixels == nil then return end
+    self.pixels[x + y * self.width] = c
 end
-doc.info(pixel.rawset, 'util_pixel.rawset', '( pixels, width, x, y, c )')
+doc.info(Pixel.rawset, 'pixel:rawset', '( x, y, c )')
 
-function pixel.get(pixels, width, x, y)
-    if pixels == nil then return end
-    return pixel.unpack(pixel.rawget(pixels, width, x, y))
+function Pixel:get(x, y)
+    if self.pixels == nil then return end
+    return self:unpack(self:rawget(x, y))
 end
-doc.info(pixel.get, 'util_pixel.get', '( pixels, width, x, y )')
+doc.info(Pixel.get, 'pixel:get', '( x, y )')
 
-function pixel.set(pixels, width, x,y, r,g,b,a)
-    pixel.rawset(pixels, width, x, y, pixel.pack(r,g,b,a))
+function Pixel:set(x,y, r,g,b,a)
+    self:rawset(x, y, self:pack(r,g,b,a))
 end
-doc.info(pixel.set, 'util_pixel.set', '( pixels, width, x, y, r=0, g=0, b=0, a=0 )')
+doc.info(Pixel.set, 'pixel:set', '( x, y, r=0, g=0, b=0, a=0 )')
 
-return pixel
+return Pixel

@@ -4,12 +4,12 @@ local Window = require 'window'
 local fake = require('util.table').fake
 
 --------------------------------------------------------------------------------
-function emulator(external_window)
+local function emulator(external_window)
 window = external_window or window
 
 local fs = require 'fs'
 local ffi = require 'ffi'
-local pixel = require 'util.pixel'
+local Pixel = require 'util.pixel'
 local libcairo = require 'lib.cairo'
 local touserdata = require('util._ffi').touserdata
 local contains = require('util.table').index
@@ -50,6 +50,7 @@ function ImageData.new(width, height)
     end
     data.width, data.height = libcairo.get_size(data)
     data.pixels = libcairo.get_data(data, 'uint32_t*')
+    data.pixel = Pixel:new(data.pixels, data.width)
     local instance = touserdata(data.object)
     debug.setmetatable(instance, {
         __index = setmetatable(data, ImageData)
@@ -58,21 +59,21 @@ function ImageData.new(width, height)
 end
 
 function ImageData:mapPixel(pixelFunction)
-    local pixels = self.pixels
+    local pixel = self.pixel
     local w, h = self.width, self.height
     for y = 0, h - 1 do
         for x = 0, w - 1 do
-            pixel.set(pixels,w,x,y,pixelFunction(x,y,pixel.get(pixels,w,x,y)))
+            pixel:set(x, y, pixelFunction(x, y, pixel:get(x, y)))
         end
     end
 end
 
 function ImageData:setPixel(x, y, r, g, b, a)
-    pixel.set(self.pixels, self.width, x, y, r, g, b, a)
+    self.pixel:set(x, y, r, g, b, a)
 end
 
 function ImageData:getPixel(x, y)
-    return pixel.get(self.pixels, self.width, x, y)
+    return self.pixel:get(x, y)
 end
 
 function ImageData:encode(filename)
