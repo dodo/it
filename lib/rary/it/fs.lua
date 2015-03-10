@@ -21,6 +21,15 @@ function fs.read(filename, mode)
 end
 doc.info(fs.read, 'fs.read', '( filename, mode="r" )')
 
+function fs.write(filename, content, mode)
+    local file = io.open(filename, mode or 'w')
+    if not file then return end
+    file:write(content)
+    file:close()
+    return content
+end
+doc.info(fs.write, 'fs.write', '( filename, content, mode="w" )')
+
 function fs.line(filename, from, to)
     local file = io.open(filename, 'r')
     if not file then return end
