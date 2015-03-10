@@ -1,5 +1,5 @@
 
-IT_SRC_BIN =  it.c src/uvI.c
+IT_SRC_BIN =  it.c
 IT_SRC_API = src/api.c \
 	src/errors.c \
 	src/uvI.c \
@@ -85,7 +85,6 @@ it: api cdefdb.so $(IT_SRC_BIN)
 		$(shell pkg-config --cflags --libs libuv) \
 		$(shell pkg-config --libs luajit) $(LUAJIT_INC) \
 		$(_rpath),'$(shell cat $(IT_RPATHS))'
-# 		$(shell pkg-config --cflags --libs luajit)
 
 
 clean:
