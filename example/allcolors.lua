@@ -32,11 +32,12 @@ math.randomseed(os.time() + _D.id)
 local ffi = require 'ffi'
 local util = require 'util'
 local _ffi = require 'util._ffi'
-local pixel = require 'util.pixel'
+local Pixel = require 'util.pixel'
 local clamp = require('util.misc').clamp
 local api = process.context.async
 local pixels = ffi.cast('uint32_t*', ffi.cast('void*', _D.pixels))
 local id, w, h, width, height = _D.id, _D.w, _D.h, _D.width, _D.height
+local pixel = Pixel:new(pixels, width)
 print(id, w .. "x" .. h, "at", _D.x..",".._D.y, "("..(w*h).." pixels)")
 
 ffi.cdef [[void *malloc(size_t size);void free(void *ptr);]]
@@ -76,7 +77,7 @@ end
 
 
 function unpackrgb(x,y)
-    return pixel.get(pixels, width, _D.x + x, _D.y + y)
+    return pixel:get(_D.x + x, _D.y + y)
 --     local c = ffi.new('pixel', {})
 --     c.u.i = pixels[_D.x + x + (y + _D.y) * width]
 --     c.u.i = pixels[x + (y + _D.y) * (w + _D.x)]
@@ -85,7 +86,8 @@ end
 
 local pixelcount = 0
 function setpixel(x,y,c)
-    pixels[_D.x + x + (y + _D.y) * width] = c
+    pixel:rawset(_D.x + x, _D.y + y, c)
+--     pixels[_D.x + x + (y + _D.y) * width] = c
     pixelcount = pixelcount + 1
 end
 
@@ -190,7 +192,7 @@ end
 function seed(c, x, y)
     local i = math.random(colors.len) - 1
     if png then
-        c = pixel.rawget(png.data, width, _D.x + x, _D.y + y)
+        c = png.pixel:rawget( _D.x + x, _D.y + y)
 --         print(pixel.unpack(c))
 --         c = ffi.new('pixel', {})
 --         c.u.i = png.data[_D.x + x + (y + _D.y) * width]
@@ -381,7 +383,7 @@ local ffi = require 'ffi'
 local util = require 'util'
 local Thread = require 'thread'
 local Async = require 'async'
-local pixel = require 'util.pixel'
+local Pixel = require 'util.pixel'
 local surface = window.native:surface(false)
 local width, height = window.width, window.height
 local w, h = math.floor(width/(COUNT.x)), math.floor(height/(COUNT.y))
@@ -404,7 +406,8 @@ end)
 
 print "" -- placeholder
 window:pixels(function (pixels)
-    local black = pixel.pack(0, 0, 0, 255)
+    local pixel = Pixel:new()
+    local black = pixel:pack(0, 0, 0, 255)
     pixels = ffi.cast('uint32_t*', ffi.cast('void*', pixels))
 --     ffi.fill(pixels, w * h * 4)
     for i=0,(width * height - 1) do
@@ -416,7 +419,7 @@ end)
 threads = {} do
     local coords = {x=0, y=0}
     for i = 1,COUNT.i do
-        local thread = Thread:new()
+        local thread = Thread:new('worker' .. i)
         thread.async = Async:new(thread)
         thread.coords = {x=coords.x, y=coords.y}
         thread.scope:define('backport', window.async.native, function ()
@@ -429,6 +432,7 @@ threads = {} do
                 png = {surface = {object = ffi.cast('cairo_surface_t*', _D.png)}}
                 png.data = cairo.get_data(png.surface, 'uint32_t*')
                 local width, height = cairo.get_size(png.surface)
+                png.pixel = require('util.pixel'):new(png.data, width)
                 SEEDS = math.floor(width * height * 0.03)
             end)
         end
@@ -554,7 +558,7 @@ end
 process:on('exit', function (code) print(code, "going down …") end)
 
 
-window = require('window'):new()
+window = require('window'):new('window')
 window.async = require('async'):new(window.thread)
 
 local width, height = size, size
@@ -571,6 +575,7 @@ if process.argv[#process.argv]:match('.png$') then
         png = {surface = {object = ffi.cast('cairo_surface_t*', _D.png)}}
         png.data = cairo.get_data(png.surface, 'uint32_t*')
         local width, height = cairo.get_size(png.surface)
+        png.pixel = require('util.pixel'):new(png.data, width)
         SEEDS = math.floor(width * height * 0.15)
     end)
     width, height = cairo.get_size(png.surface)

@@ -1,3 +1,4 @@
+if _it and require('prostitution').emulate(1) then return end
 
 x = x or 0
 y = y or 0
