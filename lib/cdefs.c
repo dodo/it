@@ -6,5 +6,6 @@
 #include "core-api.h"
 #include "core-types.h"
 
+#include <libgen.h>
 #include <cairo.h>
 #include <pixman.h>

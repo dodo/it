@@ -35,7 +35,7 @@ local function lazysubmodules(modname, names)
 end
 
 local util = lazysubmodules('util', {'_ffi','bind', 'doc', 'fps', 'funcinfo',
-    'luastate', 'misc', 'pixel', 'string', 'table', 'traverse'})
+    'luastate', 'misc', 'path', 'pixel', 'string', 'table', 'traverse'})
 
 util.lazysubmodules = lazysubmodules
 doc.info(lazysubmodules,
