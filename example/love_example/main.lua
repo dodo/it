@@ -2,7 +2,8 @@ if _it and require('prostitution').emulate(1) then return end
 
 x = x or 0
 y = y or 0
-function love.load()
+function love.load(arg)
+    if arg and arg[#arg] == "-debug" then require("mobdebug").start() end
     x, y = love.window.getDimensions()
     x, y = x / 2, y / 2
 end

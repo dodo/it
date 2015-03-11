@@ -85,10 +85,15 @@ function Process:exit(code)
     self.native:exit(code or 0)
 end
 
-function Process.debug()
-    process.debugmode = true
-    require('jit.v').start()
-    require('jit.dump').start()
+function Process.debug(mode)
+    if mode == 'remote' then
+        process.debugger = true
+        require('mobdebug').scratch = process.reload
+    else
+        process.debugmode = true
+        require('jit.v').start()
+        require('jit.dump').start()
+    end
 end
 
 

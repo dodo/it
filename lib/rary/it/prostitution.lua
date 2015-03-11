@@ -576,7 +576,7 @@ window:on('event', function (event)
     end
 end)
 
-window:on('need render', function ()
+local function loop()
 
     love.timer.step()
     if type(love.update) == 'function' then
@@ -603,15 +603,34 @@ window:on('need render', function ()
     love.graphics.present() -- blit now
     love.timer.sleep(0.0145) -- ~60fps
 --     love.timer.sleep(0.0001) -- original love does wait only this long, lol
-end)
-
+end
 love.math.setRandomSeed(os.time())
 for i=1,3 do love.math.random() end
 
+
 if type(love.load) == 'function' then
-    -- TODO process.argv is missing in threads or passing tables via async/define
-    love.load({})
+    local args = {process.cwd()}
+    -- skip executable & cwd
+    for i = 2, process.native.argc-1 do
+        args[#args+1] = ffi.string(process.native.argv[i])
+    end
+    -- append debug flag
+    if process.debugger then
+        args[#args+1] = "-debug"
+    end
+    love.load(args)
 end
+
+if not process.debugger then
+    window:on('need render', loop)
+else
+    window:on('need render', function ()
+        require('mobdebug').on()
+        loop()
+        require('mobdebug').off()
+    end)
+end
+
 
 end -- emulator
 --------------------------------------------------------------------------------
@@ -654,6 +673,11 @@ local function emulate(gamepath)
     end
     if type(c.window.height) ~= 'number' then
         c.window.height = 600
+    end
+
+    if process.debugger then
+        -- disable auto require('mobdebug').start()
+        process.initialized = true
     end
 
     return window:open(

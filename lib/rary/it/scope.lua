@@ -34,6 +34,9 @@ function Scope:__new(name)
     if process.debugmode then
         self:import(function () process.debug() end)
     end
+    if process.debugger then
+        self:import(function () process.debug('remote') end)
+    end
     -- special case since object gets injected into process.context instead as global
     self:define('_it_scopes_', self.state, function ()
         process.context.scope = require('scope'):cast(_D._it_scopes_)
