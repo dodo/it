@@ -8,7 +8,7 @@ local doc = require 'util.doc'
 
 function Process:usage()
     local usage = [[
-Usage: it [options] scripts.lua [arguments]
+Usage: it [options] [scripts.lua] [arguments]
 
 Options:
   -m --main <module> require module and run module.__main function
