@@ -11,21 +11,21 @@ local interpreter = {
     frun = function(self,wfilename,rundebug)
         muSchro0m = muSchro0m or ide.config.path.it -- check if the path is configured
         if not muSchro0m then
-        local default = ''
-        local path = default
-            ..(os.getenv('PATH') or '')..':'
-            ..(GetPathWithSep(self:fworkdir(wfilename)))..':'
-            ..(os.getenv('HOME') and GetPathWithSep(os.getenv('HOME'))..'bin' or '')
-        local paths = {}
-        for p in path:gmatch("[^:]+") do
-            muSchro0m = muSchro0m or GetFullPathIfExists(p, 'it')
-            table.insert(paths, p)
-        end
-        if not muSchro0m then
-            DisplayOutput("Can't find muSchro0m it executable in any of the following folders: "
-            ..table.concat(paths, ", ").."\n")
-            return
-        end
+            local default = ''
+            local path = default
+                ..(os.getenv('PATH') or '')..':'
+                ..(GetPathWithSep(self:fworkdir(wfilename)))..':'
+                ..(os.getenv('HOME') and GetPathWithSep(os.getenv('HOME'))..'bin' or '')
+            local paths = {}
+            for p in path:gmatch("[^:]+") do
+                muSchro0m = muSchro0m or GetFullPathIfExists(p, 'it')
+                table.insert(paths, p)
+            end
+            if not muSchro0m then
+                DisplayOutput("Can't find muSchro0m it executable in any of the following folders: "
+                ..table.concat(paths, ", ").."\n")
+                return
+            end
         end
 
     --    if not GetFullPathIfExists(self:fworkdir(wfilename), 'main.lua') then
