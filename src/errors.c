@@ -57,11 +57,15 @@ int at_panic(lua_State* L) {
     return 0;
 }
 
+static bool missed_thread = FALSE;
 void at_fatal_panic(int signum) {
     // first things first
     uvI_thread_t* thread = uvI_thread_self();
     if (!thread) {
-        it_prints_error("at_fatal_panic: current thread not found!");
+        if (!missed_thread) {
+            it_prints_error("at_fatal_panic: current thread not found!");
+            missed_thread = TRUE;
+        }
         return;
     }
     uvI_thread_stacktrace(thread);
@@ -94,7 +98,7 @@ int luaI_xpcall(lua_State* L, int nargs, int nresults, int safe) {
         return 0;
     }
     signal(SIGILL, &at_fatal_panic);
-    signal(SIGABRT, &at_fatal_panic);
+    if (!missed_thread) signal(SIGABRT, &at_fatal_panic);
     signal(SIGFPE, &at_fatal_panic);
     signal(SIGSEGV, &at_fatal_panic);
     signal(SIGSYS, &at_fatal_panic);
