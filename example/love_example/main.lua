@@ -18,7 +18,7 @@ function love.draw()
     love.graphics.print(love.timer.getDelta(), 10, 20)
 
 
-    love.graphics.print('Hello World!', 400, p)
+    love.graphics.print('Hello World!', 234, p)
     p = (p+1) % love.window.getHeight()
 
 

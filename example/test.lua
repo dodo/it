@@ -8,7 +8,7 @@ process:on('panic', function (err)
     print("PANIC!")
 end)
 
-require('jit').opt.start(3)
+jit.opt.start(3)
 
 -- require('encoder').debug('warning')
 -- require('encoder').debug('debug')
