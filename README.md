@@ -21,7 +21,8 @@ Lua Deps: (luarocks install *)
  * lua-term
  * luarepl
  - *optional*:
- * [mobdebug](https://github.com/pkulchenko/MobDebug)
+ * [lunatic-python](https://github.com/dodo/lunatic-python)
+ * [mobdebug](https://github.com/dodo/MobDebug)
  * [torch7](/http://torch.ch)
 
 
