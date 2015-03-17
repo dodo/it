@@ -59,14 +59,14 @@ api: libapi.so
 	cat lib/cdefs.c > combined-cdefs.c
 
 audio: api lib/plugins.lua
-	make -C plugin/audio CC=$(CC) DEBUG=$(DEBUG) \
+	make -C plugin/audio CC="$(CC)" DEBUG="$(DEBUG)" \
 		&& echo -n ",'audio'" >> lib/plugins.lua \
 		&& echo -n ':$$ORIGIN/plugin/audio' >> $(IT_RPATHS) \
 		&& cat plugin/audio/lib/cdefs.c >> combined-cdefs.c \
 		&& cat plugin/audio/ccflags >> ccflags
 
 encoder: api lib/plugins.lua
-	make -C plugin/encoder CC=$(CC) DEBUG=$(DEBUG) \
+	make -C plugin/encoder CC="$(CC)" DEBUG="$(DEBUG)" \
 		&& echo -n ",'encoder'" >> lib/plugins.lua \
 		&& echo -n ':$$ORIGIN/plugin/encoder' >> $(IT_RPATHS) \
 		&& cat plugin/encoder/lib/cdefs.c >> combined-cdefs.c \
