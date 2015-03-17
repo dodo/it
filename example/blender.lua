@@ -4,7 +4,9 @@
 function process.load()
     print "blender.lua"
     bpy = python.import 'bpy'
-    print("bpy", bpy)
+    python.execute("import sys; sys.path.append('"  .. process.cwd() .. "')")
+    utils = python.import 'blend_utils'
+    bpy.ops.view3d.viewnumpad{utils.get_current_view3d(), type='CAMERA'}
 end
 
 local function inc(t, k, i)
