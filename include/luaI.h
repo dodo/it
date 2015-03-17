@@ -39,8 +39,6 @@
 #define luaI_getglobalfield(L,gn,fn) \
     (lua_getglobal(L,gn), luaI_getlocalfield(L,fn))
 
-#define luaI_setglobalfield(L,gn,fn) \
-    (lua_getglobal(L,gn), lua_insert(L,-2), lua_setfield(L,-2,fn), lua_pop(L,1))
 
 
 extern int luaI_loadmetatable(lua_State* L, int i);
@@ -51,7 +49,7 @@ extern luaI_cfunction* luaI_tocfunction(lua_State* L, int index);
 extern luaI_function* luaI_tofunction(lua_State* L, int index);
 extern int luaI_pushcfunction(lua_State* L, luaI_cfunction* func);
 extern int luaI_pushfunction(lua_State* L, luaI_function* func);
-
+extern int luaI_setglobalfield(lua_State* L, const char *global, const char *name);
 extern int luaI_dofile(lua_State* L, const char *filename);
 extern void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
 

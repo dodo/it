@@ -101,6 +101,16 @@ int luaI_pushfunction(lua_State* L, luaI_function* func) {
     return 1;
 }
 
+int luaI_setglobalfield(lua_State* L, const char *global, const char *name) {
+    lua_getglobal(L, global);
+    lua_insert(       L, -2);
+    if (!lua_isnil(   L, -2)){
+         lua_setfield(L, -2, name);
+         lua_pop(     L,  1);
+    } else lua_pop(   L,  2);
+    return 0;
+}
+
 int luaI_dofile(lua_State* L, const char *filename) {
     if (luaL_dofile(L, filename)) {
         return lua_error(L);
