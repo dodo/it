@@ -58,8 +58,8 @@ local function local_loader(name)
 end
 
 -- this uses at least 40mb!!! FIXME
+local orig_require = require
 local function api_require(name) -- FIXME isnt this ugly in the stacktrace?
-    local orig_require = getmetatable(package.env).require
     if not name or not tostring(name):match('^%w') then
         return orig_require(name)
     else
@@ -83,7 +83,7 @@ package.env = setmetatable({
             loaders[k] = v
         end
         package.loaders = loaders
-        require = getmetatable(env).require
+        require = orig_require
     end,
     ['it'] = function (env)
         env('vanilla') -- remove any previously defined custom loaders
@@ -103,7 +103,7 @@ package.env = setmetatable({
         end
     end,
 }, {
-    require = require,
+    require = orig_require,
     loaders = package.loaders,
     __call = function (env, mode, ...)
         if  env[mode] then
