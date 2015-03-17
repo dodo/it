@@ -48,6 +48,13 @@ int luaI_copyfunction(lua_State* L, lua_State* src) {
     return 0;
 }
 
+luaI_cfunction* luaI_tocfunction(lua_State* L, int index) {
+    luaI_cfunction* cfunc = (luaI_cfunction*) calloc(1, sizeof(luaI_cfunction));
+    if (!cfunc) return NULL;
+    cfunc->cfunction = lua_tocfunction(L, index);
+    return cfunc;
+}
+
 luaI_function* luaI_tofunction(lua_State* L, int index) {
     luaI_function* func = (luaI_function*) calloc(1, sizeof(luaI_function));
     if (!func) return NULL;
@@ -72,6 +79,14 @@ luaI_function* luaI_tofunction(lua_State* L, int index) {
     }
     lua_pop(L, stack); // dumped string + maybe function
     return func;
+}
+
+int luaI_pushcfunction(lua_State* L, luaI_cfunction* cfunc) {
+    if (!cfunc) return 0;
+    lua_pushcfunction(L, cfunc->cfunction);
+    // hopefully i remember to set all references to NULL after this call
+    free(cfunc);
+    return 1;
 }
 
 int luaI_pushfunction(lua_State* L, luaI_function* func) {
@@ -193,8 +208,13 @@ luaI_value* luaI_getvalue(lua_State* L, int i) {
             value->v.cdata = lua_touserdata(L, i);
             break;
         case LUA_TFUNCTION:
-            value->type = LUAI_TYPE_FUNCTION;
-            value->v.function = luaI_tofunction(L, i);
+            if (lua_iscfunction(L, i)) {
+                value->type = LUAI_TYPE_CFUNCTION;
+                value->v.cfunction = luaI_tocfunction(L, i);
+            } else {
+                value->type = LUAI_TYPE_FUNCTION;
+                value->v.function = luaI_tofunction(L, i);
+            }
             break;
         case LUA_TNIL:
         default:
@@ -219,9 +239,12 @@ void luaI_pushvalue(lua_State* L, luaI_value* value) {
         case LUAI_TYPE_CDATA:
             lua_pushlightuserdata(L, value->v.cdata);
             break;
-        case LUA_TFUNCTION:
+        case LUAI_TYPE_FUNCTION:
             luaI_pushfunction(L, value->v.function);
             value->v.function = NULL;
+        case LUAI_TYPE_CFUNCTION:
+            luaI_pushcfunction(L, value->v.cfunction);
+            value->v.cfunction = NULL;
         case LUAI_TYPE_NIL:
         default:
             lua_pushnil(L);

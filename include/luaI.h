@@ -47,7 +47,9 @@ extern int luaI_loadmetatable(lua_State* L, int i);
 extern void luaI_newmetatable(lua_State* L, const char *name, const luaL_Reg *l);
 
 extern int luaI_copyfunction(lua_State* L, lua_State* src);
+extern luaI_cfunction* luaI_tocfunction(lua_State* L, int index);
 extern luaI_function* luaI_tofunction(lua_State* L, int index);
+extern int luaI_pushcfunction(lua_State* L, luaI_cfunction* func);
 extern int luaI_pushfunction(lua_State* L, luaI_function* func);
 
 extern int luaI_dofile(lua_State* L, const char *filename);

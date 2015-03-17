@@ -22,12 +22,17 @@ typedef enum _luaI_types {
     LUAI_TYPE_STRING,
     LUAI_TYPE_BOOLEAN,
     LUAI_TYPE_FUNCTION,
+    LUAI_TYPE_CFUNCTION,
     LUAI_TYPE_MAX
 } luaI_types;
 
 typedef struct _luaI_userdata {
     void* pointer;
 } luaI_userdata;
+
+typedef struct _luaI_cfunction {
+    lua_CFunction cfunction;
+} luaI_cfunction;
 
 typedef struct _luaI_function {
     size_t      size;
@@ -43,6 +48,7 @@ typedef struct _luaI_value {
         const char* string;
         bool boolean;
         luaI_function* function;
+        luaI_cfunction* cfunction;
     } v;
 } luaI_value;
 
