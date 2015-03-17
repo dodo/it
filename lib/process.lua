@@ -27,6 +27,8 @@ function Process:__new()
     self.debugmode = nil
     self.debugger = nil
     self.verbose = nil
+    self.script = nil
+    self.repl = nil
     -- reserve these for thread scopes
     self.context = nil
     -- reserve these for user callbacks
