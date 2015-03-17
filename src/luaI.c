@@ -276,7 +276,7 @@ int luaI_newstate(lua_State* L, it_states* ctx) {
     luaJIT_setmode(L, 0, LUAJIT_MODE_ENGINE | LUAJIT_MODE_ON);
     // load lua libs
     lua_gc(L, LUA_GCSTOP, 0);  // stop collector during initialization
-    luaL_openlibs(L);
+    if (newstate) luaL_openlibs(L); // expected to be already open
     luaI_createdefinetable(L);
     register_api(ctx->lua, "_it"); // api.c main
     if (!newstate) {
