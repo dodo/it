@@ -14,7 +14,7 @@ Async.type:load(_it.api('api'), {
     __ac = 'it_allocs_async',
     __init = 'it_inits_async',
     newqueue = 'it_queues_async',
-    pushcdata = 'it_pushes_cdata_async',
+    pushcdata = 'it_pushes_cdata_queue',
     send = 'it_sends_async',
     __gc = 'it_frees_async',
 }, cdef)

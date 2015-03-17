@@ -18,11 +18,7 @@ void default_async_callback(void* priv, it_queues* queue) {
 //     if (async->thread->ctx->closed) return;
     luaI_getglobalfield(async->thread->ctx->lua, "process", "context");
     luaI_localemit(async->thread->ctx->lua, "async", queue->key);
-    int nargs = 2 + queue->count;
-    int i; for (i = 0; i < queue->count; i++) {
-        luaI_value* value = queue->values[i];
-        luaI_pushvalue(async->thread->ctx->lua, value);
-    }
+    int nargs = 2 + luaI_pushqueuevalues(async->thread->ctx->lua, queue);
     luaI_pcall_in(async->thread->ctx, nargs, 0);
 }
 
@@ -43,12 +39,8 @@ void uvI_async_call(uv_async_t* handle) {
         if (!async->thread->ctx || (async->thread->ctx && async->thread->ctx->err)) break;
         async->on_sync(async->priv, queue);
         it_queues* next = queue->next;
-        queue->size = queue->count = 0;
-        if (queue->values) {
-            free(queue->values);
-            queue->values = NULL;
-        }
-        free(queue);
+        queue->next = NULL; // disable cascade free
+        it_frees_queue(queue);
         queue = next;
     }
 }
@@ -75,36 +67,14 @@ void it_inits_async(it_asyncs* async) {
 
 it_queues* it_queues_async(it_asyncs* async) {
     if (!async) return NULL; // async as arg to cascade NULL pointer
-    it_queues* queue = (it_queues*) calloc(1, sizeof(it_queues));
-    if (!queue) return NULL;
-    return queue;
-}
-
-// thread safe (hopefully *g*)
-void it_pushes_async(it_queues* queue, luaI_value* value) {
-    if (!queue) return;
-    int pos = queue->count;
-    if (++(queue->count) >= queue->size) {
-        queue->size = queue->size == 0 ? 1 : 2 * queue->size;
-        queue->values = realloc(queue->values, sizeof(luaI_value*) * queue->size);
-    }
-    queue->values[pos] = value;
+    return it_allocs_queue();
 }
 
 int it_pushes_async_lua(lua_State* L) { // (queue_userdata, value)
     it_queues*  queue = (it_queues*) lua_touserdata(L, 1);
     luaI_value* value = luaI_getvalue(L, 2);
-    it_pushes_async(queue, value);
+    it_pushes_queue(queue, value);
     return 0;
-}
-
-void it_pushes_cdata_async(it_queues* queue, void* cdata) {
-    if (!queue) return;
-    luaI_value* value = (luaI_value*) malloc(sizeof(luaI_value));
-    if (!value) return;
-    value->type = LUAI_TYPE_CDATA;
-    value->v.cdata = cdata;
-    it_pushes_async(queue, value);
 }
 
 void it_sends_async(it_asyncs* async, const char* key, it_queues* queue) {
@@ -131,16 +101,7 @@ void it_frees_async(it_asyncs* async) {
     it_queues* queue = async->queue;
     async->queue = NULL;
     async->last = NULL;
-    while (queue) {
-        it_queues* next = queue->next;
-        queue->size = queue->count = 0;
-        if (queue->values) {
-            free(queue->values);
-            queue->values = NULL;
-        }
-        free(queue);
-        queue = next;
-    }
+    it_frees_queue(queue);
     if (async->async) {
         uv_async_t* uvasync = async->async;
         async->async = NULL;

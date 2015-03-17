@@ -5,6 +5,7 @@ IT_SRC_API = src/api.c \
 	src/uvI.c \
 	src/luaI.c \
 	src/api/it.c \
+	src/api/queue.c \
 	src/api/async.c \
 	src/api/scope.c \
 	src/api/thread.c \

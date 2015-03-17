@@ -16,12 +16,12 @@ Scope.type:load(_it.api('api'), {
     __ac = 'it_allocs_scope',
     __init = 'it_inits_scope',
     collectgarbage = 'it_collectsgarbage_scope',
-    defcdata = 'it_defines_cdata_scope',
+--     defcdata = 'it_defines_cdata_scope',
     close = 'it_closes_scope',
     call = 'it_calls_scope',
     __gc = 'it_frees_scope',
 }, cdef)
--- Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
+Scope.type.prototype.defcdata = _ffi.get_define() -- HACK share pointer here
 
 
 function Scope:__new(name)

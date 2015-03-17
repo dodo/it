@@ -15,6 +15,8 @@
 #define FALSE 0
 
 
+typedef struct _it_queues it_queues;
+
 typedef enum _luaI_types {
     LUAI_TYPE_NIL = 0,
     LUAI_TYPE_CDATA,
@@ -71,6 +73,7 @@ typedef struct _it_processes {
     int exit_code;
     uv_loop_t *loop;
     /* lua privates */
+    it_queues  *queue;
     it_states *ctx;
     uv_idle_t *init;
     uv_signal_t *sigint;
@@ -95,8 +98,6 @@ typedef struct _it_threads {
 } it_threads;
 
 
-
-typedef struct _it_queues it_queues;
 typedef void (*uvI_async_callback) (void *priv, it_queues* queue);
 
 typedef struct _it_asyncs {
