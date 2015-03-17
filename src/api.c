@@ -84,5 +84,5 @@ int api_version(lua_State* L) {
 #include "api/process.h"
 LUA_API int luaopen_libapi(lua_State* L) {
     it_runs_process(L, 0, NULL);
-    return 0;
+    return 1;
 }

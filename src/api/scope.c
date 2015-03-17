@@ -42,8 +42,7 @@ void it_inits_scope(it_states* ctx, it_processes* process) {
     if (!ctx) return;
     if (luaI_newstate(NULL, ctx)) return;
     ctx->err = NULL;
-    lua_pushlightuserdata(ctx->lua, process);
-    luaI_setdefine(ctx->lua, "_it_processes_");
+    luaI_setprocess(ctx->lua, process);
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "context.lua"));
 }
 

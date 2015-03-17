@@ -6,8 +6,11 @@ local Metatype = require 'metatype'
 
 local Process = EventEmitter:fork()
 Process._type = Metatype:struct('it_processes', {
+    "int refc";
     "int argc";
     "char **argv";
+    "bool runsinthread";
+    "bool islibrary";
     "int exit_code";
     "void /*uv_loop_t*/ *loop";
 --     … the rest is not important for lua
@@ -32,6 +35,7 @@ function Process:__new()
     -- reserve these for thread scopes
     self.context = nil
     -- reserve these for user callbacks
+    self.boot  = nil -- c init event loop callback
     self.main  = nil -- c event loop callback
     self.load  = nil
     self.setup = nil
@@ -58,6 +62,7 @@ function Process:__new()
     self.native = self._type:load(_it.api('api'), {
         time = "double it_gets_time_process()";
         exit = "void it_exits_process(it_processes* process, int exit_code)";
+        __gc = "void it_frees_process(it_processes* process)";
     }):ptr(_D._it_processes_)
 end
 
@@ -84,13 +89,23 @@ function Process:time()
 end
 
 function Process:exit(code)
-    self.native:exit(code or 0)
+    code = code or 0
+    self.native:exit(code)
+    return string.format('process.exit(%d)', code)
 end
 
 function Process.debug(mode)
     if mode == 'remote' then
+        if not process.debugger then
+            process:on('exit', require('mobdebug').done)
+        end
         process.debugger = true
         require('mobdebug').scratch = process.reload
+        -- turn jit off based on Mike Pall's comment in this discussion:
+        -- http://www.freelists.org/post/luajit/Debug-hooks-and-JIT,2
+        -- "You need to turn it off at the start if you plan to receive
+        -- reliable hook calls at any later point in time."
+        jit.off()
     else
         process.debugmode = true
         require('jit.v').start()

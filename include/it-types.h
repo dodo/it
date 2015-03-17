@@ -69,10 +69,14 @@ typedef struct _it_states {
 
 typedef struct _it_processes {
     /* lua publics */
+    int refc;
     int argc; char **argv;
+    bool runsinthread;
+    bool islibrary;
     int exit_code;
     uv_loop_t *loop;
     /* lua privates */
+    bool multireturn;
     it_queues  *queue;
     it_states *ctx;
     uv_idle_t *init;

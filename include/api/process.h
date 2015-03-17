@@ -10,12 +10,16 @@
 #include "luaI.h"
 
 
+extern it_processes* it_allocs_process();
+
 extern void it_creates_process(it_processes* process);
 extern void it_inits_process(it_processes* process);
 extern void it_sigints_process(it_processes* process);
 extern void it_closes_process(it_processes* process);
+extern void it_frees_process(it_processes* process);
 
 extern void it_exits_process(it_processes* process, int code);
+extern void it_shutdowns_process(it_processes* process);
 
 extern double it_gets_time_process();
 

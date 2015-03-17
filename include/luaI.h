@@ -53,6 +53,7 @@ extern int luaI_setglobalfield(lua_State* L, const char *global, const char *nam
 extern int luaI_dofile(lua_State* L, const char *filename);
 extern void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable);
 
+extern int luaI_setprocess(lua_State* L, it_processes* process);
 extern it_processes* luaI_getprocess(lua_State* L);
 extern it_states* luaI_getstate(lua_State* L);
 extern int luaI_setstate(lua_State* L, it_states* ctx);

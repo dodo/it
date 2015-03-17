@@ -124,9 +124,25 @@ void* luaI_checklightuserdata(lua_State* L, int i, const char *metatable) {
         luaL_checkudata(L, i, metatable);
 }
 
+int luaI_setprocess(lua_State* L, it_processes* process) {
+    if (!process) {
+        lua_pushnil(L);
+        luaI_setdefine(L, "_it_processes_");
+        return 0;
+    }
+    // dont do it twice on same lua state
+    if (luaI_getprocess(L)) return 0;
+    // make sure to not delete process too early.
+    it_refs((it_refcounts*) process);
+    // put pointer
+    lua_pushlightuserdata(L, process);
+    luaI_setdefine(L, "_it_processes_");
+    return 0;
+}
+
 it_processes* luaI_getprocess(lua_State* L) {
     luaI_getdefine(L, "_it_processes_");
-    it_processes* process = lua_touserdata(L, -1);
+    it_processes* process = lua_isnil(L, -1) ? NULL : lua_touserdata(L, -1);
     lua_pop(L, 1);
     return process;
 }
@@ -305,17 +321,10 @@ int luaI_createstate(lua_State* L, it_processes* process) {
     if (luaI_newstate(L, ctx)) {
         return 0; // fail
     }
-    lua_pushlightuserdata(ctx->lua, process);
-    luaI_setdefine(ctx->lua, "_it_processes_");
+    luaI_setprocess(ctx->lua, process);
     // initrd returns a function to be called when everything is initialized
     luaI_dofile(ctx->lua, luaI_getlibpath(ctx->lua, "initrd.lua"));
     it_inits_process(process);
-    return 1; // success
-}
-
-int luaI_closestate(it_processes* process) {
-    if (!process) return 0; // fail
-    it_closes_process(process);
     return 1; // success
 }
 
