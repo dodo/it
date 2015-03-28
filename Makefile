@@ -31,7 +31,7 @@ IT_LAZY_LIBS = \
 	$(shell pkg-config --cflags pixman-1)
 
 IT_INCLUDES = -I./include
-IT_WARNS = -Wall
+IT_WARNS = -Wall -Wconversion
 
 CC = gcc
 

@@ -80,8 +80,8 @@ void it_creates_window(it_windows* win, const char* title,
     sdlI_ref(1); // prevent SDL_Quit
     if (win->window) it_closes_window(win);
     win->window = SDL_CreateWindow(title,
-            (x) ? ((intptr_t) &x) : SDL_WINDOWPOS_UNDEFINED,
-            (y) ? ((intptr_t) &y) : SDL_WINDOWPOS_UNDEFINED,
+            (x) ? ((int)(intptr_t) &x) : SDL_WINDOWPOS_UNDEFINED,
+            (y) ? ((int)(intptr_t) &y) : SDL_WINDOWPOS_UNDEFINED,
             width, height, SDL_WINDOW_SHOWN
     );
     if (!win->window)

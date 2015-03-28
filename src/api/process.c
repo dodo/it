@@ -171,7 +171,7 @@ double it_gets_time_process() {
     struct timeval v;
     gettimeofday(&v, (struct timezone *) NULL);
     /* Unix Epoch time (time since January 1, 1970 (UTC)) */
-    return v.tv_sec + v.tv_usec/1.0e6;
+    return (double)(v.tv_sec + v.tv_usec / (long int)1.0e6);
 }
 
 static int lua_api_run(lua_State* L) {

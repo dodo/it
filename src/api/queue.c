@@ -16,7 +16,8 @@ void it_pushes_queue(it_queues* queue, luaI_value* value) {
     int pos = queue->count;
     if (++(queue->count) >= queue->size) {
         queue->size = queue->size == 0 ? 1 : 2 * queue->size;
-        queue->values = realloc(queue->values, sizeof(luaI_value*) * queue->size);
+        queue->values = realloc(queue->values,
+                                sizeof(luaI_value*) * (unsigned int)queue->size);
     }
     queue->values[pos] = value;
 }

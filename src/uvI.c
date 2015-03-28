@@ -104,7 +104,7 @@ int uvI_thread_notch(uvI_thread_t* thread) {
     // resize struct, since it contains full jmp_buf
     thread = // stub to disable attribute warn_unused_result (noop)
     realloc(thread, sizeof(uvI_thread_t) +
-                    sizeof(jmp_buf) *
+                    sizeof(jmp_buf) * (unsigned int)
                     (thread->size - old_size - C_STACK_MINSIZE));
     // stub to disableclang warning: Value stored to 'thread' is never read
     thread = thread;
