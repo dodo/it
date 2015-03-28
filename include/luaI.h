@@ -20,11 +20,10 @@
         luaL_register(L,NULL,l)
 
     #define luaL_newlibtable(L,l) \
-        lua_createtable(L, 0, sizeof(l)/sizeof((l)[0]) - 1)
+        lua_createtable(L, 0, floor(sizeof(l)/sizeof((l)[0])))
 
     #define luaL_newlib(L,l) \
-        (lua_newtable(L), luaL_setfuncs(L,l,0))
-//         (luaL_newlibtable(L,l), luaL_setfuncs(L,l,0)) FIXME
+        (luaL_newlibtable(L,l), luaL_setfuncs(L,l,0))
 #endif
 
 #define luaI_newlib(L,name,l) \
