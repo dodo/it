@@ -15,4 +15,20 @@ function exports.lazymodules(names, module)
 end
 doc.info(exports.lazymodules, 'util_module.lazymodules', '( names[, module] )')
 
+-- from http://stackoverflow.com/questions/15429236/how-to-check-if-a-module-exists-in-lua
+function exports.exists(name, pkg)
+    pkg = pkg or package
+    if pkg.loaded[name] then return true end
+    for _, searcher in ipairs(pkg.searchers or pkg.loaders) do
+        local loader = searcher(name)
+        if type(loader) == 'function' then
+            pkg.preload[name] = loader
+            return true
+        end
+    end
+    return false
+end
+doc.info(exports.exists, 'util_module.exists', '( name[, pkg=package] )')
+
+
 return exports
